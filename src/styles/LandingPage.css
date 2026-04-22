@@ -1,0 +1,266 @@
+.landing {
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+  background: #ffffff;
+}
+
+.hero h1 {
+  font-size: 50px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.hero h1 span {
+  color: #2563eb;
+}
+
+.hero p {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #334155;
+}
+
+/* 🔷 BUTTONS */
+.hero-buttons {
+  margin-top: 30px;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-outline {
+  background: white;
+  color: #2563eb;
+  padding: 12px 24px;
+  border: 2px solid #2563eb;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background: #2563eb;
+  color: white;
+}
+
+/* FLOAT EFFECT */
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0); }
+}
+
+/* QUOTE */
+.quote {
+  text-align: center;
+  padding: 60px 20px;
+  background: #ffffff;  /* WHITE */
+}
+
+.quote p {
+  font-size: 20px;
+  font-style: italic;
+  color: #2563eb;   /* BLUE */
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: #2563eb;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links a {
+  margin: 0 15px;
+  text-decoration: none;
+  color: #374151;
+  font-size: 16px;
+}
+
+.nav-links a:hover {
+  color: #2563eb;
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.nav-buttons button {
+  margin-left: 10px;
+}
+
+/* ABOUT PAGE */
+.about-page {
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+.about-container {
+  padding: 60px 20px;
+  max-width: 1000px;
+  margin: auto;
+  text-align: center;
+}
+
+.about-tag {
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.about-title {
+  font-size: 42px;
+  margin: 10px 0;
+  color: #0f172a;
+}
+
+.about-desc {
+  color: #475569;
+  line-height: 1.8;
+  font-size: 18px;
+}
+
+.about-stats {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* CARD */
+.stat-card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+/* NUMBER */
+.stat-card h2 {
+  color: #2563eb;
+  margin: 0;
+}
+
+/* LABEL */
+.stat-card p {
+  color: #64748b;
+  margin-top: 8px;
+}
+
+/* CONTACT PAGE */
+.contact-page {
+  background: #ffffff;
+  min-height: 100vh;
+}
+/* CONTAINER */
+.contact-container {
+  padding: 60px 20px;
+  max-width: 900px;
+  margin: auto;
+  text-align: center;
+}
+
+/* TAG */
+.contact-tag {
+  color: #2563eb;
+  font-weight: bold;
+}
+
+/* TITLE */
+.contact-title {
+  font-size: 42px;
+  margin: 10px 0;
+  color: #0f172a;
+}
+
+/* DESCRIPTION */
+.contact-desc {
+  color: #64748b;
+  margin-bottom: 40px;
+}
+
+/* CARD */
+.contact-card {
+  background: white;
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  text-align: left;
+}
+
+/* FORM GROUP */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #1e293b;
+}
+
+/* INPUTS */
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  outline: none;
+  transition: 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* BUTTON */
+.contact-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(to right, #2563eb, #1d4ed8);
+  color: white;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.contact-btn:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(to right, #1d4ed8, #1e40af);
+}
