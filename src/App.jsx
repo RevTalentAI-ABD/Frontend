@@ -9,26 +9,25 @@ import ForgotPassword from "./pages/ForgotPassword";
 
 import RegisterPage from "./pages/RegisterPage";
 import SecurityPage from "./pages/SecurityPage";
-import ManagerDashboard from "./pages/ManagerDashboard";
+
+import EmployeeDashboard from "./pages/EmployeeDashboard";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
-        {/* Common Pages */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
 
-        {/* Auth Pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Register Flow */}
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/security" element={<SecurityPage />} /> 
-        <Route path="/managerdashboard" element={<ManagerDashboard />} />
+        <Route path="/security" element={<SecurityPage />} />
+
+        <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
 
       </Routes>
     </BrowserRouter>

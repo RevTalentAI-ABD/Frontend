@@ -1,0 +1,414 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Background ── */
+.hrflow-bg {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #1a0a3c;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 70% 30%, rgba(120, 60, 220, 0.35) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(80, 40, 180, 0.25) 0%, transparent 70%);
+  font-family: 'DM Sans', sans-serif;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hrflow-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Card ── */
+.hrflow-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px 40px 28px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08);
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Logo ── */
+.hrflow-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.hrflow-logo-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6c47ff, #4f35cc);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(108,71,255,0.4);
+}
+
+.hrflow-brand {
+  font-size: 20px;
+  color: #1a0a3c;
+  letter-spacing: -0.3px;
+}
+
+.hrflow-brand strong {
+  font-weight: 700;
+  color: #5b3fef;
+}
+
+/* ── Headings ── */
+.hrflow-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a0a3c;
+  margin: 0 0 4px;
+  letter-spacing: -0.5px;
+}
+
+.hrflow-subtitle {
+  font-size: 14px;
+  color: #7a7a9a;
+  margin: 0 0 12px;
+}
+
+/* ── Steps ── */
+.hrflow-steps {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.hrflow-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hrflow-step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  background: #e8e4f8;
+  color: #9b8fd4;
+  border: 2px solid #e0d9f5;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.hrflow-step.active .hrflow-step-circle {
+  background: linear-gradient(135deg, #6c47ff, #4f35cc);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(108,71,255,0.4);
+}
+
+.hrflow-step-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #aaa;
+}
+
+.hrflow-step.active .hrflow-step-label {
+  color: #1a0a3c;
+  font-weight: 600;
+}
+
+.hrflow-step-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, #c5b8ff, #e0d9f5);
+  margin: 0 10px;
+  border-radius: 2px;
+}
+
+/* ── Form ── */
+.hrflow-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hrflow-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.hrflow-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+}
+
+.hrflow-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3d2a7a;
+  margin-bottom: 4px;
+}
+
+/* ── Input ── */
+.hrflow-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f5f3ff;
+  border: 1.5px solid #e8e2ff;
+  border-radius: 10px;
+  padding: 0 14px;
+  height: 48px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: text;
+}
+
+.hrflow-input-wrap:focus-within {
+  border-color: #6c47ff;
+  box-shadow: 0 0 0 3px rgba(108,71,255,0.12);
+  background: #fff;
+}
+
+.hrflow-input-wrap.error {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229,62,62,0.1);
+}
+
+.hrflow-input-icon {
+  width: 16px;
+  height: 16px;
+  color: #9b8fd4;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.hrflow-input-wrap input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 14px;
+  color: #1a0a3c;
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+}
+
+.hrflow-input-wrap input::placeholder {
+  color: #bbb5d8;
+  font-weight: 400;
+}
+
+.hrflow-error {
+  font-size: 12px;
+  color: #e53e3e;
+  font-weight: 500;
+}
+
+/* ── Dropdown ── */
+.hrflow-dropdown-field { z-index: 10; }
+
+.hrflow-input-wrap.hrflow-select {
+  cursor: pointer;
+  user-select: none;
+}
+
+.hrflow-input-wrap.hrflow-select span {
+  flex: 1;
+  font-size: 14px;
+  color: #1a0a3c;
+  font-weight: 500;
+}
+
+.hrflow-input-wrap.hrflow-select span.placeholder {
+  color: #bbb5d8;
+  font-weight: 400;
+}
+
+.hrflow-chevron {
+  width: 16px;
+  height: 16px;
+  color: #9b8fd4;
+  transition: transform 0.2s;
+}
+
+.hrflow-input-wrap.hrflow-select.open .hrflow-chevron {
+  transform: rotate(180deg);
+}
+
+.hrflow-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1.5px solid #e8e2ff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(108,71,255,0.15);
+  overflow: hidden;
+  z-index: 100;
+  animation: dropIn 0.15s ease both;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hrflow-dropdown-item {
+  padding: 11px 16px;
+  font-size: 14px;
+  color: #3d2a7a;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.hrflow-dropdown-item:hover { background: #f0ebff; }
+.hrflow-dropdown-item.selected {
+  background: #ede8ff;
+  color: #5b3fef;
+  font-weight: 600;
+}
+
+/* ── Role Buttons ── */
+.hrflow-roles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.hrflow-role-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 1.5px solid #e8e2ff;
+  background: #faf9ff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.hrflow-role-btn:hover {
+  border-color: #a58fff;
+  background: #f5f0ff;
+}
+
+.hrflow-role-btn.selected {
+  border-color: #6c47ff;
+  background: linear-gradient(160deg, #f0e8ff, #ebe0ff);
+  box-shadow: 0 4px 14px rgba(108,71,255,0.18);
+}
+
+.hrflow-role-icon {
+  width: 24px;
+  height: 24px;
+  color: #9b8fd4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hrflow-role-btn.selected .hrflow-role-icon { color: #5b3fef; }
+.hrflow-role-icon svg { width: 100%; height: 100%; }
+
+.hrflow-role-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7a7a9a;
+}
+
+.hrflow-role-btn.selected .hrflow-role-label { color: #5b3fef; }
+
+/* ── Continue Button ── */
+.hrflow-btn {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6c47ff 0%, #8f6aff 50%, #b563ff 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.2px;
+  box-shadow: 0 6px 20px rgba(108,71,255,0.45);
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  margin-top: 4px;
+}
+
+.hrflow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(108,71,255,0.55);
+  filter: brightness(1.05);
+}
+
+.hrflow-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 14px rgba(108,71,255,0.4);
+}
+
+/* ── Sign In ── */
+.hrflow-signin {
+  text-align: center;
+  font-size: 13.5px;
+  color: #7a7a9a;
+  margin: 12px 0 0;
+  font-weight: 500;
+}
+
+.hrflow-signin a {
+  color: #5b3fef;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.hrflow-signin a:hover { text-decoration: underline; }
+
+/* ── Responsive ── */
+@media (max-width: 520px) {
+  .hrflow-card { padding: 28px 22px 24px; }
+  .hrflow-row { grid-template-columns: 1fr; }
+}

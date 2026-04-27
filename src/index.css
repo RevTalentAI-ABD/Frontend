@@ -148,8 +148,22 @@ button:hover {
   h1 {
     font-size: 34px;
   }
+}
 
-  h2 {
-    font-size: 22px;
-  }
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  font-size: 22px;
 }
