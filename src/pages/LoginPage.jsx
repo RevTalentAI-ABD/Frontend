@@ -1,29 +1,53 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/axiosConfig";
 import "./LoginPage.css";
 import ForgotPassword from "./ForgotPassword";
 
-import EmployeeDashboard from "./EmployeeDashboard";
-
-
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [role, setRole] = useState("Employee");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [page, setPage] = useState("login"); // "login"|"forgot"|"google"|"employee"|"manager"
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState("login");
 
   const roles = ["Employee", "Manager", "HR Admin"];
 
-  const handleSubmit = () => {
-    if (role === "Employee") setPage("employee");
-    else if (role === "Manager") setPage("manager");
-    else alert("HR Admin dashboard coming soon!");
+  const handleSubmit = async () => {
+    setError("");
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter email and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await api.post("/api/auth/login", {
+        username: email,
+        password: password,
+      });
+
+      const { token, role: userRole, name } = res.data;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", userRole);
+      localStorage.setItem("name", name);
+
+      if (userRole === "EMPLOYEE")     navigate("/employee-dashboard");
+      else if (userRole === "MANAGER") navigate("/manager-dashboard");
+      else if (userRole === "HR_ADMIN") navigate("/hr-dashboard");
+      else setError("Unknown role. Contact admin.");
+
+    } catch (err) {
+      setError(err.response?.data || "Invalid credentials. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (page === "forgot")   return <ForgotPassword onBack={() => setPage("login")} />;
-  if (page === "google")   return <GoogleAuth onBack={() => setPage("login")} />;
-  if (page === "employee") return <EmployeeDashboard onLogout={() => setPage("login")} />;
-  if (page === "manager")  return <ManagerDashboard onLogout={() => setPage("login")} />;
+  if (page === "forgot") return <ForgotPassword onBack={() => setPage("login")} />;
 
   return (
     <div className="page-wrapper">
@@ -53,11 +77,18 @@ export default function LoginPage() {
             <div className="input-wrapper">
               <span className="input-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 7 10-7" />
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m2 7 10 7 10-7" />
                 </svg>
               </span>
-              <input type="email" className="input-field" placeholder="you@company.com"
-                value={email} onChange={(e) => setEmail(e.target.value)} />
+              <input
+                type="email"
+                className="input-field"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              />
             </div>
           </div>
 
@@ -66,12 +97,18 @@ export default function LoginPage() {
             <div className="input-wrapper">
               <span className="input-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </span>
-              <input type={showPassword ? "text" : "password"} className="input-field"
-                placeholder="Enter your password" value={password}
-                onChange={(e) => setPassword(e.target.value)} />
+              <input
+                type={showPassword ? "text" : "password"}
+                className="input-field"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              />
               <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
                 {showPassword ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -94,9 +131,14 @@ export default function LoginPage() {
               <label className="field-label">Sign in as</label>
               <div className="role-tabs">
                 {roles.map((r) => (
-                  <button key={r} type="button"
+                  <button
+                    key={r}
+                    type="button"
                     className={`role-tab ${role === r ? "active" : ""}`}
-                    onClick={() => setRole(r)}>{r}</button>
+                    onClick={() => setRole(r)}
+                  >
+                    {r}
+                  </button>
                 ))}
               </div>
             </div>
@@ -108,8 +150,30 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <button type="button" className="signin-btn" onClick={handleSubmit}>
-            Sign In →
+          {/* ✅ Error Message */}
+          {error && (
+            <div style={{
+              background: "rgba(239,68,68,0.1)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              color: "#ef4444",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              textAlign: "center",
+              marginBottom: "4px"
+            }}>
+              {error}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="signin-btn"
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{ opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? "Signing in..." : "Sign In →"}
           </button>
 
           <div className="divider">
@@ -118,7 +182,7 @@ export default function LoginPage() {
             <span className="divider-line" />
           </div>
 
-          <button type="button" className="google-btn" onClick={() => setPage("google")}>
+          <button type="button" className="google-btn">
             <svg width="20" height="20" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
               <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
@@ -131,7 +195,7 @@ export default function LoginPage() {
 
         <p className="footer-text">
           Don't have an account?{" "}
-          <a href="#" className="create-link">Create one</a>
+          <a href="/register" className="create-link">Create one</a>
         </p>
       </div>
     </div>
