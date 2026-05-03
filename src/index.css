@@ -1,22 +1,26 @@
+/* 🔷 Google Fonts (MATCH HR DASHBOARD) */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
 /* 🔷 Root Variables */
 :root {
-  --text: #334155;         /* dark gray */
-  --text-h: #0f172a;       /* almost black */
-  --bg: #ffffff;           /* PURE WHITE */
+  --text: #334155;
+  --text-h: #0f172a;
+  --bg: #ffffff;
   --border: #e5e7eb;
 
-  --accent: #2563eb;       /* BLUE */
+  --accent: #2563eb;
   --accent-hover: #1d4ed8;
 
   --shadow:
     rgba(0, 0, 0, 0.08) 0 10px 15px -3px,
     rgba(0, 0, 0, 0.04) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* ✅ FONT FIX */
+  --sans: 'DM Sans', sans-serif;
+  --heading: 'Syne', sans-serif;
 }
 
-/* 🔷 Global Reset */
+/* 🔷 Reset */
 * {
   margin: 0;
   padding: 0;
@@ -27,11 +31,11 @@
 body {
   font-family: var(--sans);
   color: var(--text);
-  background: var(--bg);   /* WHITE */
-  line-height: 1.5;
+  background: var(--bg);
+  line-height: 1.6;
 }
 
-/* 🔷 Root Container */
+/* 🔷 Root */
 #root {
   width: 100%;
   min-height: 100vh;
@@ -41,24 +45,23 @@ body {
 .container {
   max-width: 1200px;
   margin: auto;
-  padding: 0 20px;
+  padding: 0 24px;
 }
 
 /* 🔷 Headings */
 h1, h2, h3 {
   font-family: var(--heading);
   color: var(--text-h);
+  margin-bottom: 12px;
 }
 
 h1 {
   font-size: 52px;
   letter-spacing: -1px;
-  margin: 20px 0;
 }
 
 h2 {
   font-size: 26px;
-  margin-bottom: 10px;
 }
 
 h3 {
@@ -67,8 +70,7 @@ h3 {
 
 /* 🔷 Paragraph */
 p {
-  color: var(--text);
-  line-height: 1.6;
+  margin-bottom: 10px;
 }
 
 /* 🔷 Links */
@@ -88,59 +90,12 @@ button:hover {
   transform: translateY(-2px);
 }
 
-/* 🔷 Button Variants */
-.btn-primary {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
-}
-
-.btn-primary:hover {
-  background: var(--accent-hover);
-}
-
-.btn-outline {
-  background: white;
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  padding: 10px 20px;
-  border-radius: 6px;
-}
-
-.btn-outline:hover {
-  background: var(--accent);
-  color: white;
-}
-
 /* 🔷 Card */
 .card {
   background: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 28px;
   box-shadow: var(--shadow);
-  transition: all 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-6px);
-}
-
-/* 🔷 Animation */
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-up {
-  animation: fadeUp 0.6s ease forwards;
 }
 
 /* 🔷 Responsive */
@@ -148,22 +103,4 @@ button:hover {
   h1 {
     font-size: 34px;
   }
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
-
-html, body, #root {
-  width: 100%;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-}
-
-h2 {
-  font-size: 22px;
 }
