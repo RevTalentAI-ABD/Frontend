@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import api from "../api/axiosConfig";
 import "../styles/Security.css";
 
 export default function SecurityPage() {
@@ -11,6 +12,8 @@ export default function SecurityPage() {
   const [confirm, setConfirm] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const hasMinLength = password.length >= 8;
   const hasUppercase = /[A-Z]/.test(password);
@@ -19,10 +22,25 @@ export default function SecurityPage() {
   const allValid = hasMinLength && hasUppercase && hasNumberOrSymbol;
   const passwordsMatch = password === confirm && confirm.length > 0;
 
-  const handleSubmit = () => {
-    if (allValid && passwordsMatch) {
-      alert("Account created successfully!");
-      // navigate("/dashboard"); // uncomment when dashboard is ready
+  const handleSubmit = async () => {
+    if (!allValid || !passwordsMatch) return;
+    setError("");
+    setLoading(true);
+    try {
+      await api.post("/api/auth/register", {
+        name: `${profileData.firstName} ${profileData.lastName}`,
+        username: profileData.email,
+        email: profileData.email,
+        password: password,
+        role: profileData.role.toUpperCase(),   // "employee" → "EMPLOYEE"
+        department: profileData.department,
+      });
+      alert("Account created successfully! Please login.");
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,7 +61,6 @@ export default function SecurityPage() {
           <span className="hrflow-logo-text">Rev<span>Talent</span></span>
         </div>
 
-        {/* Title */}
         <h1 className="hrflow-title">Set your credentials</h1>
         <p className="hrflow-subtitle">Almost done — secure your account</p>
 
@@ -128,38 +145,51 @@ export default function SecurityPage() {
           </div>
         </div>
 
-        {/* Requirements Box */}
+        {/* Requirements */}
         <div className="hrflow-requirements">
           <p className="req-title">Password requirements</p>
           <ul className="req-list">
             <li className={hasMinLength ? "req-item met" : "req-item"}>
-              <span className="req-dot"></span>
-              At least 8 characters
+              <span className="req-dot"></span>At least 8 characters
             </li>
             <li className={hasUppercase ? "req-item met" : "req-item"}>
-              <span className="req-dot"></span>
-              One uppercase letter
+              <span className="req-dot"></span>One uppercase letter
             </li>
             <li className={hasNumberOrSymbol ? "req-item met" : "req-item"}>
-              <span className="req-dot"></span>
-              One number or symbol
+              <span className="req-dot"></span>One number or symbol
             </li>
           </ul>
         </div>
+
+        {/* ✅ Error Message */}
+        {error && (
+          <div style={{
+            background: "rgba(239,68,68,0.1)",
+            border: "1px solid rgba(239,68,68,0.3)",
+            color: "#ef4444",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            textAlign: "center",
+            marginBottom: "8px"
+          }}>
+            {error}
+          </div>
+        )}
 
         {/* Buttons */}
         <div className="hrflow-actions">
           <button className="btn-back" onClick={() => navigate("/register")}>← Back</button>
           <button
             className={`btn-create ${allValid && passwordsMatch ? "active" : ""}`}
-            disabled={!allValid || !passwordsMatch}
+            disabled={!allValid || !passwordsMatch || loading}
             onClick={handleSubmit}
+            style={{ opacity: loading ? 0.7 : 1 }}
           >
-            Create Account ✓
+            {loading ? "Creating..." : "Create Account ✓"}
           </button>
         </div>
 
-        {/* Sign In */}
         <p className="hrflow-signin">
           Already have an account? <a href="/login">Sign in</a>
         </p>
