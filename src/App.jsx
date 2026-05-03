@@ -18,6 +18,9 @@ const ProtectedRoute = ({ children, allowedRole }) => {
   return children;
 };
 
+/* ===== HR MODULE (FIXED PATH) ===== */
+import HRDashboard from "./components/HRDashboard";
+
 function App() {
   return (
     <BrowserRouter>
@@ -48,6 +51,9 @@ function App() {
             <div>HR Admin Dashboard — Coming Soon</div>
           </ProtectedRoute>
         } />
+
+        {/* HR DASHBOARD */}
+        <Route path="/hr" element={<HRDashboard />} />
 
       </Routes>
     </BrowserRouter>
