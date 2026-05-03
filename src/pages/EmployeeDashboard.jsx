@@ -236,8 +236,8 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
       await api.post("/api/leaves/apply", {
         employeeId: employeeId,
         leaveType:  form.type,
-        startDate:  form.from,
-        endDate:    form.to,
+        fromDate:  form.from,
+        toDate:    form.to,
         reason:     form.reason,
       });
       setToast("✅ Leave request submitted!");
@@ -303,14 +303,14 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
         ) : (
           leaves.map((l, i) => (
             <div key={i} className="ed-leave-card" style={{ "--lc": "#7c5af0" }}>
-              <div className="ed-leave-type">{l.leaveType} Leave</div>
+              <div className="ed-leave-type">{l.type} Leave</div>
               <div className="ed-leave-numbers">
                 <span className="ed-leave-used">{l.used}</span>
                 <span className="ed-leave-sep">/</span>
                 <span className="ed-leave-total">{l.total}</span>
               </div>
               <div className="ed-leave-bar-bg">
-                <div className="ed-leave-bar-fill" style={{ width: `${(l.used / l.total) * 100}%` }}/>
+                <div className="ed-leave-bar-fill" style={{ width: `${(l.used / l.total) * 100 }%` }}/>
               </div>
               <div className="ed-leave-remaining">{l.total - l.used} days remaining</div>
             </div>
@@ -586,9 +586,9 @@ export default function EmployeeDashboard() {
       const [attRes, leaveBalRes, leaveHistRes, payRes, notifRes] = await Promise.allSettled([
         api.get(`/api/attendance/employee/${empId}`),
         api.get(`/api/leaves/balance/${empId}`),
-        api.get(`/api/leaves/employee/${empId}`),
+        api.get(`/api/leaves/history/${empId}`),
         api.get(`/api/payroll/employee/${empId}`),
-        api.get(`/api/notifications/employee/${empId}`),
+        api.get(`/api/notifications/${empId}`),
       ]);
 
       if (attRes.status      === "fulfilled") setAttendance(attRes.value.data);

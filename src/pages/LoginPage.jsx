@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axiosConfig";
-import "./LoginPage.css";
+import "../styles/LoginPage.css";
+import { login } from "../api/api";
 import ForgotPassword from "./ForgotPassword";
 
 export default function LoginPage() {
@@ -10,8 +10,8 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [page, setPage] = useState("login");
 
   const roles = ["Employee", "Manager", "HR Admin"];
@@ -24,24 +24,21 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const res = await api.post("/api/auth/login", {
-        username: email,
-        password: password,
-      });
+      const data = await login(email, password);
 
-      const { token, role: userRole, name } = res.data;
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("name", data.name);
+      localStorage.setItem("user", JSON.stringify(data));
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", userRole);
-      localStorage.setItem("name", name);
-
-      if (userRole === "EMPLOYEE")     navigate("/employee-dashboard");
-      else if (userRole === "MANAGER") navigate("/manager-dashboard");
-      else if (userRole === "HR_ADMIN") navigate("/hr-dashboard");
+      const userRole = data.role?.toUpperCase();
+      if (userRole === "EMPLOYEE")       navigate("/employee-dashboard");
+      else if (userRole === "MANAGER")   navigate("/managerdashboard");
+      else if (userRole === "HR_ADMIN")  navigate("/hr-dashboard");
       else setError("Unknown role. Contact admin.");
 
     } catch (err) {
-      setError(err.response?.data || "Invalid credentials. Please try again.");
+      setError(err.message || "Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -56,12 +53,13 @@ export default function LoginPage() {
       <div className="bg-blob blob-3" />
 
       <div className="card">
+        {/* Logo */}
         <div className="logo">
           <div className="logo-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="2" width="9" height="9" rx="2" fill="white" opacity="0.9" />
-              <rect x="13" y="2" width="9" height="9" rx="2" fill="white" opacity="0.6" />
-              <rect x="2" y="13" width="9" height="9" rx="2" fill="white" opacity="0.6" />
+              <rect x="2"  y="2"  width="9" height="9" rx="2" fill="white" opacity="0.9" />
+              <rect x="13" y="2"  width="9" height="9" rx="2" fill="white" opacity="0.6" />
+              <rect x="2"  y="13" width="9" height="9" rx="2" fill="white" opacity="0.6" />
               <rect x="13" y="13" width="9" height="9" rx="2" fill="white" opacity="0.9" />
             </svg>
           </div>
@@ -71,7 +69,24 @@ export default function LoginPage() {
         <h1 className="heading">Welcome back</h1>
         <p className="subheading">Sign in to your RevTalent account to continue</p>
 
+        {/* Error */}
+        {error && (
+          <div style={{
+            background: "rgba(239,68,68,0.1)",
+            border: "1px solid rgba(239,68,68,0.3)",
+            color: "#ef4444",
+            padding: "10px 14px",
+            borderRadius: "8px",
+            fontSize: "13px",
+            textAlign: "center",
+            marginBottom: "8px",
+          }}>
+            {error}
+          </div>
+        )}
+
         <div className="form">
+          {/* Email */}
           <div className="field-group">
             <label className="field-label">Work Email</label>
             <div className="input-wrapper">
@@ -92,6 +107,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Password */}
           <div className="field-group">
             <label className="field-label">Password</label>
             <div className="input-wrapper">
@@ -109,7 +125,11 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               />
-              <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+              <button
+                type="button"
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
                 {showPassword ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
@@ -126,6 +146,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Role */}
           <div className="role-row">
             <div className="role-group">
               <label className="field-label">Sign in as</label>
@@ -144,28 +165,18 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Forgot password */}
           <div className="forgot-row">
-            <button type="button" className="forgot-link-btn" onClick={() => setPage("forgot")}>
+            <button
+              type="button"
+              className="forgot-link-btn"
+              onClick={() => setPage("forgot")}
+            >
               Forgot password?
             </button>
           </div>
 
-          {/* ✅ Error Message */}
-          {error && (
-            <div style={{
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.3)",
-              color: "#ef4444",
-              padding: "10px 14px",
-              borderRadius: "8px",
-              fontSize: "13px",
-              textAlign: "center",
-              marginBottom: "4px"
-            }}>
-              {error}
-            </div>
-          )}
-
+          {/* Sign in */}
           <button
             type="button"
             className="signin-btn"
@@ -173,15 +184,17 @@ export default function LoginPage() {
             disabled={loading}
             style={{ opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? "Signing in..." : "Sign In →"}
+            {loading ? "Signing in…" : "Sign In →"}
           </button>
 
+          {/* Divider */}
           <div className="divider">
             <span className="divider-line" />
             <span className="divider-text">or continue with</span>
             <span className="divider-line" />
           </div>
 
+          {/* Google */}
           <button type="button" className="google-btn">
             <svg width="20" height="20" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
