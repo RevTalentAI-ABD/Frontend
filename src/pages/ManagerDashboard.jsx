@@ -22,6 +22,10 @@ import {
   markNotificationRead,
 } from "../api/api";
 import { useNavigate } from "react-router-dom";
+import {
+  Users, CheckCircle, Home, Laptop, ClipboardList, BarChart2,
+  Bell, Download, AlertTriangle, Pin, Clock, Umbrella, Check, X,
+} from "lucide-react";
 
 
 function getInitials(name = "") {
@@ -134,7 +138,7 @@ function ErrorMsg({ msg }) {
       background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)",
       color: "#f87171", borderRadius: 10, padding: "12px 16px", margin: "16px 0",
     }}>
-      ⚠️ {msg}
+      <span style={{display:"flex",alignItems:"center",gap:6}}><AlertTriangle size={15} /> {msg}</span>
     </div>
   );
 }
@@ -199,10 +203,10 @@ function PageHome() {
       </div>
 
       <div className="md-stats-grid">
-        <StatCard icon="👥" label="Team Size"         value={teamSize} sub="total members"  color="#7c5af0" />
-        <StatCard icon="🟢" label="Present Today"     value={present}  sub="in office"      color="#10b981" />
-        <StatCard icon="🏠" label="WFH Today"         value={wfh}      sub="remote"         color="#06b6d4" />
-        <StatCard icon="📋" label="Pending Approvals" value={pending}  sub="need action"    color="#f59e0b" />
+        <StatCard icon={<Users size={20} />} label="Team Size"         value={teamSize} sub="total members"  color="#7c5af0" />
+        <StatCard icon={<CheckCircle size={20} />} label="Present Today"     value={present}  sub="in office"      color="#10b981" />
+        <StatCard icon={<Laptop size={20} />} label="WFH Today"         value={wfh}      sub="remote"         color="#06b6d4" />
+        <StatCard icon={<ClipboardList size={20} />} label="Pending Approvals" value={pending}  sub="need action"    color="#f59e0b" />
       </div>
 
       <div className="md-two-col">
@@ -233,7 +237,7 @@ function PageHome() {
             )}
             {activity.map((a, i) => (
               <div key={i} className="md-activity-row">
-                <span className="md-activity-icon">{a.icon || "📌"}</span>
+                <span className="md-activity-icon">{a.icon || <Pin size={14} />}</span>
                 <div className="md-activity-text">{a.text || a.message || a.description}</div>
                 <div className="md-activity-time">{a.time || a.timestamp}</div>
               </div>
@@ -289,7 +293,7 @@ function PageTeamAttendance() {
     <div className="md-page">
       <div className="md-page-header-row">
         <h2 className="md-page-heading">Team Attendance</h2>
-        <button className="md-primary-btn" onClick={handleExport}>📥 Export</button>
+        <button className="md-primary-btn" onClick={handleExport} style={{display:"flex",alignItems:"center",gap:6}}><Download size={15} /> Export</button>
       </div>
 
       {error && <ErrorMsg msg={error} />}
@@ -381,13 +385,14 @@ function PageLeaveApprovals() {
       setActionError(e.message);
     }
   };
+const PENDING_STATUSES = ["PENDING", "Pending", "APPLIED", "Applied"];
 
-  const pending = requests.filter(
-    (r) => !r.status || r.status === "PENDING" || r.status === "Pending"
-  );
-  const done = requests.filter(
-    (r) => r.status && r.status !== "PENDING" && r.status !== "Pending"
-  );
+const pending = requests.filter((r) => 
+  !r.status || PENDING_STATUSES.includes(r.status)
+);
+const done = requests.filter((r) => 
+  r.status && !PENDING_STATUSES.includes(r.status)
+);
 
   if (loading) return <Spinner />;
 
@@ -423,8 +428,8 @@ function PageLeaveApprovals() {
                 <div className="md-lr-reason">"{r.reason}"</div>
               </div>
               <div className="md-lr-actions">
-                <button className="md-approve-btn" onClick={() => handle(r.id, "approve")}>✓ Approve</button>
-                <button className="md-reject-btn"  onClick={() => handle(r.id, "reject")}>✕ Reject</button>
+                <button className="md-approve-btn" onClick={() => handle(r.id, "approve")} style={{display:"flex",alignItems:"center",gap:5}}><Check size={14} /> Approve</button>
+                <button className="md-reject-btn"  onClick={() => handle(r.id, "reject")} style={{display:"flex",alignItems:"center",gap:5}}><X size={14} /> Reject</button>
               </div>
             </div>
           </div>
@@ -514,10 +519,10 @@ function PageTeamMembers() {
           </div>
         </div>
         <div className="md-stats-grid">
-          <StatCard icon="📅" label="Attendance"   value={"—"} sub="% this month"  color="#7c5af0" />
-          <StatCard icon="🏖️" label="Leaves Used"  value={"—"} sub="this year"     color="#f59e0b" />
-          <StatCard icon="⭐" label="Performance"  value={"—"} sub="score"         color="#10b981" />
-          <StatCard icon="🕐" label="Avg Hours"    value={"—"} sub="per day"       color="#06b6d4" />
+          <StatCard icon={<ClipboardList size={20} />} label="Attendance"   value={"—"} sub="% this month"  color="#7c5af0" />
+          <StatCard icon={<Umbrella size={20} />} label="Leaves Used"  value={"—"} sub="this year"     color="#f59e0b" />
+          <StatCard icon={<BarChart2 size={20} />} label="Performance"  value={"—"} sub="score"         color="#10b981" />
+          <StatCard icon={<Clock size={20} />} label="Avg Hours"    value={"—"} sub="per day"       color="#06b6d4" />
         </div>
         <div className="md-panel">
           <h3 className="md-panel-title">Contact Information</h3>
@@ -613,10 +618,10 @@ function PageReports() {
       {error && <ErrorMsg msg={error} />}
 
       <div className="md-stats-grid">
-        <StatCard icon="📅" label="Team Size"         value={team.length} sub="members"       color="#7c5af0" />
-        <StatCard icon="🟢" label="Active Members"    value={team.filter(e=>e.status?.toUpperCase()==="ACTIVE"||e.status?.toUpperCase()==="PRESENT").length} sub="in office" color="#10b981" />
-        <StatCard icon="📊" label="Leave Records"     value={"—"}         sub="this month"    color="#f59e0b" />
-        <StatCard icon="🕐" label="Avg Hours/Week"    value={"—"}         sub="per member"    color="#06b6d4" />
+        <StatCard icon={<Users size={20} />} label="Team Size"         value={team.length} sub="members"       color="#7c5af0" />
+        <StatCard icon={<CheckCircle size={20} />} label="Active Members"    value={team.filter(e=>e.status?.toUpperCase()==="ACTIVE"||e.status?.toUpperCase()==="PRESENT").length} sub="in office" color="#10b981" />
+        <StatCard icon={<BarChart2 size={20} />} label="Leave Records"     value={"—"}         sub="this month"    color="#f59e0b" />
+        <StatCard icon={<Clock size={20} />} label="Avg Hours/Week"    value={"—"}         sub="per member"    color="#06b6d4" />
       </div>
 
       <div className="md-two-col">
@@ -757,7 +762,7 @@ function PageNotifications() {
             onClick={() => handleMarkOne(n)}
           >
             <div className="md-notif-icon">
-              {n.type === "LEAVE" ? "📋" : n.type === "ATTENDANCE" ? "📅" : "🔔"}
+              {n.type === "LEAVE" ? <ClipboardList size={16} /> : n.type === "ATTENDANCE" ? <Clock size={16} /> : <Bell size={16} />}
             </div>
             <div className="md-notif-body">
               <div className="md-notif-text">{n.message}</div>
@@ -775,12 +780,12 @@ function PageNotifications() {
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
 const NAV = [
-  { id: "home",       icon: "🏠", label: "Overview"        },
-  { id: "attendance", icon: "📅", label: "Team Attendance" },
-  { id: "approvals",  icon: "📋", label: "Leave Approvals" },
-  { id: "members",    icon: "👥", label: "Team Members"    },
-  { id: "reports",    icon: "📊", label: "Reports"         },
-  { id: "notifs",     icon: "🔔", label: "Notifications"   },
+  { id: "home",       icon: <Home size={18} />,          label: "Overview"        },
+  { id: "attendance", icon: <ClipboardList size={18} />, label: "Team Attendance" },
+  { id: "approvals",  icon: <ClipboardList size={18} />, label: "Leave Approvals" },
+  { id: "members",    icon: <Users size={18} />,         label: "Team Members"    },
+  { id: "reports",    icon: <BarChart2 size={18} />,     label: "Reports"         },
+  { id: "notifs",     icon: <Bell size={18} />,          label: "Notifications"   },
 ];
 
 // ─── Root Dashboard Component ─────────────────────────────────────────────────
@@ -840,7 +845,7 @@ export default function ManagerDashboard() {
               className={`md-nav-item ${active === n.id ? "active" : ""}`}
               onClick={() => { setActive(n.id); setSidebarOpen(false); }}
             >
-              <span className="md-nav-icon">{n.icon}</span>
+              <span className="md-nav-icon" style={{display:"flex",alignItems:"center"}}>{n.icon}</span>
               <span className="md-nav-label">{n.label}</span>
               {n.id === "approvals" && pendingCount > 0 && (
                 <span className="md-nav-badge">{pendingCount}</span>
@@ -879,7 +884,7 @@ export default function ManagerDashboard() {
             {NAV.find((n) => n.id === active)?.label}
           </div>
           <button className="md-topbar-notif" onClick={() => setActive("notifs")}>
-            🔔{unreadCount > 0 && <span className="md-notif-badge">{unreadCount}</span>}
+            <Bell size={18} />{unreadCount > 0 && <span className="md-notif-badge">{unreadCount}</span>}
           </button>
         </header>
 

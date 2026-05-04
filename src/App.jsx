@@ -10,6 +10,8 @@ import SecurityPage       from "./pages/SecurityPage";
 import ManagerDashboard   from "./pages/ManagerDashboard";
 import EmployeeDashboard  from "./pages/EmployeeDashboard";
 import HRDashboard        from "./components/HRDashboard";
+import PublicJobBoard     from "./pages/PublicJobBoard";
+import ApplyForm          from "./pages/ApplyForm";
 
 // Role-aware protected route
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -28,6 +30,10 @@ function App() {
         <Route path="/"                element={<LandingPage />} />
         <Route path="/about"           element={<About />} />
         <Route path="/contact"         element={<Contact />} />
+
+        {/* Public Job Board — no login needed */}
+        <Route path="/jobs"            element={<PublicJobBoard />} />
+        <Route path="/jobs/:jobId/apply" element={<ApplyForm />} />
 
         {/* Auth */}
         <Route path="/login"           element={<LoginPage />} />

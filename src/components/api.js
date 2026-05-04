@@ -34,58 +34,56 @@ export const authAPI = {
 
 // ── EMPLOYEES ─────────────────────────────────────────────────────────────────
 export const employeeAPI = {
-  getAll:          ()         => api.get("/api/employees"),
-  getById:         (id)       => api.get(`/api/employees/${id}`),
-  create:          (data)     => api.post("/api/employees", data),
-  update:          (id, data) => api.put(`/api/employees/${id}`, data),
-  patch:           (id, data) => api.patch(`/api/employees/${id}`, data),
-  updatePersonal:  (id, data) => api.patch(`/api/employees/${id}/personal-info`, data),
-  delete:          (id)       => api.delete(`/api/employees/${id}`),
-  getSchedule:     (id)       => api.get(`/api/employees/${id}/schedule`),
-  getDashStats:    (id)       => api.get(`/api/employees/${id}/dashboard-stats`),
-  getAnnouncements:()         => api.get("/api/employees/announcements"),
+  getAll:           ()         => api.get("/api/employees"),
+  getById:          (id)       => api.get(`/api/employees/${id}`),
+  create:           (data)     => api.post("/api/employees", data),
+  update:           (id, data) => api.put(`/api/employees/${id}`, data),
+  patch:            (id, data) => api.patch(`/api/employees/${id}`, data),
+  updatePersonal:   (id, data) => api.patch(`/api/employees/${id}/personal-info`, data),
+  delete:           (id)       => api.delete(`/api/employees/${id}`),
+  getSchedule:      (id)       => api.get(`/api/employees/${id}/schedule`),
+  getDashStats:     (id)       => api.get(`/api/employees/${id}/dashboard-stats`),
+  getAnnouncements: ()         => api.get("/api/employees/announcements"),
 };
 
 // ── MANAGER ───────────────────────────────────────────────────────────────────
 export const managerAPI = {
-  getProfile:      ()   => api.get("/api/manager/profile"),
-  getDashboard:    ()   => api.get("/api/manager/dashboard"),
-  getDashSummary:  ()   => api.get("/api/manager/dashboard-summary"),
-  getActivity:     ()   => api.get("/api/manager/activity"),
-  getTeam:         ()   => api.get("/api/manager/team"),
-  searchTeam:      (q)  => api.get(`/api/manager/search?q=${q}`),
+  getProfile:     ()  => api.get("/api/manager/profile"),
+  getDashboard:   ()  => api.get("/api/manager/dashboard"),
+  getDashSummary: ()  => api.get("/api/manager/dashboard-summary"),
+  getActivity:    ()  => api.get("/api/manager/activity"),
+  getTeam:        ()  => api.get("/api/manager/team"),
+  searchTeam:     (q) => api.get(`/api/manager/search?q=${q}`),
   getReports: {
-    teamSummary:   ()   => api.get("/api/manager/reports/team-summary"),
-    productivity:  ()   => api.get("/api/manager/reports/productivity"),
-    hrTeamSummary: ()   => api.get("/api/manager/reports/hr/team-summary"),
-    attendance:    ()   => api.get("/api/manager/reports/attendance"),
+    teamSummary:   () => api.get("/api/manager/reports/team-summary"),
+    productivity:  () => api.get("/api/manager/reports/productivity"),
+    hrTeamSummary: () => api.get("/api/manager/reports/hr/team-summary"),
+    attendance:    () => api.get("/api/manager/reports/attendance"),
   },
 };
 
 // ── LEAVES ────────────────────────────────────────────────────────────────────
 export const leaveAPI = {
-  getAll:       ()         => api.get("/api/leaves"),
-  getById:      (id)       => api.get(`/api/leaves/${id}`),
-  getPending:   ()         => api.get("/api/leaves/pending"),
-  getHistory:   (empId)    => api.get(`/api/leaves/history/${empId}`),
-  getBalance:   (empId)    => api.get(`/api/leaves/balance/${empId}`),
-  apply:        (data)     => api.post("/api/leaves/apply", data),
-  applyHR:      (data)     => api.post("/api/leaves/apply/hr", data),
-  approve:      (id)       => api.put(`/api/leaves/${id}/approve`),
-  reject:       (id)       => api.put(`/api/leaves/${id}/reject`),
-  cancel:       (leaveId)  => api.delete(`/api/leaves/${leaveId}/cancel`),
+  getAll:    ()        => api.get("/api/leaves"),
+  getById:   (id)      => api.get(`/api/leaves/${id}`),
+  getPending: ()       => api.get("/api/leaves/pending"),
+  getHistory: (empId)  => api.get(`/api/leaves/history/${empId}`),
+  getBalance: (empId)  => api.get(`/api/leaves/balance/${empId}`),
+  apply:     (data)    => api.post("/api/leaves/apply", data),
+  applyHR:   (data)    => api.post("/api/leaves/apply/hr", data),
+  approve:   (id)      => api.put(`/api/leaves/${id}/approve`),
+  reject:    (id)      => api.put(`/api/leaves/${id}/reject`),
+  cancel:    (leaveId) => api.delete(`/api/leaves/${leaveId}/cancel`),
 };
 
+// ── PAYROLL ───────────────────────────────────────────────────────────────────
 export const payrollAPI = {
-  getAll:        ()          => api.get("/api/payroll"),
-  getMonth:      ()          => api.get("/api/payroll/month"),
-  getByEmployee: (empId)     => api.get(`/api/payroll/employee/${empId}`),
-
-  generate:      ()          => api.post("/api/payroll/generate"),
-  processAll:    ()          => api.post("/api/payroll/process-all"),
-  process:       (id)        => api.put(`/api/payroll/${id}/process`),
-
-
+  getAll:        ()      => api.get("/api/payroll"),
+  getMonth:      ()      => api.get("/api/payroll/month"),
+  getByEmployee: (empId) => api.get(`/api/payroll/employee/${empId}`),
+  generate:      ()      => api.post("/api/payroll/generate"),
+  processAll:    ()      => api.post("/api/payroll/process-all"),
+  process:       (id)    => api.put(`/api/payroll/${id}/process`),
 };
 
 // ── ATTENDANCE ────────────────────────────────────────────────────────────────
@@ -104,10 +102,18 @@ export const attendanceAPI = {
 
 // ── RECRUITMENT ───────────────────────────────────────────────────────────────
 export const recruitmentAPI = {
-  getJobs:   ()       => api.get("/api/recruitment/jobs"),
-  createJob: (data)   => api.post("/api/recruitment/jobs", data),
-  updateJobStatus: (id, status) =>
-    api.put(`/api/recruitment/jobs/${id}/status`, { status })
+  getJobs:         ()           => api.get("/api/recruitment/jobs"),
+  createJob:       (data)       => api.post("/api/recruitment/jobs", data),
+  updateJobStatus: (id, status) => api.put(`/api/recruitment/jobs/${id}/status`, { status }),
+};
+
+// ── CANDIDATES ────────────────────────────────────────────────────────────────
+export const candidateAPI = {
+  add:          (data)       => api.post("/api/candidates", data),
+  getByJob:     (jobId)      => api.get(`/api/candidates/job/${jobId}`),
+  getAll:       ()           => api.get("/api/candidates"),
+  updateStatus: (id, status) => api.put(`/api/candidates/${id}/status`, { status }),
+  delete:       (id)         => api.delete(`/api/candidates/${id}`),
 };
 
 // ── SCREENING ─────────────────────────────────────────────────────────────────
@@ -118,32 +124,37 @@ export const screeningAPI = {
 
 // ── RESUME ────────────────────────────────────────────────────────────────────
 export const resumeAPI = {
-  upload: (candidateId, data) => api.post(`/api/resumes/${candidateId}`, data),
+  // upload with candidateId so backend links resume → Candidate.resumeMongoId
+  upload:         (formData)     => api.post("/api/resume/upload", formData),
+  // fetch resume metadata for a candidate
+  getByCandidate: (candidateId)  => api.get(`/api/resume/candidate/${candidateId}`),
+  // direct download URL — opens PDF/DOC in new tab
+  getDownloadUrl: (candidateId)  => `${BASE_URL}/api/resume/candidate/${candidateId}/download`,
 };
 
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
 export const notificationAPI = {
-  getAll:         ()         => api.get("/api/notifications"),
-  getUnread:      ()         => api.get("/api/notifications/unread"),
-  getByEmployee:  (empId)    => api.get(`/api/notifications/${empId}`),
-  getUnreadByEmp: (empId)    => api.get(`/api/notifications/${empId}/unread`),
-  getUnreadCount: (empId)    => api.get(`/api/notifications/${empId}/unread-count`),
-  create:         (data)     => api.post("/api/notifications", data),
-  markRead:       (notifId)  => api.put(`/api/notifications/${notifId}/read`),
-  markAllReadEmp: (empId)    => api.put(`/api/notifications/${empId}/read-all`),
-  markAllRead:    ()         => api.put("/api/notifications/read-all"),
+  getAll:         ()        => api.get("/api/notifications"),
+  getUnread:      ()        => api.get("/api/notifications/unread"),
+  getByEmployee:  (empId)   => api.get(`/api/notifications/${empId}`),
+  getUnreadByEmp: (empId)   => api.get(`/api/notifications/${empId}/unread`),
+  getUnreadCount: (empId)   => api.get(`/api/notifications/${empId}/unread-count`),
+  create:         (data)    => api.post("/api/notifications", data),
+  markRead:       (notifId) => api.put(`/api/notifications/${notifId}/read`),
+  markAllReadEmp: (empId)   => api.put(`/api/notifications/${empId}/read-all`),
+  markAllRead:    ()        => api.put("/api/notifications/read-all"),
 };
 
 // ── PERFORMANCE ───────────────────────────────────────────────────────────────
 export const performanceAPI = {
-  create:      (data)    => api.post("/api/performance", data),
-  getByEmployee:(empId)  => api.get(`/api/performance/${empId}`),
+  create:        (data)   => api.post("/api/performance", data),
+  getByEmployee: (empId)  => api.get(`/api/performance/${empId}`),
 };
 
 // ── POLICIES ──────────────────────────────────────────────────────────────────
 export const policyAPI = {
-  getAll:  () => api.get("/api/policies"),
-  create:  (data) => api.post("/api/policies", data),
+  getAll: ()     => api.get("/api/policies"),
+  create: (data) => api.post("/api/policies", data),
 };
 
 // ── CHAT ─────────────────────────────────────────────────────────────────────

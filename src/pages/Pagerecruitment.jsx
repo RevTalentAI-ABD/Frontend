@@ -232,7 +232,7 @@
 
 
 import React, { useState } from "react";
-import { recruitmentAPI, candidateAPI, resumeAPI } from "./api";
+import { recruitmentAPI, candidateAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
 import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
 
@@ -470,22 +470,7 @@ export default function PageRecruitment() {
                               )}
                             </div>
                           </div>
-                          {/* Row 2: Resume button */}
-                          <a
-                            href={resumeAPI.getDownloadUrl(c.id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              gap: 5, textDecoration: "none",
-                              background: "rgba(99,102,241,0.1)", color: "#818cf8",
-                              border: "1px solid rgba(99,102,241,0.25)", borderRadius: 6,
-                              padding: "5px 8px", fontSize: 11, fontWeight: 500,
-                              cursor: "pointer",
-                            }}>
-                            📄 View Resume
-                          </a>
-                          {/* Row 3: stage action buttons */}
+                          {/* Row 2: action buttons */}
                           <div style={{ display: "flex", gap: 6 }}>
                             {nextStage && (
                               <button
