@@ -240,7 +240,7 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
         toDate:    form.to,
         reason:     form.reason,
       });
-      setToast("✅ Leave request submitted!");
+      setToast(" Leave request submitted!");
       setShowForm(false);
       setForm({ type: "CASUAL", from: "", to: "", reason: "" });
       onLeaveApplied();
@@ -582,7 +582,7 @@ export default function EmployeeDashboard() {
       setEmployee(empRes.data);
       const empId = empRes.data.id;
 
-      // ✅ Other endpoints — update these when you share other controllers
+    
       const [attRes, leaveBalRes, leaveHistRes, payRes, notifRes] = await Promise.allSettled([
         api.get(`/api/attendance/employee/${empId}`),
         api.get(`/api/leaves/balance/${empId}`),

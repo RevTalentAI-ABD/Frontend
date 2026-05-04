@@ -12,11 +12,30 @@ import ManagerDashboard  from "./pages/ManagerDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
 import HRDashboard       from "./components/HRDashboard";
 
+// ✅ from your feature branch
+import PublicJobBoard    from "./pages/PublicJobBoard";
+import ApplyForm         from "./pages/ApplyForm";
+
+// ✅ Protected Route
 const ProtectedRoute = ({ children, allowedRole }) => {
   const token = localStorage.getItem("token");
   const role  = localStorage.getItem("role");
+
   if (!token) return <Navigate to="/login" replace />;
-  if (allowedRole && role !== allowedRole) return <Navigate to="/login" replace />;
+
+  // supports single role or multiple roles
+  if (allowedRole) {
+    if (Array.isArray(allowedRole)) {
+      if (!allowedRole.includes(role)) {
+        return <Navigate to="/login" replace />;
+      }
+    } else {
+      if (role !== allowedRole) {
+        return <Navigate to="/login" replace />;
+      }
+    }
+  }
+
   return children;
 };
 
@@ -24,34 +43,52 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"                element={<LandingPage />} />
-        <Route path="/about"           element={<About />} />
-        <Route path="/contact"         element={<Contact />} />
 
-        <Route path="/login"           element={<LoginPage />} />
+        {/* Public Pages */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+
+        {/* Public Job Board */}
+        <Route path="/jobs" element={<PublicJobBoard />} />
+        <Route path="/jobs/:jobId/apply" element={<ApplyForm />} />
+
+        {/* Auth Pages */}
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/register"        element={<RegisterPage />} />
-        <Route path="/security"        element={<SecurityPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/security" element={<SecurityPage />} />
 
-        <Route path="/managerdashboard" element={
-          <ProtectedRoute allowedRole="MANAGER">
-            <ManagerDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/employee-dashboard" element={
-          <ProtectedRoute allowedRole="EMPLOYEE">
-            <EmployeeDashboard />
-          </ProtectedRoute>
-        } />
-
-        <Route path="/hr-dashboard" element={
-          <AuthProvider>
-            <ProtectedRoute allowedRole="HR_ADMIN">
-              <HRDashboard />
+        {/* Dashboards */}
+        <Route
+          path="/managerdashboard"
+          element={
+            <ProtectedRoute allowedRole="MANAGER">
+              <ManagerDashboard />
             </ProtectedRoute>
-          </AuthProvider>
-        } />
+          }
+        />
+
+        <Route
+          path="/employee-dashboard"
+          element={
+            <ProtectedRoute allowedRole="EMPLOYEE">
+              <EmployeeDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/hr-dashboard"
+          element={
+            <AuthProvider>
+              <ProtectedRoute allowedRole="HR_ADMIN">
+                <HRDashboard />
+              </ProtectedRoute>
+            </AuthProvider>
+          }
+        />
+
       </Routes>
     </BrowserRouter>
   );
