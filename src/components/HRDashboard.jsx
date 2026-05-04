@@ -9,6 +9,7 @@ import PagePayroll       from "./PagePayroll";
 import PageRecruitment   from "./PageRecruitment";
 import PageReports       from "./PageReports";
 import PageNotifications from "./PageNotifications";
+import PageAI from "./PageAI";
 import "./HRDashboard.css";
 import {
   LayoutDashboard,
@@ -27,6 +28,7 @@ const NAV = [
   { id: "payroll",       icon: <Wallet size={18} />, label: "Payroll" },
   { id: "recruitment",   icon: <Briefcase size={18} />, label: "Recruitment" },
   { id: "notifications", icon: <Bell size={18} />, label: "Notifications" },
+  { id: "ai", icon: <Briefcase size={18} />, label: "AI Assistant" },
 ];
 
 
@@ -64,6 +66,7 @@ export default function HRDashboard() {
     recruitment:   <PageRecruitment />,
     reports:       <PageReports />,
     notifications: <PageNotifications />,
+    ai:            <PageAI />
   };
 
   const name = user
