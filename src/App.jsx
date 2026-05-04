@@ -1,17 +1,17 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./components/AuthContext";
 
-import LandingPage        from "./pages/LandingPage";
-import About              from "./pages/About";
-import Contact            from "./pages/Contact";
-import LoginPage          from "./pages/LoginPage";
-import ForgotPassword     from "./pages/ForgotPassword";
-import RegisterPage       from "./pages/RegisterPage";
-import SecurityPage       from "./pages/SecurityPage";
-import ManagerDashboard   from "./pages/ManagerDashboard";
-import EmployeeDashboard  from "./pages/EmployeeDashboard";
-import HRDashboard        from "./components/HRDashboard";
+import LandingPage       from "./pages/LandingPage";
+import About             from "./pages/About";
+import Contact           from "./pages/Contact";
+import LoginPage         from "./pages/LoginPage";
+import ForgotPassword    from "./pages/ForgotPassword";
+import RegisterPage      from "./pages/RegisterPage";
+import SecurityPage      from "./pages/SecurityPage";
+import ManagerDashboard  from "./pages/ManagerDashboard";
+import EmployeeDashboard from "./pages/EmployeeDashboard";
+import HRDashboard       from "./components/HRDashboard";
 
-// Role-aware protected route
 const ProtectedRoute = ({ children, allowedRole }) => {
   const token = localStorage.getItem("token");
   const role  = localStorage.getItem("role");
@@ -24,36 +24,33 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public */}
         <Route path="/"                element={<LandingPage />} />
         <Route path="/about"           element={<About />} />
         <Route path="/contact"         element={<Contact />} />
 
-        {/* Auth */}
         <Route path="/login"           element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/register"        element={<RegisterPage />} />
         <Route path="/security"        element={<SecurityPage />} />
 
-        {/* Manager Dashboard */}
         <Route path="/managerdashboard" element={
           <ProtectedRoute allowedRole="MANAGER">
             <ManagerDashboard />
           </ProtectedRoute>
         } />
 
-        {/* Employee Dashboard */}
         <Route path="/employee-dashboard" element={
           <ProtectedRoute allowedRole="EMPLOYEE">
             <EmployeeDashboard />
           </ProtectedRoute>
         } />
 
-        {/* HR Dashboard */}
         <Route path="/hr-dashboard" element={
-          <ProtectedRoute allowedRole="HR_ADMIN">
-            <HRDashboard />
-          </ProtectedRoute>
+          <AuthProvider>
+            <ProtectedRoute allowedRole="HR_ADMIN">
+              <HRDashboard />
+            </ProtectedRoute>
+          </AuthProvider>
         } />
       </Routes>
     </BrowserRouter>

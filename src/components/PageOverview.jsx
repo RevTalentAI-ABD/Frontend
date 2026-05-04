@@ -6,7 +6,9 @@ import { useFetch } from "./hooks";
 import { managerAPI, leaveAPI, notificationAPI, employeeAPI } from "./api";
 import { StatCard, Spinner, ErrorState, Avatar } from "./UI";
 import { useAuth } from "./AuthContext";
-
+import { aiAPI } from "../api/aiAPI";
+import { useState } from "react";
+import { recruitmentAPI } from "./api";
 import {
   Users,
   UserPlus,
@@ -18,10 +20,10 @@ import {
   IndianRupee,
   CheckCircle,
   Clock,
-  Circle,        // ✅ ADD
-  Wallet,        // ✅ ADD
-  BarChart3,     // ✅ ADD
-  Bell           // ✅ ADD
+  Circle,
+  Wallet,
+  BarChart3,
+  Bell
 } from "lucide-react";
 const DEPT_COLORS = ["#7c5af0","#f59e0b","#f97316","#10b981","#06b6d4","#ec4899","#a855f7","#64748b"];
 

@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState } from "react";
 import { authAPI } from "./api";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("hr_user"));
@@ -15,6 +18,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // ✅ LOGIN
   const login = async (credentials) => {
     setLoading(true);
     setError("");
@@ -30,6 +34,9 @@ export function AuthProvider({ children }) {
       localStorage.setItem("hr_user", JSON.stringify(userData));
 
       setUser(userData);
+
+      navigate("/hr-dashboard");
+
       return userData;
     } catch (err) {
       setError(err.response?.data?.message || "Invalid credentials");
@@ -39,10 +46,14 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // ✅ LOGOUT
   const logout = () => {
     localStorage.removeItem("hr_token");
     localStorage.removeItem("hr_user");
+
     setUser(null);
+
+    navigate("/login");
   };
 
   return (
@@ -52,7 +63,7 @@ export function AuthProvider({ children }) {
   );
 }
 
-/* ✅ SAFE HOOK (fix for your crash) */
+// ✅ SAFE HOOK
 export const useAuth = () => {
   const context = useContext(AuthContext);
 
