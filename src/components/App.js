@@ -1,17 +1,21 @@
 import React from "react";
-import { AuthProvider, useAuth } from "./AuthContext";
-import LoginPage   from "./LoginPage";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./AuthContext";
+import Login from "./Login";
 import HRDashboard from "./HRDashboard";
 
-function AppInner() {
-  const { user } = useAuth();
-  return user ? <HRDashboard /> : <LoginPage />;
-}
-
-export default function App() {
+function App() {
   return (
-    <AuthProvider>
-      <AppInner />
-    </AuthProvider>
+    <Router>
+      {/* ✅ AuthProvider is INSIDE Router so useNavigate works */}
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/hr-dashboard" element={<HRDashboard />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
+
+export default App;

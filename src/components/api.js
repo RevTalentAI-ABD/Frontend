@@ -162,5 +162,16 @@ export const chatAPI = {
   send:       (data)   => api.post("/api/chat", data),
   getHistory: (userId) => api.get(`/api/chat/${userId}`),
 };
+export default api;
+export const aiAPI = {
+  ask: (question) =>
+    api.post("/api/ai/ask", { question }),
+
+  resume: (resume, job) =>
+    api.post("/api/ai/resume", { resume, job }),
+
+  performance: (history) =>
+    api.post("/api/ai/performance", { history }),
+};
 
 export default api;
