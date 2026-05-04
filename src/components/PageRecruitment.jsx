@@ -19,7 +19,6 @@ export default function PageRecruitment() {
 
   const jobs = Array.isArray(data) ? data : (data?.jobs || data?.content || []);
 
-  // Group applicants from screening into pipeline
   const applicants = Array.isArray(screenData)
     ? screenData
     : (screenData?.candidates || screenData?.applicants || []);
@@ -34,39 +33,49 @@ export default function PageRecruitment() {
     finally { setLoadingScreen(false); }
   };
 
-const postJob = async () => {
-  setPosting(true);
+  // ✅ FIX: moved outside
+  const updateStatus = async (jobId, status) => {
+    try {
+      await recruitmentAPI.updateJobStatus(jobId, status);
+      showToast("✅ Status updated");
+      refetch();
+    } catch {
+      showToast("❌ Failed to update status");
+    }
+  };
 
-  try {
-    const payload = {
-      title: newJob.title,
-      description: newJob.description,
-      requirements: newJob.department,
-      vacancies: Number(newJob.numberOfOpenings),
-      status: "OPEN"
-    };
+  const postJob = async () => {
+    setPosting(true);
 
-    await recruitmentAPI.createJob(payload);
+    try {
+      const payload = {
+        title: newJob.title,
+        description: newJob.description,
+        requirements: newJob.department,
+        vacancies: Number(newJob.numberOfOpenings),
+        status: "OPEN"
+      };
 
-    showToast("✅ Job posted successfully!");
+      await recruitmentAPI.createJob(payload);
 
-    // reset form (optional but recommended)
-    setNewJob({
-      title: "",
-      department: "Engineering",
-      numberOfOpenings: 1,
-      description: ""
-    });
+      showToast("✅ Job posted successfully!");
 
-    setShowForm(false);
-    refetch();
+      setNewJob({
+        title: "",
+        department: "Engineering",
+        numberOfOpenings: 1,
+        description: ""
+      });
 
-  } catch (err) {
-    showToast("❌ Failed to post job");
-  } finally {
-    setPosting(false);
-  }
-};
+      setShowForm(false);
+      refetch();
+
+    } catch (err) {
+      showToast("❌ Failed to post job");
+    } finally {
+      setPosting(false);
+    }
+  };
   if (loading) return <Spinner />;
   if (error)   return <ErrorState message={error} onRetry={refetch} />;
 
@@ -196,7 +205,19 @@ const postJob = async () => {
                   </div>
                   <div className="hr-job-row">
                     <span className="hr-job-applicants">👤 View applicants</span>
-                    <Badge status={status} />
+                   <select
+                     value={status}
+                     onClick={(e) => e.stopPropagation()}
+                     onChange={(e) => {
+                       e.stopPropagation();
+                       updateStatus(id, e.target.value);
+                     }}
+                     className="hr-status-dropdown"
+                   >
+                     <option value="OPEN">OPEN</option>
+                     <option value="ON_HOLD">ON_HOLD</option>
+                     <option value="CLOSED">CLOSED</option>
+                   </select>
                   </div>
                   {posted && <div className="hr-job-posted">Posted {posted}</div>}
                 </div>

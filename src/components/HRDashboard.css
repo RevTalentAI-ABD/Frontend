@@ -912,5 +912,59 @@ h1, h2, h3,
 }
 
 .hr-main {
-  height: 100vh;   /* 🔥 ADD THIS */
+  height: 100vh;
+}
+
+.hr-status-dropdown {
+  background: #1e1b2e;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+/* 🔥 Status Dropdown Styling */
+.hr-status-dropdown {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #444;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+/* Hover */
+.hr-status-dropdown:hover {
+  border-color: #7c5cff;
+  box-shadow: 0 0 6px rgba(124, 92, 255, 0.4);
+}
+
+/* Focus */
+.hr-status-dropdown:focus {
+  border-color: #9d8bff;
+}
+
+/* Dropdown options (light fallback) */
+.hr-status-dropdown option {
+  color: #000;
+}
+
+/* 🎨 Status Colors */
+.hr-status-dropdown.OPEN {
+  color: #00e676;
+  border-color: #00e676;
+}
+
+.hr-status-dropdown.ON_HOLD {
+  color: #ffb300;
+  border-color: #ffb300;
+}
+
+.hr-status-dropdown.CLOSED {
+  color: #ff5252;
+  border-color: #ff5252;
 }
