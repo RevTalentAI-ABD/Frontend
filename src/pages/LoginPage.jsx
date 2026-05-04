@@ -31,10 +31,36 @@ export default function LoginPage() {
       localStorage.setItem("name", data.name);
       localStorage.setItem("user", JSON.stringify(data));
 
+<<<<<<< Updated upstream
       const userRole = data.role?.toUpperCase();
       if (userRole === "EMPLOYEE")       navigate("/employee-dashboard");
       else if (userRole === "MANAGER")   navigate("/managerdashboard");
       else if (userRole === "HR_ADMIN")  navigate("/hr-dashboard");
+=======
+      // ✅ Map UI role to backend role
+      const roleMap = {
+        "Employee": "EMPLOYEE",
+        "Manager":  "MANAGER",
+        "HR Admin": "HR_ADMIN",
+      };
+
+      const selectedRole = roleMap[role];
+
+      // ✅ Check role matches
+      if (selectedRole !== userRole) {
+        setError(`Access denied. You are not a ${role}.`);
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", userRole);
+      localStorage.setItem("name", name);
+
+      if (userRole === "EMPLOYEE")      navigate("/employee-dashboard");
+      else if (userRole === "MANAGER")  navigate("/manager-dashboard");
+      else if (userRole === "HR_ADMIN") navigate("/hr-dashboard");
+>>>>>>> Stashed changes
       else setError("Unknown role. Contact admin.");
 
     } catch (err) {
@@ -176,7 +202,25 @@ export default function LoginPage() {
             </button>
           </div>
 
+<<<<<<< Updated upstream
           {/* Sign in */}
+=======
+          {error && (
+            <div style={{
+              background: "rgba(239,68,68,0.1)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              color: "#ef4444",
+              padding: "10px 14px",
+              borderRadius: "8px",
+              fontSize: "13px",
+              textAlign: "center",
+              marginBottom: "4px"
+            }}>
+              {error}
+            </div>
+          )}
+
+>>>>>>> Stashed changes
           <button
             type="button"
             className="signin-btn"

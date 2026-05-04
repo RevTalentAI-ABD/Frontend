@@ -1,5 +1,9 @@
 import React, { useState } from "react";
+<<<<<<< Updated upstream
 import "../styles/ForgotPassword.css";  
+=======
+import "./ForgotPassword.css";
+>>>>>>> Stashed changes
 import api from "../api/axiosConfig";
 
 export default function ForgotPassword({ onBack }) {

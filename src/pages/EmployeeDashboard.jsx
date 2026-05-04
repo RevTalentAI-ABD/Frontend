@@ -235,9 +235,15 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
     try {
       await api.post("/api/leaves/apply", {
         employeeId: employeeId,
+<<<<<<< Updated upstream
         leaveType:  form.type,
         fromDate:  form.from,
         toDate:    form.to,
+=======
+        fromDate:   form.from,
+        toDate:     form.to,
+        endDate:    form.to,
+>>>>>>> Stashed changes
         reason:     form.reason,
       });
       setToast("✅ Leave request submitted!");
@@ -446,20 +452,25 @@ function PageProfile({ employee, onProfileUpdated }) {
   const [saving, setSaving]   = useState(false);
   const [toast, setToast]     = useState("");
   const [info, setInfo]       = useState({
-    name:  employee?.name  || "",
-    email: employee?.email || "",
-    phone: employee?.phone || "",
-    dept:  employee?.departmentName || "",
+    name:        employee?.name            || "",
+    email:       employee?.email           || "",
+    phone:       employee?.phone           || "",
+    dept:        employee?.departmentName  || "",
+    address:     employee?.address         || "",
+    dateOfBirth: employee?.dateOfBirth     || "",
+    gender:      employee?.gender          || "",
   });
 
   const save = async () => {
     setSaving(true);
     try {
-      // ✅ Correct endpoint from your controller: PATCH /api/employees/{id}
       await api.patch(`/api/employees/${employee.id}`, {
-        name:  info.name,
-        email: info.email,
-        phone: info.phone,
+        name:        info.name,
+        email:       info.email,
+        phone:       info.phone,
+        address:     info.address,
+        dateOfBirth: info.dateOfBirth,
+        gender:      info.gender,
       });
       setEditing(false);
       setToast("✅ Profile updated!");
@@ -494,15 +505,70 @@ function PageProfile({ employee, onProfileUpdated }) {
       <div className="ed-panel">
         <h3 className="ed-panel-title">Personal Information</h3>
         <div className="ed-form-grid">
-          {[["Full Name","name"],["Email","email"],["Phone","phone"],["Department","dept"]].map(([label, key]) => (
-            <div key={key} className="ed-form-field">
-              <label>{label}</label>
-              {editing && key !== "dept"
-                ? <input value={info[key]} onChange={e => setInfo(i => ({ ...i, [key]: e.target.value }))}/>
-                : <div className="ed-profile-value">{info[key] || "—"}</div>
-              }
-            </div>
-          ))}
+
+          {/* Name */}
+          <div className="ed-form-field">
+            <label>Full Name</label>
+            {editing
+              ? <input value={info.name} onChange={e => setInfo(i => ({ ...i, name: e.target.value }))}/>
+              : <div className="ed-profile-value">{info.name || "—"}</div>}
+          </div>
+
+          {/* Email */}
+          <div className="ed-form-field">
+            <label>Email</label>
+            {editing
+              ? <input value={info.email} onChange={e => setInfo(i => ({ ...i, email: e.target.value }))}/>
+              : <div className="ed-profile-value">{info.email || "—"}</div>}
+          </div>
+
+          {/* Phone */}
+          <div className="ed-form-field">
+            <label>Phone</label>
+            {editing
+              ? <input value={info.phone} onChange={e => setInfo(i => ({ ...i, phone: e.target.value }))}/>
+              : <div className="ed-profile-value">{info.phone || "—"}</div>}
+          </div>
+
+          {/* Department — never editable */}
+          <div className="ed-form-field">
+            <label>Department</label>
+            <div className="ed-profile-value">{info.dept || "—"}</div>
+          </div>
+
+          {/* Date of Birth ✅ NEW */}
+          <div className="ed-form-field">
+            <label>Date of Birth</label>
+            {editing
+              ? <input type="date" value={info.dateOfBirth}
+                  onChange={e => setInfo(i => ({ ...i, dateOfBirth: e.target.value }))}/>
+              : <div className="ed-profile-value">{info.dateOfBirth || "—"}</div>}
+          </div>
+
+          {/* Address ✅ NEW */}
+          <div className="ed-form-field ed-form-full">
+            <label>Address</label>
+            {editing
+              ? <textarea rows={2} value={info.address}
+                  onChange={e => setInfo(i => ({ ...i, address: e.target.value }))}
+                  placeholder="Enter your address..."/>
+              : <div className="ed-profile-value">{info.address || "—"}</div>}
+          </div>
+          <div className="ed-form-field">
+                      <label>Gender</label>
+                      {editing
+                        ? (
+                          <select value={info.gender} onChange={e => setInfo(i => ({ ...i, gender: e.target.value }))}>
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                          </select>
+                        )
+                        : <div className="ed-profile-value">{info.gender || "—"}</div>}
+                    </div>
+
         </div>
       </div>
 
@@ -587,6 +653,10 @@ export default function EmployeeDashboard() {
         api.get(`/api/attendance/employee/${empId}`),
         api.get(`/api/leaves/balance/${empId}`),
         api.get(`/api/leaves/history/${empId}`),
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         api.get(`/api/payroll/employee/${empId}`),
         api.get(`/api/notifications/${empId}`),
       ]);
