@@ -29,6 +29,7 @@ const NAV = [
   { id: "notifications", icon: <Bell size={18} />, label: "Notifications" },
 ];
 
+
 export default function HRDashboard() {
   const { user, logout } = useAuth();
   const [active, setActive]           = useState("overview");

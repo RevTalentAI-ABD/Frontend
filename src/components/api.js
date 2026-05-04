@@ -106,6 +106,8 @@ export const attendanceAPI = {
 export const recruitmentAPI = {
   getJobs:   ()       => api.get("/api/recruitment/jobs"),
   createJob: (data)   => api.post("/api/recruitment/jobs", data),
+  updateJobStatus: (id, status) =>
+    api.put(`/api/recruitment/jobs/${id}/status`, { status })
 };
 
 // ── SCREENING ─────────────────────────────────────────────────────────────────

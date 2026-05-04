@@ -53,19 +53,27 @@ const getDepartmentId = (deptName) => {
 };
 
 const addEmployee = async () => {
-  if (!form.firstName || !form.email) return;
+  if (!form.firstName || !form.email || !form.role) {
+    showToast("❌ Please fill all required fields");
+    return;
+  }
+
   setSaving(true);
 
   try {
-    const payload = {
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
-      password: "Strong@123",
-      departmentId: getDepartmentId(form.department),
-      designation: form.role,
-      phone: form.phone
-    };
+   const payload = {
+     name: form.firstName + " " + form.lastName,
+     username: form.email,
+     email: form.email,
+     password: "Strong@123",
+     role: "EMPLOYEE",
+     employeeCode: "EMP" + Date.now(),
+     designation: form.role,
+     joiningDate: new Date().toISOString().split("T")[0],
+     phone: form.phone,
+     address: "N/A",
+     departmentId: getDepartmentId(form.department)
+   };
 
     await employeeAPI.create(payload);
 
