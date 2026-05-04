@@ -64,16 +64,16 @@ export const managerAPI = {
 
 // ── LEAVES ────────────────────────────────────────────────────────────────────
 export const leaveAPI = {
-  getAll:    ()        => api.get("/api/leaves"),
-  getById:   (id)      => api.get(`/api/leaves/${id}`),
-  getPending: ()       => api.get("/api/leaves/pending"),
-  getHistory: (empId)  => api.get(`/api/leaves/history/${empId}`),
-  getBalance: (empId)  => api.get(`/api/leaves/balance/${empId}`),
-  apply:     (data)    => api.post("/api/leaves/apply", data),
-  applyHR:   (data)    => api.post("/api/leaves/apply/hr", data),
-  approve:   (id)      => api.put(`/api/leaves/${id}/approve`),
-  reject:    (id)      => api.put(`/api/leaves/${id}/reject`),
-  cancel:    (leaveId) => api.delete(`/api/leaves/${leaveId}/cancel`),
+  getAll:     ()        => api.get("/api/leaves"),
+  getById:    (id)      => api.get(`/api/leaves/${id}`),
+  getPending: ()        => api.get("/api/leaves/pending"),
+  getHistory: (empId)   => api.get(`/api/leaves/history/${empId}`),
+  getBalance: (empId)   => api.get(`/api/leaves/balance/${empId}`),
+  apply:      (data)    => api.post("/api/leaves/apply", data),
+  applyHR:    (data)    => api.post("/api/leaves/apply/hr", data),
+  approve:    (id)      => api.put(`/api/leaves/${id}/approve`),
+  reject:     (id)      => api.put(`/api/leaves/${id}/reject`),
+  cancel:     (leaveId) => api.delete(`/api/leaves/${leaveId}/cancel`),
 };
 
 // ── PAYROLL ───────────────────────────────────────────────────────────────────
@@ -124,12 +124,9 @@ export const screeningAPI = {
 
 // ── RESUME ────────────────────────────────────────────────────────────────────
 export const resumeAPI = {
-  // upload with candidateId so backend links resume → Candidate.resumeMongoId
-  upload:         (formData)     => api.post("/api/resume/upload", formData),
-  // fetch resume metadata for a candidate
-  getByCandidate: (candidateId)  => api.get(`/api/resume/candidate/${candidateId}`),
-  // direct download URL — opens PDF/DOC in new tab
-  getDownloadUrl: (candidateId)  => `${BASE_URL}/api/resume/candidate/${candidateId}/download`,
+  upload:         (formData)    => api.post("/api/resume/upload", formData),
+  getByCandidate: (candidateId) => api.get(`/api/resume/candidate/${candidateId}`),
+  getDownloadUrl: (candidateId) => `${BASE_URL}/api/resume/candidate/${candidateId}/download`,
 };
 
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
@@ -147,8 +144,8 @@ export const notificationAPI = {
 
 // ── PERFORMANCE ───────────────────────────────────────────────────────────────
 export const performanceAPI = {
-  create:        (data)   => api.post("/api/performance", data),
-  getByEmployee: (empId)  => api.get(`/api/performance/${empId}`),
+  create:        (data)  => api.post("/api/performance", data),
+  getByEmployee: (empId) => api.get(`/api/performance/${empId}`),
 };
 
 // ── POLICIES ──────────────────────────────────────────────────────────────────
@@ -162,16 +159,13 @@ export const chatAPI = {
   send:       (data)   => api.post("/api/chat", data),
   getHistory: (userId) => api.get(`/api/chat/${userId}`),
 };
-export default api;
+
+// ── AI ────────────────────────────────────────────────────────────────────────
 export const aiAPI = {
-  ask: (question) =>
-    api.post("/api/ai/ask", { question }),
-
-  resume: (resume, job) =>
-    api.post("/api/ai/resume", { resume, job }),
-
-  performance: (history) =>
-    api.post("/api/ai/performance", { history }),
+  ask:            (question)        => api.post("/api/ai/ask",             { question }),
+  screenResume:   (resume, job)     => api.post("/api/ai/screen-resume",   { resume, job }),
+  performance:    (history)         => api.post("/api/ai/performance",     { history }),
+  generatePolicy: (topic)           => api.post("/api/ai/generate-policy", { topic }),
 };
 
-export default api;
+export default api;  // ← only one default export
