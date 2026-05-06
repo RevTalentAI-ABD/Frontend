@@ -5,7 +5,7 @@ function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="page">
+    <div className="landing">
       <Navbar />
 
       <section className="hero">
@@ -22,15 +22,15 @@ function LandingPage() {
 
           <button
             className="btn btn-outline"
-            onClick={() => navigate("/about")}
+            onClick={() => navigate("/jobs")}
           >
-            Explore
+            View Open Positions
           </button>
         </div>
       </section>
 
       <section className="quote">
-        <p>“Empowering teams with smart HR solutions.”</p>
+        <p>"Empowering teams with smart HR solutions."</p>
       </section>
     </div>
   );
