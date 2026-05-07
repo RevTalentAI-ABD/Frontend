@@ -6,35 +6,23 @@ import ForgotPassword from "./ForgotPassword";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [role, setRole] = useState("Employee");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [role, setRole]             = useState("Employee");
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState("login"); // login, otp, forgot
-
-  const [otpEmail, setOtpEmail]     = useState("");
-  const [otpRole, setOtpRole]       = useState("");
-  const [otpName, setOtpName]       = useState("");
-  const [otp, setOtp]               = useState("");
-  const [otpError, setOtpError]     = useState("");
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(30);
+  const [error, setError]           = useState("");
+  const [loading, setLoading]       = useState(false);
+  const [page, setPage]             = useState("login"); // login | forgot
 
   const roles = ["Employee", "Manager", "HR Admin"];
 
-  // ─── Resend timer ────────────────────────────────────────────────────────────
-  const startResendTimer = () => {
-    setResendTimer(30);
-    const interval = setInterval(() => {
-      setResendTimer(t => {
-        if (t <= 1) { clearInterval(interval); return 0; }
-        return t - 1;
-      });
-    }, 1000);
+  const roleMap = {
+    "Employee": "EMPLOYEE",
+    "Manager":  "MANAGER",
+    "HR Admin": "HR_ADMIN",
   };
 
+  // ── Login → JWT directly ───────────────────────────────────────────────────
   const handleSubmit = async () => {
     setError("");
     if (!email.trim() || !password.trim()) {
@@ -48,68 +36,33 @@ export default function LoginPage() {
         password: password,
       });
 
-      const roleMap = {
-        "Employee": "EMPLOYEE",
-        "Manager":  "MANAGER",
-        "HR Admin": "HR_ADMIN",
-      };
+      const { token, role: userRole, name } = res.data;
 
-      // ✅ Check role matches what user selected
-      if (roleMap[role] !== res.data.role) {
+      // ✅ Check selected role matches actual role
+      if (roleMap[role] !== userRole) {
         setError(`Access denied. You are not a ${role}.`);
         return;
       }
 
-      // ✅ Store for OTP verification
-      setOtpEmail(res.data.email);   // ← from backend response
-      setOtpRole(res.data.role);
-      setOtpName(res.data.name);
-      setPage("otp");
-      startResendTimer();
+      // ✅ Save to localStorage and navigate
+      localStorage.setItem("token", token);
+      localStorage.setItem("role",  userRole);
+      localStorage.setItem("name",  name);
+
+      if (userRole === "EMPLOYEE")      navigate("/employee-dashboard");
+      else if (userRole === "MANAGER")  navigate("/manager-dashboard");
+      else if (userRole === "HR_ADMIN") navigate("/hr-dashboard");
+      else setError("Unknown role. Contact admin.");
 
     } catch (err) {
-      console.log("Login error:", err.response?.data); // debug
+      console.log("Login error:", err.response?.data);
       setError(err.response?.data || "Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ─── Verify OTP ──────────────────────────────────────────────────────────────
-  const handleVerifyOtp = async () => {
-    setOtpError("");
-    if (!otp || otp.length !== 6) {
-      setOtpError("Please enter the 6-digit OTP.");
-      return;
-    }
-    setOtpLoading(true);
-    try {
-      const res = await api.post("/api/auth/verify-otp", {
-        email: otpEmail,
-        otp: otp,
-      });
-
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role",  res.data.role);
-      localStorage.setItem("name",  res.data.name);
-
-      if (res.data.role === "EMPLOYEE")      navigate("/employee-dashboard");
-      else if (res.data.role === "MANAGER")  navigate("/manager-dashboard");
-      else if (res.data.role === "HR_ADMIN") navigate("/hr-dashboard");
-    } catch (err) {
-      setOtpError(err.response?.data || "Invalid OTP. Please try again.");
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  // ─── Resend OTP ───────────────────────────────────────────────────────────────
-  const handleResendOtp = async () => {
-    await api.post("/api/auth/resend-otp", { email: otpEmail });
-    startResendTimer();
-  };
-
-  // ─── Shared logo block ────────────────────────────────────────────────────────
+  // ── Shared logo ────────────────────────────────────────────────────────────
   const Logo = () => (
     <div className="logo">
       <div className="logo-icon">
@@ -124,108 +77,10 @@ export default function LoginPage() {
     </div>
   );
 
-  // ─── Forgot Password page ────────────────────────────────────────────────────
+  // ── Forgot Password page ───────────────────────────────────────────────────
   if (page === "forgot") return <ForgotPassword onBack={() => setPage("login")} />;
 
-  // ─── OTP page ─────────────────────────────────────────────────────────────────
-  if (page === "otp") return (
-    <div className="page-wrapper">
-      <div className="bg-blob blob-1" />
-      <div className="bg-blob blob-2" />
-      <div className="bg-blob blob-3" />
-
-      <div className="card">
-        <Logo />
-
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <div style={{
-            width: "64px", height: "64px",
-            background: "rgba(124,90,240,0.12)",
-            borderRadius: "50%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 16px",
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-              stroke="#7c5af0" strokeWidth="2">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <path d="m2 7 10 7 10-7"/>
-            </svg>
-          </div>
-          <h1 className="heading" style={{ fontSize: "22px" }}>Check your email</h1>
-          <p className="subheading">
-            We sent a 6-digit OTP to<br/>
-            <strong style={{ color: "#5b3de8" }}>{otpEmail}</strong>
-          </p>
-        </div>
-
-        <div className="field-group" style={{ width: "100%" }}>
-          <label className="field-label">Enter OTP</label>
-          <input
-            type="text"
-            className="input-field"
-            placeholder="Enter 6-digit OTP"
-            maxLength={6}
-            value={otp}
-            onChange={e => setOtp(e.target.value.replace(/\D/g, ""))}
-            onKeyDown={e => e.key === "Enter" && handleVerifyOtp()}
-            style={{
-              textAlign: "center",
-              fontSize: "24px",
-              letterSpacing: "8px",
-              fontWeight: "700",
-            }}
-          />
-        </div>
-
-        {otpError && (
-          <div style={{
-            background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.3)",
-            color: "#ef4444",
-            padding: "10px 14px",
-            borderRadius: "8px",
-            fontSize: "13px",
-            textAlign: "center",
-            marginBottom: "8px",
-            width: "100%",
-          }}>
-            {otpError}
-          </div>
-        )}
-
-        <button
-          className="signin-btn"
-          onClick={handleVerifyOtp}
-          disabled={otpLoading}
-          style={{ opacity: otpLoading ? 0.7 : 1 }}
-        >
-          {otpLoading ? "Verifying..." : "Verify OTP →"}
-        </button>
-
-        <div style={{ textAlign: "center", marginTop: "12px" }}>
-          {resendTimer > 0 ? (
-            <p style={{ color: "#9b96b8", fontSize: "13px" }}>
-              Resend OTP in <strong style={{ color: "#5b3de8" }}>{resendTimer}s</strong>
-            </p>
-          ) : (
-            <button className="forgot-link-btn" onClick={handleResendOtp}>
-              Resend OTP
-            </button>
-          )}
-        </div>
-
-        <button
-          className="forgot-link-btn"
-          style={{ marginTop: "8px" }}
-          onClick={() => { setPage("login"); setOtp(""); setOtpError(""); }}
-        >
-          ← Back to Sign In
-        </button>
-      </div>
-    </div>
-  );
-
-  // ─── Login page ───────────────────────────────────────────────────────────────
+  // ── Login page ─────────────────────────────────────────────────────────────
   return (
     <div className="page-wrapper">
       <div className="bg-blob blob-1" />
@@ -239,6 +94,7 @@ export default function LoginPage() {
         <p className="subheading">Sign in to your RevTalent account to continue</p>
 
         <div className="form">
+          {/* Email */}
           <div className="field-group">
             <label className="field-label">Work Email</label>
             <div className="input-wrapper">
@@ -260,6 +116,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Password */}
           <div className="field-group">
             <label className="field-label">Password</label>
             <div className="input-wrapper">
@@ -301,6 +158,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Role selector */}
           <div className="role-row">
             <div className="role-group">
               <label className="field-label">Sign in as</label>
@@ -319,6 +177,7 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Forgot password */}
           <div className="forgot-row">
             <button
               type="button"
@@ -329,6 +188,7 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Error */}
           {error && (
             <div style={{
               background: "rgba(239,68,68,0.1)",
@@ -344,6 +204,7 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* Sign In button */}
           <button
             type="button"
             className="signin-btn"
@@ -360,6 +221,7 @@ export default function LoginPage() {
             <span className="divider-line" />
           </div>
 
+          {/* Google */}
           <button type="button" className="google-btn">
             <svg width="20" height="20" viewBox="0 0 48 48">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
