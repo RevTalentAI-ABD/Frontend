@@ -1,0 +1,442 @@
+/* ===== ROOT ===== */
+.jb-root {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(91, 61, 232, 0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(124, 90, 240, 0.18), transparent 30%),
+    linear-gradient(135deg, #09051d 0%, #120a2f 40%, #050816 100%);
+  font-family: 'DM Sans', sans-serif;
+  color: #fff;
+  min-height: auto; /* scrolling fix */
+}
+
+/* ===== NAVBAR ===== */
+.jb-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 70px;
+  height: 85px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.jb-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.jb-logo-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #5b3de8, #7c5af0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(91, 61, 232, 0.4);
+}
+
+.jb-logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.jb-logo-accent {
+  color: #8f7dff;
+}
+
+.jb-nav-links {
+  display: flex;
+  gap: 40px;
+}
+
+.jb-nav-links a {
+  text-decoration: none;
+  color: #b8b7c9;
+  font-size: 17px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.jb-nav-links a:hover,
+.jb-nav-links a.active {
+  color: #fff;
+}
+
+.jb-emp-login {
+  height: 42px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #5b3de8, #7c5af0);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(91, 61, 232, 0.35);
+  transition: transform 0.2s;
+}
+
+.jb-emp-login:hover {
+  transform: translateY(-1px);
+}
+
+/* ===== HERO ===== */
+.jb-hero {
+  text-align: center;
+  padding: 80px 20px 50px;
+}
+
+.jb-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 20px;
+  border-radius: 30px;
+  background: rgba(124, 90, 240, 0.12);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #d4ccff;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.jb-hero-title {
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -1.5px;
+  margin-bottom: 16px;
+}
+
+.jb-hero-title span {
+  color: #8f7dff;
+}
+
+.jb-hero-sub {
+  color: #9e9ab8;
+  font-size: 17px;
+  margin-bottom: 36px;
+}
+
+/* ===== SEARCH ===== */
+.jb-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 14px 20px;
+  max-width: 500px;
+  margin: 0 auto;
+  transition: border-color 0.2s;
+}
+
+.jb-search-box:focus-within {
+  border-color: rgba(124, 90, 240, 0.5);
+}
+
+.jb-search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  flex: 1;
+}
+
+.jb-search-box input::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+
+/* ===== JOB LIST ===== */
+.jb-list {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 10px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.jb-state {
+  text-align: center;
+  padding: 50px;
+  color: rgba(255,255,255,0.35);
+  font-size: 16px;
+}
+
+.jb-error {
+  color: #f87171;
+}
+
+/* ===== JOB CARD ===== */
+.jb-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 18px;
+  padding: 26px 30px;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  cursor: default;
+}
+
+.jb-card:hover {
+  border-color: rgba(124, 90, 240, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(91, 61, 232, 0.12);
+}
+
+.jb-card-body {
+  flex: 1;
+}
+
+.jb-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.jb-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.jb-tag {
+  background: rgba(124, 90, 240, 0.15);
+  color: #a78bfa;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.jb-meta-text {
+  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+}
+
+.jb-req {
+  color: rgba(255,255,255,0.55);
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.jb-req strong {
+  color: rgba(255,255,255,0.75);
+}
+
+.jb-desc {
+  color: rgba(255,255,255,0.35);
+  font-size: 14px;
+}
+
+/* ===== APPLY BUTTON ===== */
+.jb-apply-btn {
+  height: 46px;
+  padding: 0 26px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #5b3de8, #7c5af0);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(91, 61, 232, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.jb-apply-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(91, 61, 232, 0.45);
+}
+
+/* ===== MODAL OVERLAY ===== */
+.jb-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 22, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+
+/* ===== MODAL BOX ===== */
+.jb-modal {
+  background: linear-gradient(145deg, #120a2f, #0d0720);
+  border: 1px solid rgba(124, 90, 240, 0.25);
+  border-radius: 24px;
+  padding: 48px 44px 40px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,90,240,0.1);
+}
+
+.jb-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 14px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.jb-modal-close:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.jb-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #5b3de8, #7c5af0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(91, 61, 232, 0.4);
+}
+
+.jb-modal-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.jb-modal-job {
+  font-size: 15px;
+  font-weight: 600;
+  color: #a78bfa;
+  margin-bottom: 12px;
+}
+
+.jb-modal-dept {
+  color: rgba(167,139,250,0.6);
+  font-weight: 400;
+}
+
+.jb-modal-sub {
+  color: rgba(255,255,255,0.45);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 30px;
+}
+
+.jb-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.jb-modal-register,
+.jb-modal-login {
+  flex: 1;
+  height: 48px;
+  border-radius: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.jb-modal-register {
+  background: linear-gradient(90deg, #5b3de8, #7c5af0);
+  border: none;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(91, 61, 232, 0.35);
+}
+
+.jb-modal-register:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(91, 61, 232, 0.5);
+}
+
+.jb-modal-login {
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  color: #fff;
+}
+
+.jb-modal-login:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.jb-modal-note {
+  margin-top: 20px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+}
+
+.jb-modal-note span {
+  color: #8f7dff;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .jb-nav {
+    padding: 0 20px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .jb-nav-links {
+    gap: 24px;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .jb-hero-title {
+    font-size: 42px;
+  }
+
+  .jb-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .jb-apply-btn {
+    width: 100%;
+  }
+
+  .jb-modal {
+    padding: 36px 24px 28px;
+  }
+}

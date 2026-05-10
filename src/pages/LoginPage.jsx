@@ -1,50 +1,72 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api/axiosConfig";
 import "../styles/LoginPage.css";
-import { login } from "../api/api";
 import ForgotPassword from "./ForgotPassword";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [role, setRole] = useState("Employee");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [role, setRole]                 = useState("Employee");
+  const [email, setEmail]               = useState("");
+  const [password, setPassword]         = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [page, setPage] = useState("login");
+  const [error, setError]               = useState("");
+  const [loading, setLoading]           = useState(false);
+  const [page, setPage]                 = useState("login");
 
   const roles = ["Employee", "Manager", "HR Admin"];
 
+  const roleMap = {
+    "Employee" : "EMPLOYEE",
+    "Manager"  : "MANAGER",
+    "HR Admin" : "HR_ADMIN",
+  };
+
   const handleSubmit = async () => {
     setError("");
+
+    // Validation
     if (!email.trim() || !password.trim()) {
       setError("Please enter email and password.");
       return;
     }
+
     setLoading(true);
     try {
-      const data = await login(email, password);
+      const res = await api.post("/api/auth/login", {
+        username: email,
+        password: password,
+      });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("name", data.name);
-      localStorage.setItem("user", JSON.stringify(data));
+      const { token, role: userRole, name } = res.data;
 
-      const userRole = data.role?.toUpperCase();
+      // Check selected tab matches actual role
+      if (roleMap[role] !== userRole) {
+        setError(`Access denied. You are not a ${role}.`);
+        return;
+      }
+
+      // Save to localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("role",  userRole);
+      localStorage.setItem("name",  name);
+      localStorage.setItem("user",  JSON.stringify(res.data));
+
+      // Navigate based on role
       if (userRole === "EMPLOYEE")       navigate("/employee-dashboard");
       else if (userRole === "MANAGER")   navigate("/managerdashboard");
       else if (userRole === "HR_ADMIN")  navigate("/hr-dashboard");
       else setError("Unknown role. Contact admin.");
 
     } catch (err) {
-      setError(err.message || "Invalid credentials. Please try again.");
+      setError(err.response?.data || "Invalid credentials. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (page === "forgot") return <ForgotPassword onBack={() => setPage("login")} />;
+  // Show forgot password page
+  if (page === "forgot") return <ForgotPassword onBack={() => setPage("/forgot-password")} />;
 
   return (
     <div className="page-wrapper">
@@ -53,6 +75,7 @@ export default function LoginPage() {
       <div className="bg-blob blob-3" />
 
       <div className="card">
+
         {/* Logo */}
         <div className="logo">
           <div className="logo-icon">
@@ -69,29 +92,15 @@ export default function LoginPage() {
         <h1 className="heading">Welcome back</h1>
         <p className="subheading">Sign in to your RevTalent account to continue</p>
 
-        {/* Error */}
-        {error && (
-          <div style={{
-            background: "rgba(239,68,68,0.1)",
-            border: "1px solid rgba(239,68,68,0.3)",
-            color: "#ef4444",
-            padding: "10px 14px",
-            borderRadius: "8px",
-            fontSize: "13px",
-            textAlign: "center",
-            marginBottom: "8px",
-          }}>
-            {error}
-          </div>
-        )}
-
         <div className="form">
+
           {/* Email */}
           <div className="field-group">
             <label className="field-label">Work Email</label>
             <div className="input-wrapper">
               <span className="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2">
                   <rect x="2" y="4" width="20" height="16" rx="2" />
                   <path d="m2 7 10 7 10-7" />
                 </svg>
@@ -112,7 +121,8 @@ export default function LoginPage() {
             <label className="field-label">Password</label>
             <div className="input-wrapper">
               <span className="input-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
@@ -131,13 +141,15 @@ export default function LoginPage() {
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
                     <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
                     <line x1="1" y1="1" x2="23" y2="23" />
                   </svg>
                 ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
@@ -146,7 +158,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Role */}
+          {/* Role Tabs */}
           <div className="role-row">
             <div className="role-group">
               <label className="field-label">Sign in as</label>
@@ -165,7 +177,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Forgot password */}
+          {/* Forgot Password */}
           <div className="forgot-row">
             <button
               type="button"
@@ -176,7 +188,23 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Sign in */}
+          {/* Error Message */}
+          {error && (
+            <div style={{
+              background   : "rgba(239,68,68,0.1)",
+              border       : "1px solid rgba(239,68,68,0.3)",
+              color        : "#ef4444",
+              padding      : "10px 14px",
+              borderRadius : "8px",
+              fontSize     : "13px",
+              textAlign    : "center",
+              marginBottom : "4px",
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Sign In Button */}
           <button
             type="button"
             className="signin-btn"
@@ -184,7 +212,7 @@ export default function LoginPage() {
             disabled={loading}
             style={{ opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? "Signing in…" : "Sign In →"}
+            {loading ? "Signing in..." : "Sign In →"}
           </button>
 
           {/* Divider */}
@@ -204,12 +232,14 @@ export default function LoginPage() {
             </svg>
             Continue with Google
           </button>
+
         </div>
 
         <p className="footer-text">
           Don't have an account?{" "}
           <a href="/register" className="create-link">Create one</a>
         </p>
+
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-/* 🔷 Google Fonts (MATCH HR DASHBOARD) */
+
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
 /* 🔷 Root Variables */
@@ -39,6 +39,114 @@ body {
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* 🔷 Container */
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 24px;
+}
+
+/* 🔷 Headings */
+h1, h2, h3 {
+  font-family: var(--heading);
+  color: var(--text-h);
+  margin-bottom: 12px;
+}
+
+h1 {
+  font-size: 52px;
+  letter-spacing: -1px;
+}
+
+h2 {
+  font-size: 26px;
+}
+
+h3 {
+  font-size: 20px;
+}
+
+/* 🔷 Paragraph */
+p {
+  margin-bottom: 10px;
+}
+
+/* 🔷 Links */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 🔷 Buttons */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+/* 🔷 Card */
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+/* 🔷 Responsive */
+@media (max-width: 1024px) {
+  h1 {
+    font-size: 34px;
+  }
+}
+
+/* 🔷 Google Fonts (MATCH HR DASHBOARD) */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* 🔷 Root Variables */
+:root {
+  --text: #334155;
+  --text-h: #0f172a;
+  --bg: #ffffff;
+  --border: #e5e7eb;
+
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+
+  --shadow:
+    rgba(0, 0, 0, 0.08) 0 10px 15px -3px,
+    rgba(0, 0, 0, 0.04) 0 4px 6px -2px;
+
+  --sans: 'DM Sans', sans-serif;
+  --heading: 'Syne', sans-serif;
+}
+
+/* 🔷 Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 🔷 Body */
+body {
+  font-family: var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  overflow-y: auto;        /* ← SCROLL FIX */
+}
+
+/* 🔷 Root */
+#root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto;        /* ← SCROLL FIX */
 }
 
 /* 🔷 Container */
