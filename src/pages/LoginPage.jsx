@@ -6,22 +6,23 @@ import ForgotPassword from "./ForgotPassword";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [role, setRole]                 = useState("Employee");
-  const [email, setEmail]               = useState("");
-  const [password, setPassword]         = useState("");
+  const [role, setRole]             = useState("Employee");
+  const [email, setEmail]           = useState("");
+  const [password, setPassword]     = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError]               = useState("");
-  const [loading, setLoading]           = useState(false);
-  const [page, setPage]                 = useState("login");
+  const [error, setError]           = useState("");
+  const [loading, setLoading]       = useState(false);
+  const [page, setPage]             = useState("login"); // login | forgot
 
   const roles = ["Employee", "Manager", "HR Admin"];
 
   const roleMap = {
-    "Employee" : "EMPLOYEE",
-    "Manager"  : "MANAGER",
-    "HR Admin" : "HR_ADMIN",
+    "Employee": "EMPLOYEE",
+    "Manager":  "MANAGER",
+    "HR Admin": "HR_ADMIN",
   };
 
+  // ── Login → JWT directly ───────────────────────────────────────────────────
   const handleSubmit = async () => {
     setError("");
 
@@ -39,8 +40,6 @@ export default function LoginPage() {
       });
 
       const { token, role: userRole, name } = res.data;
-
-      // Check selected tab matches actual role
       if (roleMap[role] !== userRole) {
         setError(`Access denied. You are not a ${role}.`);
         return;
@@ -65,9 +64,25 @@ export default function LoginPage() {
     }
   };
 
-  // Show forgot password page
-  if (page === "forgot") return <ForgotPassword onBack={() => setPage("/forgot-password")} />;
+  // ── Shared logo ────────────────────────────────────────────────────────────
+  const Logo = () => (
+    <div className="logo">
+      <div className="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <rect x="2"  y="2"  width="9" height="9" rx="2" fill="white" opacity="0.9" />
+          <rect x="13" y="2"  width="9" height="9" rx="2" fill="white" opacity="0.6" />
+          <rect x="2"  y="13" width="9" height="9" rx="2" fill="white" opacity="0.6" />
+          <rect x="13" y="13" width="9" height="9" rx="2" fill="white" opacity="0.9" />
+        </svg>
+      </div>
+      <span className="logo-text">Rev<span className="logo-accent">Talent</span></span>
+    </div>
+  );
 
+  // ── Forgot Password page ───────────────────────────────────────────────────
+  if (page === "forgot") return <ForgotPassword onBack={() => setPage("login")} />;
+
+  // ── Login page ─────────────────────────────────────────────────────────────
   return (
     <div className="page-wrapper">
       <div className="bg-blob blob-1" />
@@ -75,19 +90,7 @@ export default function LoginPage() {
       <div className="bg-blob blob-3" />
 
       <div className="card">
-
-        {/* Logo */}
-        <div className="logo">
-          <div className="logo-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <rect x="2"  y="2"  width="9" height="9" rx="2" fill="white" opacity="0.9" />
-              <rect x="13" y="2"  width="9" height="9" rx="2" fill="white" opacity="0.6" />
-              <rect x="2"  y="13" width="9" height="9" rx="2" fill="white" opacity="0.6" />
-              <rect x="13" y="13" width="9" height="9" rx="2" fill="white" opacity="0.9" />
-            </svg>
-          </div>
-          <span className="logo-text">Rev<span className="logo-accent">Talent</span></span>
-        </div>
+        <Logo />
 
         <h1 className="heading">Welcome back</h1>
         <p className="subheading">Sign in to your RevTalent account to continue</p>
@@ -158,7 +161,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Role Tabs */}
+          {/* Role selector */}
           <div className="role-row">
             <div className="role-group">
               <label className="field-label">Sign in as</label>
@@ -204,7 +207,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Sign In Button */}
+          {/* Sign In button */}
           <button
             type="button"
             className="signin-btn"
@@ -215,7 +218,6 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign In →"}
           </button>
 
-          {/* Divider */}
           <div className="divider">
             <span className="divider-line" />
             <span className="divider-text">or continue with</span>
