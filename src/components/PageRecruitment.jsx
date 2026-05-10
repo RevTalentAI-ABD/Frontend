@@ -1,237 +1,14 @@
-// import React, { useState } from "react";
-// import { recruitmentAPI, screeningAPI } from "./api";
-// import { useFetch, useToast } from "./hooks";
-// import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
-
-// const PIPELINE_STAGES = ["Applied", "Screening", "Interview", "Offer", "Hired"];
-// const DEPTS = ["Engineering","Design","Product","Data","Infra","HR","Finance","Marketing"];
-
-// export default function PageRecruitment() {
-//   const { data, loading, error, refetch } = useFetch(recruitmentAPI.getJobs);
-//   const { toast, showToast } = useToast();
-
-//   const [showForm, setShowForm]   = useState(false);
-//   const [selectedJob, setSelectedJob] = useState(null);
-//   const [screenData, setScreenData]   = useState(null);
-//   const [loadingScreen, setLoadingScreen] = useState(false);
-//   const [newJob, setNewJob] = useState({ title: "", department: "Engineering", numberOfOpenings: 1, description: "" });
-//   const [posting, setPosting] = useState(false);
-
-//   const jobs = Array.isArray(data) ? data : (data?.jobs || data?.content || []);
-
-//   const applicants = Array.isArray(screenData)
-//     ? screenData
-//     : (screenData?.candidates || screenData?.applicants || []);
-
-//   const viewJob = async (job) => {
-//     setSelectedJob(job);
-//     setLoadingScreen(true);
-//     try {
-//       const res = await screeningAPI.getByJob(job.id || job.jobId);
-//       setScreenData(res.data);
-//     } catch { setScreenData([]); }
-//     finally { setLoadingScreen(false); }
-//   };
-
-//   // ✅ FIX: moved outside
-//   const updateStatus = async (jobId, status) => {
-//     try {
-//       await recruitmentAPI.updateJobStatus(jobId, status);
-//       showToast("✅ Status updated");
-//       refetch();
-//     } catch {
-//       showToast("❌ Failed to update status");
-//     }
-//   };
-
-//   const postJob = async () => {
-//     setPosting(true);
-
-//     try {
-//       const payload = {
-//         title: newJob.title,
-//         description: newJob.description,
-//         requirements: newJob.department,
-//         vacancies: Number(newJob.numberOfOpenings),
-//         status: "OPEN"
-//       };
-
-//       await recruitmentAPI.createJob(payload);
-
-//       showToast("✅ Job posted successfully!");
-
-//       setNewJob({
-//         title: "",
-//         department: "Engineering",
-//         numberOfOpenings: 1,
-//         description: ""
-//       });
-
-//       setShowForm(false);
-//       refetch();
-
-//     } catch (err) {
-//       showToast("❌ Failed to post job");
-//     } finally {
-//       setPosting(false);
-//     }
-//   };
-//   if (loading) return <Spinner />;
-//   if (error)   return <ErrorState message={error} onRetry={refetch} />;
-
-//   // ── Job detail view ──────────────────────────────────────────────────────
-//   if (selectedJob) {
-//     return (
-//       <div className="hr-page">
-//         <Toast message={toast} />
-//         <button className="hr-back-btn" onClick={() => { setSelectedJob(null); setScreenData(null); }}>← Back to Jobs</button>
-//         <div className="hr-panel">
-//           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-//             <div>
-//               <h3 style={{ color: "#fff", fontSize: 20, marginBottom: 6 }}>{selectedJob.title || selectedJob.jobTitle}</h3>
-//               <div style={{ color: "#9b96b8", fontSize: 14 }}>{selectedJob.department} · {selectedJob.numberOfOpenings || 1} opening{(selectedJob.numberOfOpenings || 1) > 1 ? "s" : ""}</div>
-//             </div>
-//             <Badge status={selectedJob.status || "OPEN"} />
-//           </div>
-//           {selectedJob.description && (
-//             <p style={{ color: "#9b96b8", marginTop: 12, fontSize: 14 }}>{selectedJob.description}</p>
-//           )}
-//         </div>
-
-//         {/* Applicant Pipeline */}
-//         <div className="hr-panel">
-//           <h3 className="hr-panel-title">Applicant Pipeline</h3>
-//           {loadingScreen ? <Spinner /> : (
-//             <div className="hr-pipeline">
-//               {PIPELINE_STAGES.map(stage => {
-//                 const stageApplicants = applicants.filter(a =>
-//                   (a.stage || a.status || a.screeningStatus || "Applied") === stage
-//                 );
-//                 return (
-//                   <div key={stage} className="hr-pipeline-col">
-//                     <div className="hr-pipeline-header">
-//                       <span>{stage}</span>
-//                       <span className="hr-pipeline-count">{stageApplicants.length}</span>
-//                     </div>
-//                     <div className="hr-pipeline-cards">
-//                       {stageApplicants.map((a, i) => {
-//                         const name = a.name || a.candidateName || `${a.firstName || ""} ${a.lastName || ""}`.trim() || "Candidate";
-//                         return (
-//                           <div key={a.id || i} className="hr-applicant-card">
-//                             <Avatar name={name} size={32} />
-//                             <div className="hr-ac-info">
-//                               <div className="hr-ac-name">{name}</div>
-//                               <div className="hr-ac-job">{a.email || ""}</div>
-//                             </div>
-//                           </div>
-//                         );
-//                       })}
-//                       {stageApplicants.length === 0 && (
-//                         <div style={{ color: "#555", fontSize: 12, padding: "8px 4px" }}>Empty</div>
-//                       )}
-//                     </div>
-//                   </div>
-//                 );
-//               })}
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // ── Main jobs view ───────────────────────────────────────────────────────
-//   return (
-//     <div className="hr-page">
-//       <Toast message={toast} />
-//       <div className="hr-page-header-row">
-//         <h2 className="hr-page-heading">Recruitment</h2>
-//         <button className="hr-primary-btn" onClick={() => setShowForm(s => !s)}>
-//           {showForm ? "✕ Cancel" : "+ Post Job"}
-//         </button>
-//       </div>
-
-//       {showForm && (
-//         <div className="hr-panel hr-add-form">
-//           <h3 className="hr-panel-title">New Job Posting</h3>
-//           <div className="hr-form-grid">
-//             <div className="hr-field hr-field-full">
-//               <label>Job Title</label>
-//               <input placeholder="e.g. Frontend Engineer" value={newJob.title}
-//                 onChange={e => setNewJob(j => ({ ...j, title: e.target.value }))} />
-//             </div>
-//             <div className="hr-field">
-//               <label>Department</label>
-//               <select value={newJob.department} onChange={e => setNewJob(j => ({ ...j, department: e.target.value }))}>
-//                 {DEPTS.map(d => <option key={d}>{d}</option>)}
-//               </select>
-//             </div>
-//             <div className="hr-field">
-//               <label>Openings</label>
-//               <input type="number" min="1" value={newJob.numberOfOpenings}
-//                 onChange={e => setNewJob(j => ({ ...j, numberOfOpenings: parseInt(e.target.value) || 1 }))} />
-//             </div>
-//             <div className="hr-field hr-field-full">
-//               <label>Description</label>
-//               <textarea rows={3} placeholder="Job description…" value={newJob.description}
-//                 onChange={e => setNewJob(j => ({ ...j, description: e.target.value }))} />
-//             </div>
-//           </div>
-//           <button className="hr-primary-btn" onClick={postJob} disabled={posting}>
-//             {posting ? "Posting…" : "Post Job"}
-//           </button>
-//         </div>
-//       )}
-
-//       <div className="hr-panel">
-//         <h3 className="hr-panel-title">Open Positions</h3>
-//         {jobs.length === 0 ? (
-//           <EmptyState icon="💼" text="No jobs posted yet" />
-//         ) : (
-//           <div className="hr-jobs-grid">
-//             {jobs.map(j => {
-//               const id       = j.id || j.jobId;
-//               const title    = j.title || j.jobTitle;
-//               const dept     = j.department;
-//               const openings = j.numberOfOpenings || j.openings || 1;
-//               const status   = j.status || "OPEN";
-//               const posted   = j.createdAt ? new Date(j.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "";
-//               return (
-//                 <div key={id} className="hr-job-card" style={{ cursor: "pointer" }} onClick={() => viewJob(j)}>
-//                   <div className="hr-job-title">{title}</div>
-//                   <div className="hr-job-meta">
-//                     <span>{dept}</span>
-//                     <span>{openings} opening{openings > 1 ? "s" : ""}</span>
-//                   </div>
-//                   <div className="hr-job-row">
-//                     <span className="hr-job-applicants">👤 View applicants</span>
-//                    <select
-//                      value={status}
-//                      onClick={(e) => e.stopPropagation()}
-//                      onChange={(e) => {
-//                        e.stopPropagation();
-//                        updateStatus(id, e.target.value);
-//                      }}
-//                      className="hr-status-dropdown"
-//                    >
-//                      <option value="OPEN">OPEN</option>
-//                      <option value="ON_HOLD">ON_HOLD</option>
-//                      <option value="CLOSED">CLOSED</option>
-//                    </select>
-//                   </div>
-//                   {posted && <div className="hr-job-posted">Posted {posted}</div>}
-//                 </div>
-//               );
-//             })}
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import React, { useState } from "react";
+import {
+  Briefcase,
+  Users,
+  FileText,
+  X,
+  RotateCcw,
+  TriangleAlert,
+  XCircle,
+  CheckCircle2
+} from "lucide-react";
 import { recruitmentAPI, candidateAPI, resumeAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
 import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
@@ -275,7 +52,23 @@ export default function PageRecruitment() {
       setCandidates(Array.isArray(res.data) ? res.data : []);
     } catch {
       setCandidates([]);
-      showToast("⚠️ Could not load candidates");
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <TriangleAlert size={18} />
+
+          Could not load candidates
+
+        </span>
+
+      );
     } finally {
       setLoadingCands(false);
     }
@@ -283,7 +76,29 @@ export default function PageRecruitment() {
 
   // ── Post a new job ────────────────────────────────────────────────────────
   const postJob = async () => {
-    if (!newJob.title.trim()) { showToast("❌ Job title is required"); return; }
+    if (!newJob.title.trim()) {
+
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <XCircle size={18} />
+
+          Job title is required
+
+        </span>
+
+      );
+
+      return;
+    }
+
     setPosting(true);
     try {
       await recruitmentAPI.createJob({
@@ -293,12 +108,44 @@ export default function PageRecruitment() {
         vacancies:    Number(newJob.numberOfOpenings),
         status:       "OPEN",
       });
-      showToast("✅ Job posted successfully!");
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <CheckCircle2 size={18} />
+
+          Job posted successfully!
+
+        </span>
+
+      );
       setNewJob({ title: "", department: "Engineering", numberOfOpenings: 1, description: "", requirements: "" });
       setShowForm(false);
       refetch();
     } catch {
-      showToast("❌ Failed to post job");
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <XCircle size={18} />
+
+          Failed to post job
+
+        </span>
+
+      );
     } finally {
       setPosting(false);
     }
@@ -307,7 +154,23 @@ export default function PageRecruitment() {
   // ── Add candidate to current job ──────────────────────────────────────────
   const addCandidate = async () => {
     if (!newCand.name.trim() || !newCand.email.trim()) {
-      showToast("❌ Name and email are required");
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <XCircle size={18} />
+
+          Name and email are required
+
+        </span>
+
+      );
       return;
     }
     setAddingCand(true);
@@ -321,9 +184,44 @@ export default function PageRecruitment() {
       setCandidates((prev) => [...prev, res.data]);
       setNewCand({ name: "", email: "", phone: "" });
       setShowAddCand(false);
-      showToast("✅ Candidate added!");
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <CheckCircle2 size={18} />
+
+          Candidate added!
+
+        </span>
+
+      );
     } catch (e) {
-      showToast("❌ " + (e.response?.data || "Failed to add candidate"));
+     showToast(
+
+       <span
+         style={{
+           display: "flex",
+           alignItems: "center",
+           gap: "8px"
+         }}
+       >
+
+         <XCircle size={18} />
+
+         {
+           e.response?.data ||
+           "Failed to add candidate"
+         }
+
+       </span>
+
+     );
     } finally {
       setAddingCand(false);
     }
@@ -331,44 +229,187 @@ export default function PageRecruitment() {
 
   // ── Move candidate to next/different stage ────────────────────────────────
   const moveCandidate = async (candidateId, newStatus) => {
+
     setMovingId(candidateId);
+
     try {
-      const res = await candidateAPI.updateStatus(candidateId, newStatus);
+
+      const res =
+        await candidateAPI.updateStatus(
+          candidateId,
+          newStatus
+        );
+
       setCandidates((prev) =>
-        prev.map((c) => (c.id === candidateId ? res.data : c))
+        prev.map((c) =>
+          c.id === candidateId
+            ? res.data
+            : c
+        )
       );
-      showToast(`✅ Moved to ${STAGE_LABELS[newStatus] || newStatus}`);
+
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <CheckCircle2 size={18} />
+
+          {
+            `Moved to ${
+              STAGE_LABELS[newStatus] ||
+              newStatus
+            }`
+          }
+
+        </span>
+
+      );
+
     } catch {
-      showToast("❌ Failed to update status");
+
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <XCircle size={18} />
+
+          Failed to update status
+
+        </span>
+
+      );
+
     } finally {
+
       setMovingId(null);
     }
   };
 
   // ── Remove candidate ──────────────────────────────────────────────────────
-  const removeCandidate = async (candidateId) => {
-    if (!window.confirm("Remove this candidate?")) return;
-    try {
-      await candidateAPI.delete(candidateId);
-      setCandidates((prev) => prev.filter((c) => c.id !== candidateId));
-      showToast("✅ Candidate removed");
-    } catch {
-      showToast("❌ Failed to remove candidate");
-    }
-  };
+const removeCandidate = async (candidateId) => {
+
+  if (!window.confirm("Remove this candidate?"))
+    return;
+
+  try {
+
+    await candidateAPI.delete(candidateId);
+
+    setCandidates((prev) =>
+      prev.filter(
+        (c) => c.id !== candidateId
+      )
+    );
+
+    showToast(
+
+      <span
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}
+      >
+
+        <CheckCircle2 size={18} />
+
+        Candidate removed
+
+      </span>
+
+    );
+
+  } catch {
+
+    showToast(
+
+      <span
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}
+      >
+
+        <XCircle size={18} />
+
+        Failed to remove candidate
+
+      </span>
+
+    );
+  }
+};
 
   // ── Update job status ─────────────────────────────────────────────────────
-  const updateJobStatus = async (jobId, status, e) => {
-    e.stopPropagation();
-    try {
-      await recruitmentAPI.updateJobStatus(jobId, status);
-      showToast("✅ Status updated");
-      refetch();
-    } catch {
-      showToast("❌ Failed to update status");
-    }
-  };
+const updateJobStatus = async (
+  jobId,
+  status,
+  e
+) => {
 
+  e.stopPropagation();
+
+  try {
+
+    await recruitmentAPI.updateJobStatus(
+      jobId,
+      status
+    );
+
+    showToast(
+
+      <span
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}
+      >
+
+        <CheckCircle2 size={18} />
+
+        Status updated
+
+      </span>
+
+    );
+
+    refetch();
+
+  } catch {
+
+    showToast(
+
+      <span
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}
+      >
+
+        <XCircle size={18} />
+
+        Failed to update status
+
+      </span>
+
+    );
+  }
+};
   if (loading) return <Spinner />;
   if (error)   return <ErrorState message={error} onRetry={refetch} />;
 
@@ -402,7 +443,12 @@ export default function PageRecruitment() {
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <Badge status={selectedJob.status || "OPEN"} />
               <button className="hr-primary-btn" onClick={() => setShowAddCand(s => !s)}>
-                {showAddCand ? "✕ Cancel" : "+ Add Candidate"}
+                <>
+                  {showAddCand ? <X size={16} /> : <Users size={16} />}
+                  <span style={{ marginLeft: "6px" }}>
+                    {showAddCand ? "Cancel" : "Add Candidate"}
+                  </span>
+                </>
               </button>
             </div>
           </div>
@@ -483,7 +529,10 @@ export default function PageRecruitment() {
                               padding: "5px 8px", fontSize: 11, fontWeight: 500,
                               cursor: "pointer",
                             }}>
-                            📄 View Resume
+                            <>
+                              <FileText size={14} />
+                              View Resume
+                            </>
                           </a>
                           {/* Row 3: stage action buttons */}
                           <div style={{ display: "flex", gap: 6 }}>
@@ -514,7 +563,10 @@ export default function PageRecruitment() {
                                 cursor: "pointer", whiteSpace: "nowrap",
                                 opacity: movingId === c.id ? 0.5 : 1,
                               }}>
-                              ✕ Reject
+                              <>
+                                <X size={12} />
+                                <span style={{ marginLeft: 4 }}>Reject</span>
+                              </>
                             </button>
                           </div>
                         </div>
@@ -552,7 +604,10 @@ export default function PageRecruitment() {
                     border: "1px solid rgba(124,90,240,0.3)", borderRadius: 6,
                     padding: "4px 10px", fontSize: 11, cursor: "pointer",
                   }}>
-                  ↩ Reconsider
+                  <>
+                    <RotateCcw size={12} />
+                    <span style={{ marginLeft: 4 }}>Reconsider</span>
+                  </>
                 </button>
                 <button
                   onClick={() => removeCandidate(c.id)}
@@ -561,7 +616,7 @@ export default function PageRecruitment() {
                     border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6,
                     padding: "4px 10px", fontSize: 11, cursor: "pointer",
                   }}>
-                  🗑
+                  <X size={14} />
                 </button>
               </div>
             ))}
@@ -578,7 +633,12 @@ export default function PageRecruitment() {
       <div className="hr-page-header-row">
         <h2 className="hr-page-heading">Recruitment</h2>
         <button className="hr-primary-btn" onClick={() => setShowForm(s => !s)}>
-          {showForm ? "✕ Cancel" : "+ Post Job"}
+          <>
+            {showForm ? <X size={16} /> : <Briefcase size={16} />}
+            <span style={{ marginLeft: "6px" }}>
+              {showForm ? "Cancel" : "Post Job"}
+            </span>
+          </>
         </button>
       </div>
 
@@ -641,7 +701,10 @@ export default function PageRecruitment() {
                   </div>
                 )}
                 <div className="hr-job-row" style={{ marginTop: 10 }}>
-                  <span style={{ color: "#7c5af0", fontSize: 13 }}>👥 View pipeline</span>
+                  <span style={{ color: "#7c5af0", fontSize: 13 }}><>
+                                                                     <Users size={14} />
+                                                                     <span style={{ marginLeft: 6 }}>View pipeline</span>
+                                                                   </></span>
                   <select
                     value={j.status || "OPEN"}
                     onClick={(e) => e.stopPropagation()}

@@ -1,4 +1,12 @@
 import React, { useState } from "react";
+import {
+  Check,
+  X,
+  PartyPopper,
+  Loader2,
+  XCircle,
+  CheckCircle2,
+} from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { leaveAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
@@ -22,9 +30,52 @@ export default function PageLeaves() {
     try {
       action === "approve" ? await leaveAPI.approve(id) : await leaveAPI.reject(id);
       await rp(); await ra();
-      showToast(action === "approve" ? "✅ Leave approved!" : "❌ Leave rejected.");
+showToast(
+
+  <span
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "8px"
+    }}
+  >
+
+    {
+      action === "approve"
+        ? <CheckCircle2 size={18} />
+        : <XCircle size={18} />
+    }
+
+    {
+      action === "approve"
+        ? "Leave approved!"
+        : "Leave rejected."
+    }
+
+  </span>
+
+);
     } catch (err) {
-      showToast("❌ " + (err.response?.data?.message || "Action failed"));
+      showToast(
+
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}
+        >
+
+          <XCircle size={18} />
+
+          {
+            err.response?.data?.message ||
+            "Action failed"
+          }
+
+        </span>
+
+      );
     } finally { setActing(null); }
   };
 
@@ -50,7 +101,10 @@ export default function PageLeaves() {
       </div>
 
       {pendingLeaves.length === 0 && (
-        <EmptyState icon="🎉" text="No pending leave requests!" />
+        <EmptyState
+          icon={<PartyPopper size={22} />}
+          text="No pending leave requests!"
+        />
       )}
 
       {pendingLeaves.map(l => {
@@ -83,10 +137,36 @@ export default function PageLeaves() {
             </div>
             <div className="hr-lc-actions">
               <button className="hr-approve-btn" disabled={acting === id} onClick={() => handle(id, "approve")}>
-                {acting === id ? "…" : "✓ Approve"}
+                <>
+                  {acting === id ? (
+                    <Loader2
+                      size={14}
+                      className="spin"
+                    />
+                  ) : (
+                    <Check size={14} />
+                  )}
+
+                  <span style={{ marginLeft: 6 }}>
+                    Approve
+                  </span>
+                </>
               </button>
               <button className="hr-reject-btn" disabled={acting === id} onClick={() => handle(id, "reject")}>
-                {acting === id ? "…" : "✕ Reject"}
+                <>
+                  {acting === id ? (
+                    <Loader2
+                      size={14}
+                      className="spin"
+                    />
+                  ) : (
+                    <X size={14} />
+                  )}
+
+                  <span style={{ marginLeft: 6 }}>
+                    Reject
+                  </span>
+                </>
               </button>
             </div>
           </div>

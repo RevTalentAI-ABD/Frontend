@@ -168,4 +168,27 @@ export const aiAPI = {
   generatePolicy: (topic)           => api.post("/api/ai/generate-policy", { topic }),
 };
 
+export const hrAPI = {
+
+  getManagers:
+    () => api.get("/api/hr/managers"),
+
+  assignManager:
+    (data) =>
+      api.put("/api/hr/assign-manager", data),
+
+  changeRole:
+    (data) =>
+      api.put("/api/hr/change-role", data),
+
+  changeDepartment:
+    (data) =>
+      api.put("/api/hr/change-department", data),
+
+  removeManager:
+    (data) =>
+      api.put("/api/hr/remove-manager", data),
+};
+
+
 export default api;  // ← only one default export

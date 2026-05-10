@@ -27,11 +27,11 @@
 
 .hero-buttons {
   margin-top: 30px;
-  display: flex;           /* ← ADD */
-  justify-content: center; /* ← ADD */
-  align-items: center;     /* ← ADD */
-  flex-wrap: wrap;         /* ← ADD */
-  gap: 16px;               /* ← ADD — removes need for margin-right */
+  display: flex;
+  justify-content: center;
+  align-items: center
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .btn-primary {
@@ -40,7 +40,7 @@
   padding: 12px 28px;
   border: none;
   border-radius: 6px;
-  cursor: pointer;         /* ← remove margin-right, gap handles spacing */
+  cursor: pointer;
 }
 
 .btn-primary:hover {
@@ -72,13 +72,13 @@
 .quote {
   text-align: center;
   padding: 60px 20px;
-  background: #ffffff;  /* WHITE */
+  background: #ffffff;
 }
 
 .quote p {
   font-size: 20px;
   font-style: italic;
-  color: #2563eb;   /* BLUE */
+  color: #2563eb;
 }
 
 .navbar {

@@ -6,9 +6,13 @@ import {
   IndianRupee,
   CheckCircle,
   Clock,
-  Users
+  Users,
+  Zap,
+  Play,
+  CircleCheckBig,
+  XCircle,
+  CheckCircle2
 } from "lucide-react";
-
 export default function PagePayroll() {
   const { data, loading, error, refetch } = useFetch(payrollAPI.getAll);
   const { toast, showToast } = useToast();
@@ -31,30 +35,109 @@ export default function PagePayroll() {
    0
  );
 
-  // ✅ PROCESS ALL
-  const runAll = async () => {
-    setProcessing(true);
-    try {
-      await payrollAPI.processAll();   // backend API
-      await refetch();
-      showToast("✅ All payroll processed!");
-    } catch (err) {
-      showToast("❌ Failed to process payroll");
-    } finally {
-      setProcessing(false);
-    }
-  };
 
-  // ✅ PROCESS SINGLE ROW
-  const runOne = async (id) => {
-    try {
-      await payrollAPI.process(id);
-      await refetch();
-      showToast("✅ Payroll processed!");
-    } catch {
-      showToast("❌ Failed");
-    }
-  };
+const runAll = async () => {
+
+  setProcessing(true);
+
+  try {
+
+    await payrollAPI.processAll();
+
+    await refetch();
+
+    showToast(
+
+      <span
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}
+      >
+
+        <CheckCircle2 size={18} />
+
+        All payroll processed!
+
+      </span>
+
+    );
+
+  } catch (err) {
+
+    showToast(
+
+      <span
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}
+      >
+
+        <XCircle size={18} />
+
+        Failed to process payroll
+
+      </span>
+
+    );
+
+  } finally {
+
+    setProcessing(false);
+  }
+};
+
+
+ const runOne = async (id) => {
+
+   try {
+
+     await payrollAPI.process(id);
+
+     await refetch();
+
+     showToast(
+
+       <span
+         style={{
+           display: "flex",
+           alignItems: "center",
+           gap: "8px"
+         }}
+       >
+
+         <CheckCircle2 size={18} />
+
+         Payroll processed!
+
+       </span>
+
+     );
+
+   } catch {
+
+     showToast(
+
+       <span
+         style={{
+           display: "flex",
+           alignItems: "center",
+           gap: "8px"
+         }}
+       >
+
+         <XCircle size={18} />
+
+         Failed
+
+       </span>
+
+     );
+   }
+ };
 
 
   if (loading) return <Spinner />;
@@ -72,7 +155,12 @@ export default function PagePayroll() {
           onClick={runAll}
           disabled={processing}
         >
-          ⚡ Process All
+          <>
+            <Zap size={16} />
+            <span style={{ marginLeft: "6px" }}>
+              Process All
+            </span>
+          </>
         </button>
       </div>
 
@@ -127,7 +215,6 @@ export default function PagePayroll() {
                   <td>{p.allowances}</td>
                   <td>{p.deductions}</td>
 
-                  {/* ✅ NET SALARY */}
                  <td>
                    ₹{p.netSalary || 0}
                  </td>
@@ -136,17 +223,38 @@ export default function PagePayroll() {
                     <Badge status={status} />
                   </td>
 
-                  {/* ✅ ACTION BUTTON */}
                   <td>
                     {status === "PROCESSED" ? (
-                      <span style={{ color: "#22c55e" }}>Done</span>
-                    ) : (
-                      <button
-                        onClick={() => runOne(id)}
-                        className="hr-outline-btn"
+                      <span
+                        style={{
+                          color: "#22c55e",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px"
+                        }}
                       >
-                        Process
-                      </button>
+
+                        <CircleCheckBig size={15} />
+
+                        Done
+
+                      </span>
+                    ) : (
+                     <button
+                       onClick={() => runOne(id)}
+                       className="hr-outline-btn"
+                       style={{
+                         display: "flex",
+                         alignItems: "center",
+                         gap: "6px"
+                       }}
+                     >
+
+                       <Play size={14} />
+
+                       Process
+
+                     </button>
                     )}
                   </td>
                 </tr>
