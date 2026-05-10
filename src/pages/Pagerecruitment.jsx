@@ -1,238 +1,5 @@
-// import React, { useState } from "react";
-// import { recruitmentAPI, screeningAPI } from "./api";
-// import { useFetch, useToast } from "./hooks";
-// import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
-
-// const PIPELINE_STAGES = ["Applied", "Screening", "Interview", "Offer", "Hired"];
-// const DEPTS = ["Engineering","Design","Product","Data","Infra","HR","Finance","Marketing"];
-
-// export default function PageRecruitment() {
-//   const { data, loading, error, refetch } = useFetch(recruitmentAPI.getJobs);
-//   const { toast, showToast } = useToast();
-
-//   const [showForm, setShowForm]   = useState(false);
-//   const [selectedJob, setSelectedJob] = useState(null);
-//   const [screenData, setScreenData]   = useState(null);
-//   const [loadingScreen, setLoadingScreen] = useState(false);
-//   const [newJob, setNewJob] = useState({ title: "", department: "Engineering", numberOfOpenings: 1, description: "" });
-//   const [posting, setPosting] = useState(false);
-
-//   const jobs = Array.isArray(data) ? data : (data?.jobs || data?.content || []);
-
-//   const applicants = Array.isArray(screenData)
-//     ? screenData
-//     : (screenData?.candidates || screenData?.applicants || []);
-
-//   const viewJob = async (job) => {
-//     setSelectedJob(job);
-//     setLoadingScreen(true);
-//     try {
-//       const res = await screeningAPI.getByJob(job.id || job.jobId);
-//       setScreenData(res.data);
-//     } catch { setScreenData([]); }
-//     finally { setLoadingScreen(false); }
-//   };
-
-//   // ✅ FIX: moved outside
-//   const updateStatus = async (jobId, status) => {
-//     try {
-//       await recruitmentAPI.updateJobStatus(jobId, status);
-//       showToast("✅ Status updated");
-//       refetch();
-//     } catch {
-//       showToast("❌ Failed to update status");
-//     }
-//   };
-
-//   const postJob = async () => {
-//     setPosting(true);
-
-//     try {
-//       const payload = {
-//         title: newJob.title,
-//         description: newJob.description,
-//         requirements: newJob.department,
-//         vacancies: Number(newJob.numberOfOpenings),
-//         status: "OPEN"
-//       };
-
-//       await recruitmentAPI.createJob(payload);
-
-//       showToast("✅ Job posted successfully!");
-
-//       setNewJob({
-//         title: "",
-//         department: "Engineering",
-//         numberOfOpenings: 1,
-//         description: ""
-//       });
-
-//       setShowForm(false);
-//       refetch();
-
-//     } catch (err) {
-//       showToast("❌ Failed to post job");
-//     } finally {
-//       setPosting(false);
-//     }
-//   };
-//   if (loading) return <Spinner />;
-//   if (error)   return <ErrorState message={error} onRetry={refetch} />;
-
-//   // ── Job detail view ──────────────────────────────────────────────────────
-//   if (selectedJob) {
-//     return (
-//       <div className="hr-page">
-//         <Toast message={toast} />
-//         <button className="hr-back-btn" onClick={() => { setSelectedJob(null); setScreenData(null); }}>← Back to Jobs</button>
-//         <div className="hr-panel">
-//           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
-//             <div>
-//               <h3 style={{ color: "#fff", fontSize: 20, marginBottom: 6 }}>{selectedJob.title || selectedJob.jobTitle}</h3>
-//               <div style={{ color: "#9b96b8", fontSize: 14 }}>{selectedJob.department} · {selectedJob.numberOfOpenings || 1} opening{(selectedJob.numberOfOpenings || 1) > 1 ? "s" : ""}</div>
-//             </div>
-//             <Badge status={selectedJob.status || "OPEN"} />
-//           </div>
-//           {selectedJob.description && (
-//             <p style={{ color: "#9b96b8", marginTop: 12, fontSize: 14 }}>{selectedJob.description}</p>
-//           )}
-//         </div>
-
-//         {/* Applicant Pipeline */}
-//         <div className="hr-panel">
-//           <h3 className="hr-panel-title">Applicant Pipeline</h3>
-//           {loadingScreen ? <Spinner /> : (
-//             <div className="hr-pipeline">
-//               {PIPELINE_STAGES.map(stage => {
-//                 const stageApplicants = applicants.filter(a =>
-//                   (a.stage || a.status || a.screeningStatus || "Applied") === stage
-//                 );
-//                 return (
-//                   <div key={stage} className="hr-pipeline-col">
-//                     <div className="hr-pipeline-header">
-//                       <span>{stage}</span>
-//                       <span className="hr-pipeline-count">{stageApplicants.length}</span>
-//                     </div>
-//                     <div className="hr-pipeline-cards">
-//                       {stageApplicants.map((a, i) => {
-//                         const name = a.name || a.candidateName || `${a.firstName || ""} ${a.lastName || ""}`.trim() || "Candidate";
-//                         return (
-//                           <div key={a.id || i} className="hr-applicant-card">
-//                             <Avatar name={name} size={32} />
-//                             <div className="hr-ac-info">
-//                               <div className="hr-ac-name">{name}</div>
-//                               <div className="hr-ac-job">{a.email || ""}</div>
-//                             </div>
-//                           </div>
-//                         );
-//                       })}
-//                       {stageApplicants.length === 0 && (
-//                         <div style={{ color: "#555", fontSize: 12, padding: "8px 4px" }}>Empty</div>
-//                       )}
-//                     </div>
-//                   </div>
-//                 );
-//               })}
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // ── Main jobs view ───────────────────────────────────────────────────────
-//   return (
-//     <div className="hr-page">
-//       <Toast message={toast} />
-//       <div className="hr-page-header-row">
-//         <h2 className="hr-page-heading">Recruitment</h2>
-//         <button className="hr-primary-btn" onClick={() => setShowForm(s => !s)}>
-//           {showForm ? "✕ Cancel" : "+ Post Job"}
-//         </button>
-//       </div>
-
-//       {showForm && (
-//         <div className="hr-panel hr-add-form">
-//           <h3 className="hr-panel-title">New Job Posting</h3>
-//           <div className="hr-form-grid">
-//             <div className="hr-field hr-field-full">
-//               <label>Job Title</label>
-//               <input placeholder="e.g. Frontend Engineer" value={newJob.title}
-//                 onChange={e => setNewJob(j => ({ ...j, title: e.target.value }))} />
-//             </div>
-//             <div className="hr-field">
-//               <label>Department</label>
-//               <select value={newJob.department} onChange={e => setNewJob(j => ({ ...j, department: e.target.value }))}>
-//                 {DEPTS.map(d => <option key={d}>{d}</option>)}
-//               </select>
-//             </div>
-//             <div className="hr-field">
-//               <label>Openings</label>
-//               <input type="number" min="1" value={newJob.numberOfOpenings}
-//                 onChange={e => setNewJob(j => ({ ...j, numberOfOpenings: parseInt(e.target.value) || 1 }))} />
-//             </div>
-//             <div className="hr-field hr-field-full">
-//               <label>Description</label>
-//               <textarea rows={3} placeholder="Job description…" value={newJob.description}
-//                 onChange={e => setNewJob(j => ({ ...j, description: e.target.value }))} />
-//             </div>
-//           </div>
-//           <button className="hr-primary-btn" onClick={postJob} disabled={posting}>
-//             {posting ? "Posting…" : "Post Job"}
-//           </button>
-//         </div>
-//       )}
-
-//       <div className="hr-panel">
-//         <h3 className="hr-panel-title">Open Positions</h3>
-//         {jobs.length === 0 ? (
-//           <EmptyState icon="💼" text="No jobs posted yet" />
-//         ) : (
-//           <div className="hr-jobs-grid">
-//             {jobs.map(j => {
-//               const id       = j.id || j.jobId;
-//               const title    = j.title || j.jobTitle;
-//               const dept     = j.department;
-//               const openings = j.numberOfOpenings || j.openings || 1;
-//               const status   = j.status || "OPEN";
-//               const posted   = j.createdAt ? new Date(j.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "";
-//               return (
-//                 <div key={id} className="hr-job-card" style={{ cursor: "pointer" }} onClick={() => viewJob(j)}>
-//                   <div className="hr-job-title">{title}</div>
-//                   <div className="hr-job-meta">
-//                     <span>{dept}</span>
-//                     <span>{openings} opening{openings > 1 ? "s" : ""}</span>
-//                   </div>
-//                   <div className="hr-job-row">
-//                     <span className="hr-job-applicants">👤 View applicants</span>
-//                    <select
-//                      value={status}
-//                      onClick={(e) => e.stopPropagation()}
-//                      onChange={(e) => {
-//                        e.stopPropagation();
-//                        updateStatus(id, e.target.value);
-//                      }}
-//                      className="hr-status-dropdown"
-//                    >
-//                      <option value="OPEN">OPEN</option>
-//                      <option value="ON_HOLD">ON_HOLD</option>
-//                      <option value="CLOSED">CLOSED</option>
-//                    </select>
-//                   </div>
-//                   {posted && <div className="hr-job-posted">Posted {posted}</div>}
-//                 </div>
-//               );
-//             })}
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import React, { useState } from "react";
-import { recruitmentAPI, candidateAPI } from "./api";
+import { recruitmentAPI, candidateAPI, resumeAPI, employeeAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
 import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
 
@@ -255,6 +22,12 @@ export default function PageRecruitment() {
   const [posting,       setPosting]       = useState(false);
   const [addingCand,    setAddingCand]    = useState(false);
   const [movingId,      setMovingId]      = useState(null);
+
+  // ── Schedule interview modal state ────────────────────────────────────────
+  const [scheduleModal, setScheduleModal] = useState(null); // candidate object or null
+  const [scheduleForm,  setScheduleForm]  = useState({ date: "", time: "", interviewerName: "", interviewerId: "" });
+  const [scheduling,    setScheduling]    = useState(false);
+  const [employees,     setEmployees]     = useState([]);
 
   const [newJob, setNewJob] = useState({
     title: "", department: "Engineering", numberOfOpenings: 1, description: "", requirements: ""
@@ -326,6 +99,43 @@ export default function PageRecruitment() {
       showToast("❌ " + (e.response?.data || "Failed to add candidate"));
     } finally {
       setAddingCand(false);
+    }
+  };
+
+  // ── Open schedule interview modal ─────────────────────────────────────────
+  const openScheduleModal = async (candidate) => {
+    setScheduleModal(candidate);
+    setScheduleForm({ date: "", time: "", interviewerName: "", interviewerId: "" });
+    // Load employees list for interviewer selection
+    if (employees.length === 0) {
+      try {
+        const res = await employeeAPI.getAll();
+        setEmployees(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        // employees list optional
+      }
+    }
+  };
+
+  // ── Confirm schedule interview ─────────────────────────────────────────────
+  const confirmSchedule = async () => {
+    if (!scheduleForm.date || !scheduleForm.time) {
+      showToast("❌ Please select date and time");
+      return;
+    }
+    setScheduling(true);
+    try {
+      const interviewDate = `${scheduleForm.date}T${scheduleForm.time}:00`;
+      const rawId = scheduleForm.interviewerId;
+      const interviewerId = rawId && rawId !== "" ? Number(rawId) : null;
+      const res = await candidateAPI.scheduleInterview(scheduleModal.id, interviewDate, interviewerId);
+      setCandidates((prev) => prev.map((c) => (c.id === scheduleModal.id ? res.data : c)));
+      showToast("✅ Interview scheduled!");
+      setScheduleModal(null);
+    } catch (e) {
+      showToast("❌ " + (e.response?.data || e.message || "Failed to schedule interview"));
+    } finally {
+      setScheduling(false);
     }
   };
 
@@ -468,26 +278,86 @@ export default function PageRecruitment() {
                               {c.phone && (
                                 <div className="hr-ac-job" style={{ fontSize: 11 }}>{c.phone}</div>
                               )}
+                              {c.githubUrl && (
+                                <a
+                                  href={c.githubUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ fontSize: 11, color: "#a78bfa", textDecoration: "none" }}
+                                >
+                                  🔗 GitHub
+                                </a>
+                              )}
                             </div>
                           </div>
-                          {/* Row 2: action buttons */}
+
+                          {/* Interview schedule details (shown when in INTERVIEW stage) */}
+                          {stage === "INTERVIEW" && c.interviewDate && (
+                            <div style={{
+                              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
+                              borderRadius: 6, padding: "7px 10px", fontSize: 11,
+                            }}>
+                              <div style={{ color: "#f59e0b", fontWeight: 600, marginBottom: 2 }}>📅 Scheduled Interview</div>
+                              <div style={{ color: "#d1c9a8" }}>
+                                {new Date(c.interviewDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                {" at "}
+                                {new Date(c.interviewDate).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                              </div>
+                              {c.interviewerName && (
+                                <div style={{ color: "#9b96b8", marginTop: 2 }}>👤 {c.interviewerName}</div>
+                              )}
+                            </div>
+                          )}
+                          {/* Row 2: Resume button */}
+                          <a
+                            href={resumeAPI.getDownloadUrl(c.id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              gap: 5, textDecoration: "none",
+                              background: "rgba(99,102,241,0.1)", color: "#818cf8",
+                              border: "1px solid rgba(99,102,241,0.25)", borderRadius: 6,
+                              padding: "5px 8px", fontSize: 11, fontWeight: 500,
+                              cursor: "pointer",
+                            }}>
+                            📄 View Resume
+                          </a>
+                          {/* Row 3: stage action buttons */}
                           <div style={{ display: "flex", gap: 6 }}>
                             {nextStage && (
-                              <button
-                                onClick={() => moveCandidate(c.id, nextStage)}
-                                disabled={movingId === c.id}
-                                style={{
-                                  flex: 1,
-                                  background: STAGE_COLORS[nextStage] + "22",
-                                  color: STAGE_COLORS[nextStage],
-                                  border: `1px solid ${STAGE_COLORS[nextStage]}55`,
-                                  borderRadius: 6, padding: "5px 6px",
-                                  fontSize: 11, fontWeight: 500, cursor: "pointer",
-                                  whiteSpace: "nowrap",
-                                  opacity: movingId === c.id ? 0.5 : 1,
-                                }}>
-                                {movingId === c.id ? "…" : `→ ${STAGE_LABELS[nextStage]}`}
-                              </button>
+                              nextStage === "INTERVIEW" ? (
+                                <button
+                                  onClick={() => openScheduleModal(c)}
+                                  disabled={movingId === c.id}
+                                  style={{
+                                    flex: 1,
+                                    background: STAGE_COLORS["INTERVIEW"] + "22",
+                                    color: STAGE_COLORS["INTERVIEW"],
+                                    border: `1px solid ${STAGE_COLORS["INTERVIEW"]}55`,
+                                    borderRadius: 6, padding: "5px 6px",
+                                    fontSize: 11, fontWeight: 500, cursor: "pointer",
+                                    whiteSpace: "nowrap",
+                                  }}>
+                                  📅 Schedule Interview
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => moveCandidate(c.id, nextStage)}
+                                  disabled={movingId === c.id}
+                                  style={{
+                                    flex: 1,
+                                    background: STAGE_COLORS[nextStage] + "22",
+                                    color: STAGE_COLORS[nextStage],
+                                    border: `1px solid ${STAGE_COLORS[nextStage]}55`,
+                                    borderRadius: 6, padding: "5px 6px",
+                                    fontSize: 11, fontWeight: 500, cursor: "pointer",
+                                    whiteSpace: "nowrap",
+                                    opacity: movingId === c.id ? 0.5 : 1,
+                                  }}>
+                                  {movingId === c.id ? "…" : `→ ${STAGE_LABELS[nextStage]}`}
+                                </button>
+                              )
                             )}
                             <button
                               onClick={() => moveCandidate(c.id, "REJECTED")}
@@ -550,6 +420,121 @@ export default function PageRecruitment() {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+        {/* Schedule Interview Modal */}
+        {scheduleModal && (
+          <div style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}>
+            <div style={{
+              background: "#1a1730", border: "1px solid rgba(124,90,240,0.3)",
+              borderRadius: 14, padding: 28, width: "100%", maxWidth: 460,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}>📅 Schedule Interview</h3>
+                <button onClick={() => setScheduleModal(null)}
+                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}>✕</button>
+              </div>
+
+              {/* Candidate info */}
+              <div style={{
+                background: "rgba(124,90,240,0.08)", border: "1px solid rgba(124,90,240,0.2)",
+                borderRadius: 8, padding: "10px 14px", marginBottom: 20,
+              }}>
+                <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>{scheduleModal.name}</div>
+                <div style={{ color: "#9b96b8", fontSize: 12, marginTop: 2 }}>{scheduleModal.email}</div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div className="hr-field">
+                  <label style={{ color: "#9b96b8", fontSize: 13, marginBottom: 6, display: "block" }}>Interview Date *</label>
+                  <input
+                    type="date"
+                    value={scheduleForm.date}
+                    min={new Date().toISOString().split("T")[0]}
+                    onChange={e => setScheduleForm(f => ({ ...f, date: e.target.value }))}
+                    style={{
+                      width: "100%", background: "#12102a", border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 14,
+                    }}
+                  />
+                </div>
+                <div className="hr-field">
+                  <label style={{ color: "#9b96b8", fontSize: 13, marginBottom: 6, display: "block" }}>Interview Time *</label>
+                  <input
+                    type="time"
+                    value={scheduleForm.time}
+                    onChange={e => setScheduleForm(f => ({ ...f, time: e.target.value }))}
+                    style={{
+                      width: "100%", background: "#12102a", border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 14,
+                    }}
+                  />
+                </div>
+                <div className="hr-field">
+                  <label style={{ color: "#9b96b8", fontSize: 13, marginBottom: 6, display: "block" }}>Interviewer</label>
+                  {employees.length > 0 ? (
+                    <select
+                      value={scheduleForm.interviewerId}
+                      onChange={e => {
+                        const emp = employees.find(em => String(em.id) === e.target.value);
+                        setScheduleForm(f => ({
+                          ...f,
+                          interviewerId: e.target.value,
+                          interviewerName: emp ? emp.name : "",
+                        }));
+                      }}
+                      style={{
+                        width: "100%", background: "#12102a", border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 14,
+                      }}
+                    >
+                      <option value="">— Select Interviewer —</option>
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name} {emp.designation ? `(${emp.designation})` : ""}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      placeholder="Interviewer name (optional)"
+                      value={scheduleForm.interviewerName}
+                      onChange={e => setScheduleForm(f => ({ ...f, interviewerName: e.target.value }))}
+                      style={{
+                        width: "100%", background: "#12102a", border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 14,
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+                <button
+                  onClick={() => setScheduleModal(null)}
+                  style={{
+                    flex: 1, background: "rgba(255,255,255,0.05)", color: "#9b96b8",
+                    border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
+                    padding: "10px", fontSize: 14, cursor: "pointer",
+                  }}>
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmSchedule}
+                  disabled={scheduling}
+                  style={{
+                    flex: 2, background: "linear-gradient(135deg,#7c5af0,#a78bfa)",
+                    color: "#fff", border: "none", borderRadius: 8,
+                    padding: "10px", fontSize: 14, fontWeight: 600,
+                    cursor: scheduling ? "not-allowed" : "pointer",
+                    opacity: scheduling ? 0.7 : 1,
+                  }}>
+                  {scheduling ? "Scheduling…" : "✓ Confirm Interview"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

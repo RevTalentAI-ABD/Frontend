@@ -10,7 +10,7 @@ export default function ApplyForm() {
   const location = useLocation();
   const job = location.state?.job;
 
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", githubUrl: "" });
   const [resume, setResume] = useState(null);
   const [resumeName, setResumeName] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -39,10 +39,11 @@ export default function ApplyForm() {
     try {
       // Step 1 — Create candidate record
       const candRes = await axios.post(`${BASE_URL}/api/candidates`, {
-        jobId:  Number(jobId),
-        name:   form.name,
-        email:  form.email,
-        phone:  form.phone,
+        jobId:     Number(jobId),
+        name:      form.name,
+        email:     form.email,
+        phone:     form.phone,
+        githubUrl: form.githubUrl || null,
       });
 
       // candidateId comes back as a plain Long from CandidateController
@@ -82,7 +83,7 @@ export default function ApplyForm() {
           background: "rgba(255,255,255,0.05)", border: "1px solid rgba(16,185,129,0.3)",
           borderRadius: 20, padding: "48px 40px", maxWidth: 480, textAlign: "center",
         }}>
-          <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
+        
           <h2 style={{ color: "#10b981", fontSize: 26, fontWeight: 700, marginBottom: 12 }}>
             Application Submitted!
           </h2>
@@ -235,6 +236,24 @@ export default function ApplyForm() {
               placeholder="+91 9876543210"
               value={form.phone}
               onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+              style={{
+                width: "100%", background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10,
+                padding: "12px 16px", color: "#fff", fontSize: 15, outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          {/* GitHub URL */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ display: "block", color: "rgba(255,255,255,0.6)", fontSize: 13, marginBottom: 8, fontWeight: 500 }}>
+              GitHub Profile URL <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>(optional)</span>
+            </label>
+            <input
+              placeholder="https://github.com/yourusername"
+              value={form.githubUrl}
+              onChange={e => setForm(f => ({ ...f, githubUrl: e.target.value }))}
               style={{
                 width: "100%", background: "rgba(255,255,255,0.06)",
                 border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10,
