@@ -77,13 +77,43 @@ export const leaveAPI = {
 };
 
 // ── PAYROLL ───────────────────────────────────────────────────────────────────
+const PAYROLL_BASE = "/api/payroll";
+
 export const payrollAPI = {
-  getAll:        ()      => api.get("/api/payroll"),
-  getMonth:      ()      => api.get("/api/payroll/month"),
-  getByEmployee: (empId) => api.get(`/api/payroll/employee/${empId}`),
-  generate:      ()      => api.post("/api/payroll/generate"),
-  processAll:    ()      => api.post("/api/payroll/process-all"),
-  process:       (id)    => api.put(`/api/payroll/${id}/process`),
+  // GET /api/payroll  →  all payroll records
+  getAll: () => api.get(PAYROLL_BASE),
+
+  // GET /api/payroll/employee/:empId  →  payroll records for one employee
+  getByEmployee: (empId) => api.get(`${PAYROLL_BASE}/employee/${empId}`),
+
+  // GET /api/payroll/month?month=&year=  →  all records for a month
+  getByMonth: (month, year) => api.get(`${PAYROLL_BASE}/month`, { params: { month, year } }),
+
+  // POST /api/payroll/generate?month=&year=  →  auto-generate payroll rows
+  generate: (month, year) => api.post(`${PAYROLL_BASE}/generate`, null, { params: { month, year } }),
+
+  // POST /api/payroll/employee/:empId  →  create / assign salary for one employee
+  //   body: { basicSalary, allowances, deductions, netSalary, payMonth, payYear }
+  assignSalary: (empId, dto) => api.post(`${PAYROLL_BASE}/employee/${empId}`, dto),
+
+  // PUT /api/payroll/:payrollId  →  update an existing payroll record
+  update: (payrollId, dto) => api.put(`${PAYROLL_BASE}/${payrollId}`, dto),
+
+  // PUT /api/payroll/:payrollId/process  →  process a single payroll row
+  processOne: (payrollId) => api.put(`${PAYROLL_BASE}/${payrollId}/process`),
+
+  // PUT /api/payroll/bulk-process?month=&year=  →  bulk-process a month
+  bulkProcess: (month, year) => api.put(`${PAYROLL_BASE}/bulk-process`, null, { params: { month, year } }),
+
+  // POST /api/payroll/process-all  →  process ALL pending payroll rows
+  processAll: () => api.post(`${PAYROLL_BASE}/process-all`),
+
+  // PUT /api/payroll/:payrollId/pay  →  mark a record as paid
+  markPaid: (payrollId) => api.put(`${PAYROLL_BASE}/${payrollId}/pay`),
+
+  // GET /api/payroll/salary-slip/:id  →  download PDF salary slip
+  downloadSlip: (id) =>
+    api.get(`${PAYROLL_BASE}/salary-slip/${id}`, { responseType: "blob" }),
 };
 
 // ── ATTENDANCE ────────────────────────────────────────────────────────────────
@@ -162,33 +192,19 @@ export const chatAPI = {
 
 // ── AI ────────────────────────────────────────────────────────────────────────
 export const aiAPI = {
-  ask:            (question)        => api.post("/api/ai/ask",             { question }),
-  screenResume:   (resume, job)     => api.post("/api/ai/screen-resume",   { resume, job }),
-  performance:    (history)         => api.post("/api/ai/performance",     { history }),
-  generatePolicy: (topic)           => api.post("/api/ai/generate-policy", { topic }),
+  ask:            (question)    => api.post("/api/ai/ask",             { question }),
+  screenResume:   (resume, job) => api.post("/api/ai/screen-resume",   { resume, job }),
+  performance:    (history)     => api.post("/api/ai/performance",     { history }),
+  generatePolicy: (topic)       => api.post("/api/ai/generate-policy", { topic }),
 };
 
+// ── HR ────────────────────────────────────────────────────────────────────────
 export const hrAPI = {
-
-  getManagers:
-    () => api.get("/api/hr/managers"),
-
-  assignManager:
-    (data) =>
-      api.put("/api/hr/assign-manager", data),
-
-  changeRole:
-    (data) =>
-      api.put("/api/hr/change-role", data),
-
-  changeDepartment:
-    (data) =>
-      api.put("/api/hr/change-department", data),
-
-  removeManager:
-    (data) =>
-      api.put("/api/hr/remove-manager", data),
+  getManagers:      ()     => api.get("/api/hr/managers"),
+  assignManager:    (data) => api.put("/api/hr/assign-manager", data),
+  changeRole:       (data) => api.put("/api/hr/change-role", data),
+  changeDepartment: (data) => api.put("/api/hr/change-department", data),
+  removeManager:    (data) => api.put("/api/hr/remove-manager", data),
 };
 
-
-export default api;  // ← only one default export
+export default api;
