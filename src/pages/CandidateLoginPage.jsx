@@ -139,7 +139,9 @@ export default function CandidateLoginPage() {
           </div>
 
           <div className="cl-row-forgot">
-            <a href="/forgot-password" className="cl-forgot">Forgot password?</a>
+            <span className="cl-forgot" onClick={() => navigate("/forgot-password")} style={{ cursor: "pointer" }}>
+  Forgot password?
+</span>
           </div>
 
           <button

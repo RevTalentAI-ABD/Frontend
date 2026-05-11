@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "../styles/ManagerDashboard.css";
+import PagePerformanceReview from "./PagePerformanceReview";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, PieChart, Pie, Cell, Legend, LineChart, Line,
+  CartesianGrid, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import {
   getManagerDashboard,
@@ -12,7 +13,6 @@ import {
   searchTeam,
   getAllAttendance,
   getAttendanceSummary,
-  exportAttendance,
   getAllLeaves,
   getPendingLeaves,
   approveLeave,
@@ -20,21 +20,27 @@ import {
   getAllNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  
 } from "../api/api";
+import { employeeAPI, performanceAPI, getLeaveHistory,
+  getLeaveBalance,
+  applyLeave, } from "../components/api";
 import { useNavigate } from "react-router-dom";
 import {
   Users, CheckCircle, Home, Laptop, ClipboardList, BarChart2,
-  Bell, Download, AlertTriangle, Pin, Clock, Umbrella, Check, X,
+  Bell, AlertTriangle, Pin, Clock, Umbrella, Check, X, Award,
 } from "lucide-react";
 
 
 function getInitials(name = "") {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+}
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
 function statusFromEmployee(emp) {
@@ -43,12 +49,11 @@ function statusFromEmployee(emp) {
   if (s === "PRESENT" || s === "ACTIVE") return "Present";
   if (s === "ON_LEAVE" || s === "LEAVE") return "On Leave";
   if (s === "ABSENT") return "Absent";
+  if (s === "WFO" || s === "WORK_FROM_OFFICE") return "Present";
   return emp.status || "Unknown";
 }
 
-const AVATAR_COLORS = [
-  "#7c5af0", "#10b981", "#06b6d4", "#f59e0b", "#ef4444", "#8b5cf6",
-];
+const AVATAR_COLORS = ["#7c5af0", "#10b981", "#06b6d4", "#f59e0b", "#ef4444", "#8b5cf6"];
 function pickColor(id) {
   return AVATAR_COLORS[(id || 0) % AVATAR_COLORS.length];
 }
@@ -72,10 +77,7 @@ function Logo() {
 
 function Avatar({ initials, size = 36, color = "#7c5af0" }) {
   return (
-    <div
-      className="md-avatar"
-      style={{ width: size, height: size, background: color, fontSize: size * 0.35 }}
-    >
+    <div className="md-avatar" style={{ width: size, height: size, background: color, fontSize: size * 0.35 }}>
       {initials}
     </div>
   );
@@ -138,7 +140,9 @@ function ErrorMsg({ msg }) {
       background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)",
       color: "#f87171", borderRadius: 10, padding: "12px 16px", margin: "16px 0",
     }}>
-      <span style={{display:"flex",alignItems:"center",gap:6}}><AlertTriangle size={15} /> {msg}</span>
+      <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <AlertTriangle size={15} /> {msg}
+      </span>
     </div>
   );
 }
@@ -170,12 +174,12 @@ function PageHome() {
   if (loading) return <Spinner />;
   if (error) return <ErrorMsg msg={error} />;
 
-  const present    = dashboard?.presentCount   ?? 0;
-  const wfh        = dashboard?.wfhCount        ?? 0;
-  const absent     = dashboard?.absentCount     ?? 0;
-  const onLeave    = dashboard?.onLeaveCount    ?? 0;
-  const teamSize   = dashboard?.teamSize        ?? (present + wfh + absent + onLeave);
-  const pending    = dashboard?.pendingLeaves   ?? 0;
+  const present  = dashboard?.presentCount ?? 0;
+  const wfh      = dashboard?.wfhCount     ?? 0;
+  const absent   = dashboard?.absentCount  ?? 0;
+  const onLeave  = dashboard?.onLeaveCount ?? 0;
+  const teamSize = dashboard?.teamSize     ?? (present + wfh + absent + onLeave);
+  const pending  = dashboard?.pendingLeaves ?? 0;
 
   const PIE_DATA = [
     { name: "Present",  value: present,  color: "#10b981" },
@@ -193,7 +197,7 @@ function PageHome() {
               weekday: "long", day: "numeric", month: "long", year: "numeric",
             })}
           </p>
-          <h2 className="md-welcome-heading">Good morning</h2>
+          <h2 className="md-welcome-heading">{getGreeting()}</h2>
           <p className="md-welcome-sub">
             You have <strong>{pending} pending leave requests</strong> and{" "}
             <strong>{absent} absent today</strong>.
@@ -203,10 +207,10 @@ function PageHome() {
       </div>
 
       <div className="md-stats-grid">
-        <StatCard icon={<Users size={20} />} label="Team Size"         value={teamSize} sub="total members"  color="#7c5af0" />
-        <StatCard icon={<CheckCircle size={20} />} label="Present Today"     value={present}  sub="in office"      color="#10b981" />
-        <StatCard icon={<Laptop size={20} />} label="WFH Today"         value={wfh}      sub="remote"         color="#06b6d4" />
-        <StatCard icon={<ClipboardList size={20} />} label="Pending Approvals" value={pending}  sub="need action"    color="#f59e0b" />
+        <StatCard icon={<Users size={20} />}        label="Team Size"         value={teamSize} sub="total members" color="#7c5af0" />
+        <StatCard icon={<CheckCircle size={20} />}  label="Present Today"     value={present}  sub="in office"     color="#10b981" />
+        <StatCard icon={<Laptop size={20} />}       label="WFH Today"         value={wfh}      sub="remote"        color="#06b6d4" />
+        <StatCard icon={<ClipboardList size={20} />} label="Pending Approvals" value={pending}  sub="need action"   color="#f59e0b" />
       </div>
 
       <div className="md-two-col">
@@ -237,7 +241,7 @@ function PageHome() {
             )}
             {activity.map((a, i) => (
               <div key={i} className="md-activity-row">
-                <span className="md-activity-icon">{a.icon || <Pin size={14} />}</span>
+                <span className="md-activity-icon"><Pin size={14} /></span>
                 <div className="md-activity-text">{a.text || a.message || a.description}</div>
                 <div className="md-activity-time">{a.time || a.timestamp}</div>
               </div>
@@ -265,7 +269,6 @@ function PageTeamAttendance() {
           getAttendanceSummary(),
         ]);
         setAttendance(all || []);
-        // summary is array of {week, present, absent, leave} or similar
         setWeeklyData(Array.isArray(summary) ? summary : []);
       } catch (e) {
         setError(e.message);
@@ -282,18 +285,12 @@ function PageTeamAttendance() {
     ? attendance
     : attendance.filter((a) => (a.attendanceType || a.status || "").toUpperCase() === filter);
 
-  const handleExport = async () => {
-    try { await exportAttendance(); }
-    catch (e) { alert("Export failed: " + e.message); }
-  };
-
   if (loading) return <Spinner />;
 
   return (
     <div className="md-page">
       <div className="md-page-header-row">
         <h2 className="md-page-heading">Team Attendance</h2>
-        <button className="md-primary-btn" onClick={handleExport} style={{display:"flex",alignItems:"center",gap:6}}><Download size={15} /> Export</button>
       </div>
 
       {error && <ErrorMsg msg={error} />}
@@ -316,7 +313,7 @@ function PageTeamAttendance() {
               <div className="md-tac-name">{m.employeeName}</div>
               <div className="md-tac-role">{m.department || m.employeeCode}</div>
             </div>
-            <StatusBadge status={m.attendanceType || m.status} />
+            <StatusBadge status={statusFromEmployee(m)} />
           </div>
         ))}
         {filtered.length === 0 && (
@@ -352,11 +349,17 @@ function PageLeaveApprovals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [rejectModal, setRejectModal] = useState(null);
+  const [rejectComment, setRejectComment] = useState("");
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [approveModal, setApproveModal] = useState(null);
+  const [approveComment, setApproveComment] = useState("");
+  const [approveSubmitting, setApproveSubmitting] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const data = await getPendingLeaves();
+        const data = await getAllLeaves();
         setRequests(data || []);
       } catch (e) {
         setError(e.message);
@@ -366,38 +369,120 @@ function PageLeaveApprovals() {
     })();
   }, []);
 
-  const handle = async (id, action) => {
+  const handleApprove = async () => {
+    if (!approveComment.trim()) return;
+    setApproveSubmitting(true);
     setActionError("");
     try {
-      if (action === "approve") {
-        await approveLeave(id);
-      } else {
-        await rejectLeave(id, "");
-      }
-      setRequests((rs) =>
-        rs.map((r) =>
-          r.id === id
-            ? { ...r, status: action === "approve" ? "APPROVED" : "REJECTED" }
-            : r
-        )
-      );
+      await approveLeave(approveModal, approveComment);
+      setRequests(rs => rs.map(r =>
+        r.id === approveModal ? { ...r, status: "APPROVED", comment: approveComment } : r
+      ));
+      setApproveModal(null);
+      setApproveComment("");
     } catch (e) {
       setActionError(e.message);
+    } finally {
+      setApproveSubmitting(false);
     }
   };
-const PENDING_STATUSES = ["PENDING", "Pending", "APPLIED", "Applied"];
 
-const pending = requests.filter((r) => 
-  !r.status || PENDING_STATUSES.includes(r.status)
-);
-const done = requests.filter((r) => 
-  r.status && !PENDING_STATUSES.includes(r.status)
-);
+  const handleReject = async () => {
+    if (!rejectComment.trim()) return;
+    setRejectSubmitting(true);
+    setActionError("");
+    try {
+      await rejectLeave(rejectModal, rejectComment);
+      setRequests(rs => rs.map(r =>
+        r.id === rejectModal ? { ...r, status: "REJECTED", rejectionReason: rejectComment } : r
+      ));
+      setRejectModal(null);
+      setRejectComment("");
+    } catch (e) {
+      setActionError(e.message);
+    } finally {
+      setRejectSubmitting(false);
+    }
+  };
+
+  const PENDING_STATUSES = ["PENDING", "Pending", "APPLIED", "Applied"];
+  const pending = requests.filter(r => !r.status || PENDING_STATUSES.includes(r.status));
+  const done    = requests.filter(r => r.status && !PENDING_STATUSES.includes(r.status));
 
   if (loading) return <Spinner />;
 
+  const modalOverlay = {
+    position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+    display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+  };
+  const modalBox = {
+    background: "#1e1740", borderRadius: 14, padding: 28, width: 420,
+    boxShadow: "0 20px 60px rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)",
+  };
+  const modalTitle  = { margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff" };
+  const modalSub    = { margin: "0 0 16px", fontSize: 13, color: "rgba(255,255,255,0.5)" };
+  const modalTextarea = {
+    width: "100%", minHeight: 90, background: "rgba(255,255,255,0.07)",
+    border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8,
+    color: "#fff", fontSize: 13, padding: "10px 12px", resize: "vertical",
+    outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+  };
+  const modalActions = { display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" };
+
   return (
     <div className="md-page">
+      {approveModal && (
+        <div style={modalOverlay}>
+          <div style={modalBox}>
+            <h3 style={modalTitle}>Approve Leave</h3>
+            <p style={modalSub}>Add a comment before approving (required)</p>
+            <textarea
+              style={modalTextarea}
+              placeholder="e.g. Approved. Ensure handover before leave."
+              value={approveComment}
+              onChange={e => setApproveComment(e.target.value)}
+              autoFocus
+            />
+            <div style={modalActions}>
+              <button onClick={() => { setApproveModal(null); setApproveComment(""); }}
+                style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13 }}>
+                Cancel
+              </button>
+              <button onClick={handleApprove} disabled={!approveComment.trim() || approveSubmitting}
+                style={{ background: approveComment.trim() ? "#10b981" : "rgba(16,185,129,0.3)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: approveComment.trim() ? "pointer" : "not-allowed", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                <Check size={14} /> {approveSubmitting ? "Approving..." : "Confirm Approve"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rejectModal && (
+        <div style={modalOverlay}>
+          <div style={modalBox}>
+            <h3 style={modalTitle}>Reject Leave</h3>
+            <p style={modalSub}>Please provide a reason for rejection (required)</p>
+            <textarea
+              style={modalTextarea}
+              placeholder="e.g. Insufficient team coverage during this period."
+              value={rejectComment}
+              onChange={e => setRejectComment(e.target.value)}
+              autoFocus
+            />
+            <div style={modalActions}>
+              <button onClick={() => { setRejectModal(null); setRejectComment(""); }}
+                style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13 }}>
+                Cancel
+              </button>
+              <button onClick={handleReject} disabled={!rejectComment.trim() || rejectSubmitting}
+                style={{ background: rejectComment.trim() ? "#ef4444" : "rgba(239,68,68,0.3)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: rejectComment.trim() ? "pointer" : "not-allowed", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                <X size={14} /> {rejectSubmitting ? "Rejecting..." : "Confirm Reject"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="md-page-header-row">
         <h2 className="md-page-heading">Leave Approvals</h2>
         <span className="md-count-badge">{pending.length} pending</span>
@@ -410,7 +495,7 @@ const done = requests.filter((r) =>
         <div className="md-empty-state">All caught up! No pending requests.</div>
       )}
 
-      {pending.map((r) => {
+      {pending.map(r => {
         const name = r.employeeName || `Employee #${r.employeeId}`;
         const days = r.totalDays ?? "?";
         return (
@@ -428,8 +513,14 @@ const done = requests.filter((r) =>
                 <div className="md-lr-reason">"{r.reason}"</div>
               </div>
               <div className="md-lr-actions">
-                <button className="md-approve-btn" onClick={() => handle(r.id, "approve")} style={{display:"flex",alignItems:"center",gap:5}}><Check size={14} /> Approve</button>
-                <button className="md-reject-btn"  onClick={() => handle(r.id, "reject")} style={{display:"flex",alignItems:"center",gap:5}}><X size={14} /> Reject</button>
+                <button className="md-approve-btn" onClick={() => setApproveModal(r.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <Check size={14} /> Approve
+                </button>
+                <button className="md-reject-btn" onClick={() => setRejectModal(r.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <X size={14} /> Reject
+                </button>
               </div>
             </div>
           </div>
@@ -437,9 +528,9 @@ const done = requests.filter((r) =>
       })}
 
       {done.length > 0 && (
-        <div className="md-panel">
+        <div className="md-panel" style={{ marginTop: 24 }}>
           <h3 className="md-panel-title">Processed Requests</h3>
-          {done.map((r) => {
+          {done.map(r => {
             const name = r.employeeName || `Employee #${r.employeeId}`;
             return (
               <div key={r.id} className="md-lr-done-row">
@@ -447,7 +538,10 @@ const done = requests.filter((r) =>
                 <div className="md-lr-done-info">
                   <span className="md-lr-done-name">{name}</span>
                   <span className="md-lr-done-detail">
-                    {r.leaveType} · {r.startDate}–{r.endDate}
+                    {r.leaveType} · {r.startDate} – {r.endDate}
+                    {r.rejectionReason && (
+                      <span style={{ color: "#f87171", marginLeft: 8 }}>· Reason: {r.rejectionReason}</span>
+                    )}
                   </span>
                 </div>
                 <StatusBadge status={r.status} />
@@ -456,6 +550,41 @@ const done = requests.filter((r) =>
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Member Detail Component ──────────────────────────────────────────────────
+function MemberDetail({ emp, onBack }) {
+  return (
+    <div className="md-page">
+      <button className="md-back-btn" onClick={onBack}>← Back to Team</button>
+      <div className="md-member-profile">
+        <Avatar initials={getInitials(emp.name)} size={72} color={pickColor(emp.id)} />
+        <div>
+          <div className="md-mp-name">{emp.name}</div>
+          <div className="md-mp-role">{emp.designation} · {emp.departmentName}</div>
+          <StatusBadge status={statusFromEmployee(emp)} />
+        </div>
+      </div>
+      <div className="md-panel">
+        <h3 className="md-panel-title">Contact Information</h3>
+        <div className="md-contact-grid">
+          {[
+            ["Email",         emp.email],
+            ["Department",    emp.departmentName],
+            ["Designation",   emp.designation],
+            ["Employee Code", emp.employeeCode],
+            ["Phone",         emp.phone],
+            ["Status",        emp.status],
+          ].map(([l, v]) => (
+            <div key={l} className="md-contact-item">
+              <div className="md-contact-label">{l}</div>
+              <div className="md-contact-value">{v || "—"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -485,7 +614,6 @@ function PageTeamMembers() {
   const handleSearch = useCallback(async (q) => {
     setSearch(q);
     if (!q.trim()) {
-      // reset to full team
       try {
         const data = await getTeam();
         setTeam(data || []);
@@ -506,44 +634,7 @@ function PageTeamMembers() {
   if (loading) return <Spinner />;
 
   if (selected) {
-    const emp = selected;
-    return (
-      <div className="md-page">
-        <button className="md-back-btn" onClick={() => setSelected(null)}>← Back to Team</button>
-        <div className="md-member-profile">
-          <Avatar initials={getInitials(emp.name)} size={72} color={pickColor(emp.id)} />
-          <div>
-            <div className="md-mp-name">{emp.name}</div>
-            <div className="md-mp-role">{emp.designation} · {emp.departmentName}</div>
-            <StatusBadge status={statusFromEmployee(emp)} />
-          </div>
-        </div>
-        <div className="md-stats-grid">
-          <StatCard icon={<ClipboardList size={20} />} label="Attendance"   value={"—"} sub="% this month"  color="#7c5af0" />
-          <StatCard icon={<Umbrella size={20} />} label="Leaves Used"  value={"—"} sub="this year"     color="#f59e0b" />
-          <StatCard icon={<BarChart2 size={20} />} label="Performance"  value={"—"} sub="score"         color="#10b981" />
-          <StatCard icon={<Clock size={20} />} label="Avg Hours"    value={"—"} sub="per day"       color="#06b6d4" />
-        </div>
-        <div className="md-panel">
-          <h3 className="md-panel-title">Contact Information</h3>
-          <div className="md-contact-grid">
-            {[
-              ["Email",        emp.email],
-              ["Department",   emp.departmentName],
-              ["Designation",  emp.designation],
-              ["Employee Code",emp.employeeCode],
-              ["Phone",        emp.phone],
-              ["Status",       emp.status],
-            ].map(([l, v]) => (
-              <div key={l} className="md-contact-item">
-                <div className="md-contact-label">{l}</div>
-                <div className="md-contact-value">{v || "—"}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <MemberDetail emp={selected} onBack={() => setSelected(null)} />;
   }
 
   return (
@@ -584,118 +675,6 @@ function PageTeamMembers() {
             No team members found.
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Reports Page ─────────────────────────────────────────────────────────────
-function PageReports() {
-  const [team, setTeam] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const [t, summary] = await Promise.all([getTeam(), getAttendanceSummary()]);
-        setTeam(t || []);
-        setAttendanceData(Array.isArray(summary) ? summary : []);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  if (loading) return <Spinner />;
-
-  return (
-    <div className="md-page">
-      <h2 className="md-page-heading">Reports</h2>
-      {error && <ErrorMsg msg={error} />}
-
-      <div className="md-stats-grid">
-        <StatCard icon={<Users size={20} />} label="Team Size"         value={team.length} sub="members"       color="#7c5af0" />
-        <StatCard icon={<CheckCircle size={20} />} label="Active Members"    value={team.filter(e=>e.status?.toUpperCase()==="ACTIVE"||e.status?.toUpperCase()==="PRESENT").length} sub="in office" color="#10b981" />
-        <StatCard icon={<BarChart2 size={20} />} label="Leave Records"     value={"—"}         sub="this month"    color="#f59e0b" />
-        <StatCard icon={<Clock size={20} />} label="Avg Hours/Week"    value={"—"}         sub="per member"    color="#06b6d4" />
-      </div>
-
-      <div className="md-two-col">
-        {attendanceData.length > 0 && (
-          <div className="md-panel">
-            <h3 className="md-panel-title">Monthly Attendance</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={attendanceData} barSize={22}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="week" tick={{ fill: "#9b96b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#9b96b8", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#1e1740", border: "none", borderRadius: 10, color: "#fff" }} />
-                <Bar dataKey="present" fill="#7c5af0" radius={[4,4,0,0]} name="Present" />
-                <Bar dataKey="absent"  fill="#ef4444" radius={[4,4,0,0]} name="Absent" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-        <div className="md-panel">
-          <h3 className="md-panel-title">Department Distribution</h3>
-          {(() => {
-            const deptMap = {};
-            team.forEach((e) => {
-              const d = e.departmentName || "Unknown";
-              deptMap[d] = (deptMap[d] || 0) + 1;
-            });
-            const deptData = Object.entries(deptMap).map(([name, value]) => ({ name, value }));
-            const COLORS = ["#7c5af0", "#10b981", "#06b6d4", "#f59e0b", "#ef4444"];
-            return deptData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie data={deptData} cx="50%" cy="50%" outerRadius={80} dataKey="value" paddingAngle={3}>
-                    {deptData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: "#1e1740", border: "none", borderRadius: 10, color: "#fff" }} />
-                  <Legend iconType="circle" iconSize={8}
-                    formatter={(v) => <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>{v}</span>} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.4)" }}>No data</div>
-            );
-          })()}
-        </div>
-      </div>
-
-      <div className="md-panel">
-        <h3 className="md-panel-title">Team Summary</h3>
-        <div className="md-table-wrap">
-          <table className="md-table">
-            <thead>
-              <tr>
-                <th>Member</th><th>Role</th><th>Department</th>
-                <th>Employee Code</th><th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {team.map((m) => (
-                <tr key={m.id}>
-                  <td>
-                    <div className="md-table-member">
-                      <Avatar initials={getInitials(m.name)} size={28} color={pickColor(m.id)} />
-                      {m.name}
-                    </div>
-                  </td>
-                  <td>{m.designation}</td>
-                  <td>{m.departmentName}</td>
-                  <td>{m.employeeCode}</td>
-                  <td><StatusBadge status={statusFromEmployee(m)} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
     </div>
   );
@@ -778,13 +757,235 @@ function PageNotifications() {
   );
 }
 
+// ─── Apply Leave Page ─────────────────────────────────────────────────────────
+function PageApplyLeave() {
+  const storedUser = JSON.parse(localStorage.getItem("hr_user") || "{}");
+  const empId = storedUser?.employeeId || storedUser?.id;
+
+  const [form, setForm] = useState({
+    leaveType: "CASUAL",
+    fromDate: "",
+    toDate: "",
+    reason: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
+  const [balance, setBalance] = useState(null);
+  const [loadingData, setLoadingData] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      if (!empId) return;
+      try {
+        const [hist, bal] = await Promise.allSettled([
+          getHistory(empId),
+          getBalance(empId),
+        ]);
+        if (hist.status === "fulfilled") setHistory(hist.value || []);
+        if (bal.status === "fulfilled") setBalance(bal.value);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingData(false);
+      }
+    })();
+  }, [empId]);
+
+  const handleSubmit = async () => {
+    if (!form.fromDate || !form.toDate || !form.reason.trim()) {
+      setError("Please fill all fields.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    setSuccess("");
+    try {
+      await applyLeave({
+        employeeId: empId,
+        leaveType: form.leaveType,
+        fromDate: form.fromDate,
+        toDate: form.toDate,
+        reason: form.reason,
+      });
+      setSuccess("Leave applied successfully!");
+      setForm({ leaveType: "CASUAL", fromDate: "", toDate: "", reason: "" });
+      // refresh history
+      const hist = await leaveAPI.getHistory(empId);
+      setHistory(hist || []);
+    } catch (e) {
+      setError(e.message || "Failed to apply leave.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const inputStyle = {
+    width: "100%", background: "rgba(255,255,255,0.07)",
+    border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8,
+    color: "#fff", fontSize: 13, padding: "10px 12px",
+    outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+  };
+  const labelStyle = {
+    fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block",
+  };
+
+  const LEAVE_TYPES = ["CASUAL", "ANNUAL", "SICK", "UNPAID", "MATERNITY", "PATERNITY"];
+
+  const statusColor = {
+    APPROVED: "#10b981", PENDING: "#f59e0b", REJECTED: "#ef4444",
+    APPLIED: "#f59e0b", CANCELLED: "#9b96b8",
+  };
+
+  return (
+    <div className="md-page">
+      <h2 className="md-page-heading">Apply Leave</h2>
+
+      {/* ── Balance Cards ── */}
+      {balance && (
+        <div className="md-stats-grid" style={{ marginBottom: 24 }}>
+          {Object.entries(balance).map(([type, val]) => (
+            <div key={type} className="md-stat-card" style={{ "--accent": "#7c5af0" }}>
+              <div className="md-stat-body">
+                <div className="md-stat-value">{val}</div>
+                <div className="md-stat-label">{type}</div>
+                <div className="md-stat-sub">days remaining</div>
+              </div>
+              <div className="md-stat-glow" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Apply Form ── */}
+      <div className="md-panel" style={{ marginBottom: 24 }}>
+        <h3 className="md-panel-title">New Leave Request</h3>
+
+        {error   && <ErrorMsg msg={error} />}
+        {success && (
+          <div style={{
+            background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)",
+            color: "#6ee7b7", borderRadius: 10, padding: "12px 16px", marginBottom: 16,
+          }}>
+            ✓ {success}
+          </div>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+          <div>
+            <label style={labelStyle}>Leave Type</label>
+            <select
+              style={{ ...inputStyle, cursor: "pointer" }}
+              value={form.leaveType}
+              onChange={e => setForm(f => ({ ...f, leaveType: e.target.value }))}
+            >
+              {LEAVE_TYPES.map(t => (
+                <option key={t} value={t} style={{ background: "#1e1740" }}>{t}</option>
+              ))}
+            </select>
+          </div>
+
+          <div />
+
+          <div>
+            <label style={labelStyle}>From Date</label>
+            <input
+              type="date"
+              style={inputStyle}
+              value={form.fromDate}
+              onChange={e => setForm(f => ({ ...f, fromDate: e.target.value }))}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>To Date</label>
+            <input
+              type="date"
+              style={inputStyle}
+              value={form.toDate}
+              onChange={e => setForm(f => ({ ...f, toDate: e.target.value }))}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={labelStyle}>Reason</label>
+          <textarea
+            style={{ ...inputStyle, minHeight: 90, resize: "vertical" }}
+            placeholder="Reason for leave..."
+            value={form.reason}
+            onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
+          />
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={submitting}
+          style={{
+            background: submitting ? "rgba(124,90,240,0.4)" : "#7c5af0",
+            color: "#fff", border: "none", borderRadius: 8,
+            padding: "10px 24px", cursor: submitting ? "not-allowed" : "pointer",
+            fontSize: 14, fontWeight: 600,
+          }}
+        >
+          {submitting ? "Submitting..." : "Submit Request"}
+        </button>
+      </div>
+
+      {/* ── Leave History ── */}
+      <div className="md-panel">
+        <h3 className="md-panel-title">My Leave History</h3>
+        {loadingData ? <Spinner /> : history.length === 0 ? (
+          <div style={{ color: "rgba(255,255,255,0.4)", padding: 16 }}>No leave history found.</div>
+        ) : (
+          <div className="md-table-wrap">
+            <table className="md-table">
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Days</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.map((h, i) => (
+                  <tr key={h.id || i}>
+                    <td>{h.leaveType}</td>
+                    <td>{h.startDate || h.fromDate}</td>
+                    <td>{h.endDate || h.toDate}</td>
+                    <td>{h.totalDays ?? "—"}</td>
+                    <td>{h.reason}</td>
+                    <td>
+                      <span style={{
+                        color: statusColor[h.status] || "#fff",
+                        fontWeight: 600, fontSize: 12,
+                      }}>
+                        {h.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Nav config ───────────────────────────────────────────────────────────────
 const NAV = [
   { id: "home",       icon: <Home size={18} />,          label: "Overview"        },
   { id: "attendance", icon: <ClipboardList size={18} />, label: "Team Attendance" },
   { id: "approvals",  icon: <ClipboardList size={18} />, label: "Leave Approvals" },
   { id: "members",    icon: <Users size={18} />,         label: "Team Members"    },
-  { id: "reports",    icon: <BarChart2 size={18} />,     label: "Reports"         },
+  { id: "reviews",    icon: <Award size={18} />,         label: "Performance"     },
+  { id: "myleave",    icon: <Umbrella size={18} />,      label: "My Leave"        },
   { id: "notifs",     icon: <Bell size={18} />,          label: "Notifications"   },
 ];
 
@@ -797,7 +998,6 @@ export default function ManagerDashboard() {
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  // Load profile + badge counts once
   useEffect(() => {
     (async () => {
       try {
@@ -826,12 +1026,14 @@ export default function ManagerDashboard() {
     attendance: <PageTeamAttendance />,
     approvals:  <PageLeaveApprovals />,
     members:    <PageTeamMembers />,
-    reports:    <PageReports />,
+    reviews:    <PagePerformanceReview managerProfile={profile} />,
+    myleave:    <PageApplyLeave />,
     notifs:     <PageNotifications />,
   };
 
-  const managerName    = profile?.name        || "Manager";
-  const managerRole    = profile?.designation || "Manager";
+  const storedUser      = JSON.parse(localStorage.getItem("hr_user") || "{}");
+  const managerName     = profile?.name || storedUser?.name || "Manager";
+  const managerRole     = storedUser?.role === "MANAGER" ? "Manager" : profile?.designation || "Manager";
   const managerInitials = getInitials(managerName);
 
   return (
@@ -845,7 +1047,7 @@ export default function ManagerDashboard() {
               className={`md-nav-item ${active === n.id ? "active" : ""}`}
               onClick={() => { setActive(n.id); setSidebarOpen(false); }}
             >
-              <span className="md-nav-icon" style={{display:"flex",alignItems:"center"}}>{n.icon}</span>
+              <span className="md-nav-icon" style={{ display: "flex", alignItems: "center" }}>{n.icon}</span>
               <span className="md-nav-label">{n.label}</span>
               {n.id === "approvals" && pendingCount > 0 && (
                 <span className="md-nav-badge">{pendingCount}</span>

@@ -63,7 +63,7 @@ export default function PublicJobBoard() {
         <div className="jb-nav-links">
           <a href="/">Home</a>
           <a href="/jobs" className="active">Jobs</a>
-          <a href="/contact">Contact</a>
+          
         </div>
 
         <button className="jb-emp-login" onClick={() => navigate("/candidate-login")}>

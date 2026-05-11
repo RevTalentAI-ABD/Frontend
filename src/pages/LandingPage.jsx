@@ -30,7 +30,6 @@ function LandingPage() {
         <div className="nav-links">
           <a href="/">Home</a>
           <a href="/jobs">Jobs</a>
-          <a href="/contact">Contact</a>
         </div>
 
         {/* AUTH BUTTONS */}

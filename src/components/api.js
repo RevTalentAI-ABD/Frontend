@@ -229,6 +229,7 @@ export const managerAPI = {
   },
 };
 
+
 // ── LEAVES ────────────────────────────────────────────────────────────────────
 export const leaveAPI = {
   getAll:    ()        => api.get("/api/leaves"),
@@ -330,5 +331,38 @@ export const chatAPI = {
   send:       (data)   => api.post("/api/chat", data),
   getHistory: (userId) => api.get(`/api/chat/${userId}`),
 };
+
+// ── AI ────────────────────────────────────────────────────────────────────────
+export const aiAPI = {
+  ask:            (question)        => api.post("/api/ai/ask",             { question }),
+  screenResume:   (resume, job)     => api.post("/api/ai/screen-resume",   { resume, job }),
+  performance:    (history)         => api.post("/api/ai/performance",     { history }),
+  generatePolicy: (topic)           => api.post("/api/ai/generate-policy", { topic }),
+};
+
+export const hrAPI = {
+
+  getManagers:
+    () => api.get("/api/hr/managers"),
+
+  assignManager:
+    (data) =>
+      api.put("/api/hr/assign-manager", data),
+
+  changeRole:
+    (data) =>
+      api.put("/api/hr/change-role", data),
+
+  changeDepartment:
+    (data) =>
+      api.put("/api/hr/change-department", data),
+
+  removeManager:
+    (data) =>
+      api.put("/api/hr/remove-manager", data),
+};
+export const getLeaveHistory = (empId) => leaveAPI.getHistory(empId).then(r => r.data);
+export const getLeaveBalance = (empId) => leaveAPI.getBalance(empId).then(r => r.data);
+export const applyLeave      = (data)  => leaveAPI.apply(data).then(r => r.data);
 
 export default api;

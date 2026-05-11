@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/EmployeeDashboard.css";
 import api from "../api/axiosConfig";
+import PageMyReviews from "./PageMyReviews";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid
@@ -10,7 +11,7 @@ import {
   Home, Calendar, Umbrella, Wallet, Building2, User, Bell,
   CheckCircle2, XCircle, Timer, Play, Square, Pencil, Save,
   Plus, X, Download, LogOut, ChevronRight, Megaphone,
-  ClipboardList, CreditCard, BadgeCheck, AlertCircle
+  ClipboardList, CreditCard, BadgeCheck, AlertCircle, Award
 } from "lucide-react";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -67,57 +68,62 @@ function StatCard({ icon, label, value, sub, color }) {
 
 function StatusBadge({ status }) {
   const map = {
-    Approved: "badge-green", Pending: "badge-yellow",
-    Rejected: "badge-red", Ready: "badge-purple", Downloaded: "badge-gray"
+    Approved:  "badge-green",  APPROVED: "badge-green",
+    APPLIED:   "badge-yellow", Pending:  "badge-yellow",
+    Rejected:  "badge-red",    REJECTED: "badge-red",
+    CANCELLED: "badge-gray",
+    Ready:     "badge-purple", Downloaded: "badge-gray"
   };
-  return <span className={`ed-badge ${map[status] || ""}`}>{status}</span>;
+  return <span className={`ed-badge ${map[status] || "badge-yellow"}`}>{status}</span>;
 }
 
 // ── PAGES ─────────────────────────────────────────────────────────────────────
 
 function PageHome({ employee, attendance }) {
-  const [clocked, setClocked]   = useState(false);
-  const [elapsed, setElapsed]   = useState(0);
+  const [clocked, setClocked] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
   const [checkInTime, setCheckInTime] = useState(null);
   const timerRef = useRef(null);
 
   const toggle = async () => {
-      if (!clocked) {
-        try {
-          await api.post(`/api/attendance/employee/${employee.id}/checkin`, {
-            attendanceType: "WFO"
-          });
-          const now = new Date();
-          setCheckInTime(now);
-          setClocked(true);
-          timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
-        } catch (err) {
-          const msg = err.response?.data;
-          const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
-          if (msgStr.toLowerCase().includes("already")) {
-            alert("You have already clocked in today! Come back tomorrow.");
-          } else {
-            alert("Clock in failed: " + msgStr);
-          }
-        }
-      } else {
-        try {
-          await api.put(`/api/attendance/employee/${employee.id}/checkout`);
-          clearInterval(timerRef.current);
-          setClocked(false);
-          setElapsed(0);
-          setCheckInTime(null);
-        } catch (err) {
-          const msg = err.response?.data;
-          const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
-          if (msgStr.toLowerCase().includes("already")) {
-            alert("You have already clocked out today!");
-          } else {
-            alert("Clock out failed: " + msgStr);
-          }
+    if (!clocked) {
+      try {
+        await api.post(`/api/attendance/employee/${employee.id}/checkin`, {
+          attendanceType: "WFO"
+        });
+        const now = new Date();
+        setCheckInTime(now);
+        setClocked(true);
+        timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
+      } catch (err) {
+        const msg = err.response?.data;
+        const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
+        if (msgStr.toLowerCase().includes("already")) {
+          alert("You have already clocked in today! Come back tomorrow.");
+        } else {
+          alert("Clock in failed: " + msgStr);
         }
       }
-    };  useEffect(() => () => clearInterval(timerRef.current), []);
+    } else {
+      try {
+        await api.put(`/api/attendance/employee/${employee.id}/checkout`);
+        clearInterval(timerRef.current);
+        setClocked(false);
+        setElapsed(0);
+        setCheckInTime(null);
+      } catch (err) {
+        const msg = err.response?.data;
+        const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
+        if (msgStr.toLowerCase().includes("already")) {
+          alert("You have already clocked out today!");
+        } else {
+          alert("Clock out failed: " + msgStr);
+        }
+      }
+    }
+  };
+
+  useEffect(() => () => clearInterval(timerRef.current), []);
 
   const fmt = s =>
     `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
@@ -129,7 +135,7 @@ function PageHome({ employee, attendance }) {
       {/* Welcome Banner */}
       <div className="ed-welcome-banner">
         <div>
-          <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "#1e1740" }}>
+          <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "#fff" }}>
             Welcome back, {employee?.name?.split(" ")[0] || "there"}
           </h2>
           <p style={{ margin: "4px 0 0", color: "#9b96b8", fontSize: "14px" }}>
@@ -156,37 +162,75 @@ function PageHome({ employee, attendance }) {
             display: "flex", alignItems: "center", gap: "6px"
           }}>
             {clocked
-              ? <><Square size={14}/> Clock Out</>
-              : <><Play size={14}/> Clock In</>}
+              ? <><Square size={14} /> Clock Out</>
+              : <><Play size={14} /> Clock In</>}
           </button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="ed-stats-grid">
-        <StatCard icon={<Umbrella size={20}/>}   label="Leave Balance"  value={employee?.leaveBalance ?? "—"} sub="days remaining" color="#7c5af0"/>
-        <StatCard icon={<Calendar size={20}/>}   label="Present Days"   value={presentDays}                   sub="this month"     color="#06b6d4"/>
-        <StatCard icon={<CreditCard size={20}/>} label="Employee ID"    value={employee?.employeeCode ?? "—"} sub="your ID"        color="#f59e0b"/>
-        <StatCard icon={<Building2 size={20}/>}  label="Department"     value={employee?.departmentName ?? "—"} sub="your team"   color="#10b981"/>
+      {/* Stats — 3 cards now */}
+      <div className="ed-stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        <StatCard
+          icon={<Calendar size={20} />}
+          label="Present Days"
+          value={presentDays}
+          sub="this month"
+          color="#06b6d4"
+        />
+        <StatCard
+          icon={<CreditCard size={20} />}
+          label="Employee ID"
+          value={employee?.employeeCode ?? "—"}
+          sub="your ID"
+          color="#f59e0b"
+        />
+        <StatCard
+          icon={<Building2 size={20} />}
+          label="Department"
+          value={employee?.departmentName ?? "—"}
+          sub="your team"
+          color="#10b981"
+        />
+      </div>
+
+      {/* Manager Info Card */}
+      <div className="ed-panel" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "18px 24px" }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: "50%",
+          background: "#7c5af0", display: "flex", alignItems: "center",
+          justifyContent: "center", fontSize: 18, fontWeight: 700, color: "#fff", flexShrink: 0
+        }}>
+          {employee?.managerName?.charAt(0) || "M"}
+        </div>
+        <div>
+          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginBottom: 2 }}>Your Manager</div>
+          <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff" }}>
+            {employee?.managerName || "Not Assigned"}
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto" }}>
+          <User size={20} color="#9b96b8" />
+        </div>
       </div>
 
       {/* Announcements */}
       <div className="ed-panel">
         <h3 className="ed-panel-title">Announcements</h3>
-        <div className="ed-announcements">
-          <div className="ed-announce-item">
-            <span className="ed-announce-dot" style={{ background: "#f59e0b" }}/>
-            <span>Q2 performance reviews begin next week.</span>
+        {employee?.announcements && employee.announcements.length > 0 ? (
+          employee.announcements.map((a, i) => (
+            <div key={i} className="ed-announce-item">
+              <span className="ed-announce-dot" style={{ background: ["#f59e0b", "#10b981", "#7c5af0"][i % 3] }} />
+              <span>{a.message || a}</span>
+            </div>
+          ))
+        ) : (
+          <div className="ed-announcements">
+            <div className="ed-announce-item">
+              <span className="ed-announce-dot" style={{ background: "#9b96b8" }} />
+              <span style={{ color: "#9b96b8" }}>No announcements at this time.</span>
+            </div>
           </div>
-          <div className="ed-announce-item">
-            <span className="ed-announce-dot" style={{ background: "#10b981" }}/>
-            <span>New leave policy effective from June 1st.</span>
-          </div>
-          <div className="ed-announce-item">
-            <span className="ed-announce-dot" style={{ background: "#7c5af0" }}/>
-            <span>Team outing scheduled for end of month.</span>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -320,10 +364,13 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
             <div className="ed-form-field">
               <label>Leave Type</label>
               <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
-                <option value="CASUAL">Casual</option>
-                <option value="SICK">Sick</option>
-                <option value="EARNED">Earned</option>
-              </select>
+                  <option value="CASUAL">Casual</option>
+                  <option value="SICK">Sick</option>
+                  <option value="ANNUAL">Annual</option>
+                  <option value="MATERNITY">Maternity</option>
+                  <option value="PATERNITY">Paternity</option>
+                  <option value="UNPAID">Unpaid</option>
+                </select>
             </div>
             <div className="ed-form-field">
               <label>From Date</label>
@@ -372,26 +419,41 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
         <h3 className="ed-panel-title">Leave History</h3>
         <div className="ed-table-wrap">
           <table className="ed-table">
-            <thead>
-              <tr><th>Type</th><th>From</th><th>To</th><th>Days</th><th>Reason</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              {leaveHistory.length === 0 ? (
-                <tr><td colSpan={6} style={{ textAlign: "center", color: "#9b96b8", padding: "20px" }}>No history found</td></tr>
-              ) : (
-                leaveHistory.map((r, i) => (
-                  <tr key={i}>
-                    <td>{r.leaveType}</td>
-                    <td>{r.startDate}</td>
-                    <td>{r.endDate}</td>
-                    <td> <td>{r.totalDays ? `${r.totalDays} days` : "—"}</td></td>
-                    <td>{r.reason}</td>
-                    <td><StatusBadge status={r.status}/></td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>From</th>
+      <th>To</th>
+      <th>Days</th>
+      <th>Reason</th>
+      <th>Manager Comment</th>  {/* ← add this */}
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {leaveHistory.length === 0 ? (
+      <tr><td colSpan={7} style={{ textAlign: "center", color: "#9b96b8", padding: "20px" }}>No history found</td></tr>
+    ) : (
+      leaveHistory.map((r, i) => (
+        <tr key={i}>
+          <td>{r.leaveType}</td>
+          <td>{r.startDate}</td>
+          <td>{r.endDate}</td>
+          <td>{r.totalDays ? `${r.totalDays} days` : "—"}</td>
+          <td>{r.reason}</td>
+          <td>  {/* ← add this cell */}
+            {r.rejectionReason ? (
+              <span style={{ color: r.status === "REJECTED" ? "#f87171" : "#10b981" }}>
+                {r.rejectionReason}
+              </span>
+            ) : "—"}
+          </td>
+          <td><StatusBadge status={r.status}/></td>
+        </tr>
+      ))
+    )}
+  </tbody>
+</table>
         </div>
       </div>
     </div>
@@ -747,6 +809,7 @@ const NAV = [
   { id: "attendance",    icon: <Calendar size={16}/>, label: "Attendance"    },
   { id: "leave",         icon: <Umbrella size={16}/>, label: "Leave"         },
   { id: "payroll",       icon: <Wallet size={16}/>,   label: "Payroll"       },
+  { id: "reviews",       icon: <Award size={16}/>,    label: "My Reviews"    },
   { id: "profile",       icon: <User size={16}/>,     label: "Profile"       },
   { id: "notifications", icon: <Bell size={16}/>,     label: "Notifications" },
 ];
@@ -838,6 +901,7 @@ export default function EmployeeDashboard() {
     leave:         <PageLeave leaves={leaves} leaveHistory={leaveHistory}
                      employeeId={employee?.id} onLeaveApplied={fetchDashboard}/>,
     payroll:       <PagePayroll payslips={payslips}/>,
+    reviews:       <PageMyReviews employee={employee}/>,
     profile:       <PageProfile employee={employee} onProfileUpdated={fetchDashboard}/>,
     notifications: <PageNotifications notifications={notifications} setNotifications={setNotifications}/>,
   };

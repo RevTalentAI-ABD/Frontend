@@ -92,7 +92,7 @@ export default function CandidateRegisterPage() {
   department: "NA",
 });
 
-      // 2 — Send OTP to candidate's email
+     
       await axios.post(`${BASE_URL}/api/auth/resend-otp`, { email });
 
       // 3 — Move to OTP page
