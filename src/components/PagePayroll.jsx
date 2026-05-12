@@ -5,8 +5,8 @@ import { StatCard, Badge, Spinner, ErrorState, Toast } from "./UI";
 import {
   IndianRupee, CheckCircle, Clock, Users, Zap, Play,
   CircleCheckBig, XCircle, CheckCircle2, Building2,
-  ChevronDown, X, RefreshCw, UserCog, Layers, Briefcase,
-  PenLine, Save, AlertCircle, Download,
+  ChevronDown, X, UserCog, Layers, Briefcase,
+  PenLine, Save, AlertCircle,
 } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -204,8 +204,8 @@ function IndividualSalaryModal({ employee, existingPayroll, onClose, onSave, sav
                 allowances:  Number(form.allowances),
                 deductions:  Number(form.deductions),
                 netSalary:   net,
-                payMonth,        // ← fix: include month
-                payYear,         // ← fix: include year
+                payMonth,
+                payYear,
               },
             })}
           >
@@ -234,7 +234,7 @@ function BulkSalaryModal({ mode, options, employees, payrollList, preselect, onC
   const affected = useMemo(() => {
     if (!selected) return [];
     return employees.filter(e =>
-      mode === "department" ? e.departmentName === selected : e.designation === selected
+      mode === "department" ? e.departmentName === selected : (e.user?.role || e.role) === selected
     );
   }, [selected, employees, mode]);
 
@@ -281,7 +281,7 @@ function BulkSalaryModal({ mode, options, employees, payrollList, preselect, onC
             {affected.map(e => (
               <div key={e.id} style={{ fontSize:12, padding:"3px 0", display:"flex", justifyContent:"space-between" }}>
                 <span>{e.name || e.employeeName}</span>
-                <span style={{ color:"var(--hr-text-muted,#9ca3af)" }}>{e.designation || "—"}</span>
+                <span style={{ color:"var(--hr-text-muted,#9ca3af)" }}>{e.user?.role || e.role || e.designation || "—"}</span>
               </div>
             ))}
           </div>
@@ -300,8 +300,8 @@ function BulkSalaryModal({ mode, options, employees, payrollList, preselect, onC
                 allowances:  Number(form.allowances),
                 deductions:  Number(form.deductions),
                 netSalary:   net,
-                payMonth,        // ← fix: include month
-                payYear,         // ← fix: include year
+                payMonth,
+                payYear,
               },
             })}
           >
@@ -328,11 +328,8 @@ export default function PagePayroll() {
 
   const [tab,         setTab]         = useState("payroll");
   const [assignMode,  setAssignMode]  = useState("individual");
-  const [deptFilter,  setDeptFilter]  = useState("");
-  const [roleFilter,  setRoleFilter]  = useState("");
   const [modal,       setModal]       = useState(null);
 
-  const [processing,  setProcessing]  = useState(false);
   const [generating,  setGenerating]  = useState(false);
   const [rowLoading,  setRowLoading]  = useState({});
   const [savingModal, setSavingModal] = useState(false);
@@ -370,16 +367,42 @@ export default function PagePayroll() {
   // ── Derived ───────────────────────────────────────────────────────────────
   const departments = useMemo(() =>
     [...new Set(employees.map(e => e.departmentName).filter(Boolean))].sort(), [employees]);
+
+  // FIX: roles derived from backend data — e.user?.role or e.role, no hardcoding
   const roles = useMemo(() =>
-    [...new Set(employees.map(e => e.designation).filter(Boolean))].sort(), [employees]);
+    [...new Set(employees.map(e => e.user?.role || e.role).filter(Boolean))].sort(),
+    [employees]
+  );
 
-  const filteredPayroll = useMemo(() => {
-    return payrollList;
-  }, [payrollList]);
+  // Build a fast lookup set of active employee IDs
+  const activeEmpIds = useMemo(() =>
+    new Set(employees.map(e => String(e.id))),
+    [employees]
+  );
 
-  const processed = payrollList.filter(p => (p.status||"").toUpperCase() === "PROCESSED").length;
-  const pending   = payrollList.filter(p => (p.status||"").toUpperCase() !== "PROCESSED").length;
-  const totalNet  = payrollList.reduce((s,p) => s + Number(p.netSalary||0), 0);
+  // Enrich each payroll row: auto-set status to INACTIVE if the linked employee
+  // is no longer in the active employee list (deleted / terminated / not found)
+  const enrichedPayrollList = useMemo(() =>
+    payrollList.map(p => {
+      const empId = String(p.employeeId || p.empId || "");
+      const nameMatch = employees.some(e =>
+        (e.name||e.employeeName||"").toLowerCase() === (p.employeeName||p.name||"").toLowerCase()
+      );
+      const isOrphaned = empId ? !activeEmpIds.has(empId) : !nameMatch;
+      return isOrphaned ? { ...p, status: "INACTIVE" } : p;
+    }),
+    [payrollList, activeEmpIds, employees]
+  );
+
+  const processed = enrichedPayrollList.filter(p => (p.status||"").toUpperCase() === "PROCESSED").length;
+  const pending   = enrichedPayrollList.filter(p => {
+    const s = (p.status||"").toUpperCase();
+    return s !== "PROCESSED" && s !== "INACTIVE";
+  }).length;
+  // INACTIVE records excluded from total (employee no longer active)
+  const totalNet = enrichedPayrollList.reduce((s,p) =>
+    (p.status||"").toUpperCase() === "INACTIVE" ? s : s + Number(p.netSalary||0), 0
+  );
 
   const findPayroll = (emp) =>
     payrollList.find(p =>
@@ -387,8 +410,8 @@ export default function PagePayroll() {
       (p.employeeName||"").toLowerCase() === (emp.name||emp.employeeName||"").toLowerCase()
     );
 
-  // ── Generate payroll ───────────────────────────────────────────────────────
-  const handleGenerate = async () => {
+  // ── Generate + Process All (combined) ────────────────────────────────────
+  const handleGenerateAndProcess = async () => {
     setGenerating(true);
     try {
       await payrollAPI.generate(genMonth, genYear);
@@ -396,19 +419,19 @@ export default function PagePayroll() {
       ok(`Payroll generated for ${genMonth}/${genYear}!`);
     } catch (e) {
       err(e?.response?.data?.message || "Failed to generate payroll");
-    } finally { setGenerating(false); }
-  };
-
-  // ── Process all ───────────────────────────────────────────────────────────
-  const handleProcessAll = async () => {
-    setProcessing(true);
+      setGenerating(false);
+      return; // stop if generate failed
+    }
+    // Now process all
     try {
       await payrollAPI.processAll();
       await loadAll();
       ok("All payroll processed!");
     } catch {
       err("Failed to process all payroll");
-    } finally { setProcessing(false); }
+    } finally {
+      setGenerating(false);
+    }
   };
 
   // ── Process single row ────────────────────────────────────────────────────
@@ -422,19 +445,6 @@ export default function PagePayroll() {
       err("Failed to process");
     } finally {
       setRowLoading(p => ({ ...p, [payrollId]: false }));
-    }
-  };
-
-  // ── Download salary slip ───────────────────────────────────────────────────
-  const handleDownloadSlip = async (payrollId) => {
-    try {
-      const res = await payrollAPI.downloadSlip(payrollId);
-      const url = URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
-      const a   = document.createElement("a");
-      a.href = url; a.download = `salary-slip-${payrollId}.pdf`; a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      err("Failed to download salary slip");
     }
   };
 
@@ -543,23 +553,16 @@ export default function PagePayroll() {
                 {[2023,2024,2025,2026,2027].map(y => <option key={y} value={y}>{y}</option>)}
               </select>
               <button
-                className="hr-outline-btn"
-                onClick={handleGenerate}
+                className="hr-primary-btn"
+                onClick={handleGenerateAndProcess}
                 disabled={generating}
                 style={{ display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap" }}
               >
-                <RefreshCw size={15}/>{generating ? "Generating…" : "Generate Payroll"}
+                <Zap size={15}/>
+                {generating ? "Processing…" : "Generate & Process"}
               </button>
             </div>
           )}
-          <button
-            className="hr-primary-btn"
-            onClick={handleProcessAll}
-            disabled={processing}
-            style={{ display:"flex", alignItems:"center", gap:6 }}
-          >
-            <Zap size={15}/>{processing ? "Processing…" : "Process All"}
-          </button>
         </div>
       </div>
 
@@ -591,21 +594,9 @@ export default function PagePayroll() {
       {/* ═══ TAB: PAYROLL RECORDS ═══ */}
       {tab === "payroll" && (
         <>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: 14,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 13,
-                color: "var(--hr-text-muted,#9ca3af)",
-              }}
-            >
-              Showing <strong>{filteredPayroll.length}</strong> of{" "}
-              {payrollList.length}
+          <div style={{ display:"flex", alignItems:"center", marginBottom:14 }}>
+            <span style={{ fontSize:13, color:"var(--hr-text-muted,#9ca3af)" }}>
+              Showing <strong>{enrichedPayrollList.length}</strong> of {enrichedPayrollList.length}
             </span>
           </div>
 
@@ -616,6 +607,7 @@ export default function PagePayroll() {
                   <th>Employee</th>
                   <th>Department</th>
                   <th>Role</th>
+                  <th>Email</th>
                   <th>Basic</th>
                   <th>Allowances</th>
                   <th>Deductions</th>
@@ -625,52 +617,54 @@ export default function PagePayroll() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPayroll.length === 0 ? (
+                {enrichedPayrollList.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ textAlign:"center", padding:40, color:"var(--hr-text-muted,#9ca3af)" }}>
-                      {payrollList.length === 0
-                        ? "No payroll records yet — generate or assign salary to get started."
-                        : "No records match the selected filter."}
+                    <td colSpan={10} style={{ textAlign:"center", padding:40, color:"var(--hr-text-muted,#9ca3af)" }}>
+                      No payroll records yet — generate or assign salary to get started.
                     </td>
                   </tr>
-                ) : filteredPayroll.map((p) => {
+                ) : enrichedPayrollList.map((p) => {
                   const status = (p.status || "PENDING").toUpperCase();
+                  // Join with employee list to get role (payroll API may not return it)
+                  const matchedEmp = employees.find(e =>
+                    String(e.id) === String(p.employeeId || p.empId) ||
+                    (e.name||e.employeeName||"").toLowerCase() === (p.employeeName||p.name||"").toLowerCase()
+                  );
+                  const role = matchedEmp?.user?.role || matchedEmp?.role || matchedEmp?.designation
+                             || p.user?.role || p.role || p.designation || "—";
+                  const isInactive = status === "INACTIVE";
                   return (
-                    <tr key={p.id}>
+                    <tr key={p.id} style={{ opacity: isInactive ? 0.45 : 1 }}>
                       <td style={{ fontWeight:500 }}>{p.employeeName || p.name || "—"}</td>
-                      <td>{p.departmentName || p.department || "—"}</td>
-                      <td>{p.designation || p.role || "—"}</td>
+                      <td>{p.departmentName || p.department || matchedEmp?.departmentName || "—"}</td>
+                      <td>{role}</td>
+                      <td style={{ fontSize:12, color:"var(--hr-text-muted,#9ca3af)" }}>
+                        {p.email || matchedEmp?.email || matchedEmp?.user?.email || "—"}
+                      </td>
                       <td>{fmt(p.basicSalary)}</td>
                       <td>{fmt(p.allowances)}</td>
                       <td>{fmt(p.deductions)}</td>
-                      <td style={{ fontWeight:700 }}>{fmt(p.netSalary)}</td>
+                      <td style={{ fontWeight:700, color: isInactive ? "var(--hr-text-muted,#9ca3af)" : undefined }}>
+                        {isInactive ? "—" : fmt(p.netSalary)}
+                      </td>
                       <td><Badge status={status}/></td>
                       <td>
-                        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-                          {status === "PROCESSED" ? (
-                            <>
-                              <span style={{ color:"#22c55e", display:"flex", alignItems:"center", gap:4, fontSize:13 }}>
-                                <CircleCheckBig size={14}/> Done
-                              </span>
-                              <button
-                                className="hr-outline-btn"
-                                onClick={() => handleDownloadSlip(p.id)}
-                                style={{ display:"flex", alignItems:"center", gap:4 }}
-                                title="Download Salary Slip"
-                              >
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              className="hr-outline-btn"
-                              onClick={() => handleProcessOne(p.id)}
-                              disabled={!!rowLoading[p.id]}
-                              style={{ display:"flex", alignItems:"center", gap:5 }}
-                            >
-                              <Play size={13}/>{rowLoading[p.id] ? "…" : "Process"}
-                            </button>
-                          )}
-                        </div>
+                        {isInactive ? (
+                          <span style={{ fontSize:12, color:"var(--hr-text-muted,#9ca3af)" }}>Employee inactive</span>
+                        ) : status === "PROCESSED" ? (
+                          <span style={{ color:"#22c55e", display:"flex", alignItems:"center", gap:4, fontSize:13 }}>
+                            <CircleCheckBig size={14}/> Done
+                          </span>
+                        ) : (
+                          <button
+                            className="hr-outline-btn"
+                            onClick={() => handleProcessOne(p.id)}
+                            disabled={!!rowLoading[p.id]}
+                            style={{ display:"flex", alignItems:"center", gap:5 }}
+                          >
+                            <Play size={13}/>{rowLoading[p.id] ? "…" : "Process"}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );
@@ -688,7 +682,7 @@ export default function PagePayroll() {
             <div style={{ display:"flex", gap:4, padding:4, borderRadius:10, background:"var(--hr-bg,#f3f4f6)" }}>
               <TabPill active={assignMode==="individual"} onClick={() => setAssignMode("individual")} icon={UserCog}   label="Individual"/>
               <TabPill active={assignMode==="department"} onClick={() => setAssignMode("department")} icon={Building2} label="By Department"/>
-
+              <TabPill active={assignMode==="role"}       onClick={() => setAssignMode("role")}       icon={Briefcase} label="By Role"/>
             </div>
             {assignMode !== "individual" && (
               <button
@@ -709,7 +703,7 @@ export default function PagePayroll() {
                   <tr>
                     <th>Employee</th>
                     <th>Department</th>
-                    <th>Role / Designation</th>
+                    <th>Role</th>
                     <th>Current Basic</th>
                     <th>Net Salary</th>
                     <th>Status</th>
@@ -726,11 +720,13 @@ export default function PagePayroll() {
                   ) : employees.map(emp => {
                     const pr = findPayroll(emp);
                     const status = pr ? (pr.status||"PENDING").toUpperCase() : "NO RECORD";
+                    // FIX: use `emp` (not `p`) to read role from employee record
+                    const role = emp.user?.role || emp.role || emp.designation || "—";
                     return (
                       <tr key={emp.id}>
                         <td style={{ fontWeight:500 }}>{emp.name || emp.employeeName || "—"}</td>
                         <td>{emp.departmentName || "—"}</td>
-                        <td>{emp.designation || "—"}</td>
+                        <td>{role}</td>
                         <td>
                           {pr
                             ? fmt(pr.basicSalary)
@@ -764,12 +760,14 @@ export default function PagePayroll() {
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(240px,1fr))", gap:14 }}>
               {(assignMode === "department" ? departments : roles).map(group => {
                 const groupEmps = employees.filter(e =>
-                  assignMode === "department" ? e.departmentName === group : e.designation === group
+                  assignMode === "department"
+                    ? e.departmentName === group
+                    : (e.user?.role || e.role) === group
                 );
                 const groupPays = payrollList.filter(p =>
                   assignMode === "department"
                     ? (p.departmentName || p.department) === group
-                    : (p.designation || p.role) === group
+                    : (p.user?.role || p.role || p.designation) === group
                 );
                 const avgNet = groupPays.length
                   ? groupPays.reduce((s,p) => s + Number(p.netSalary||0), 0) / groupPays.length

@@ -15,7 +15,7 @@ export default function ForgotPassword({ onBack }) {
   const [error, setError]             = useState("");
   const [loading, setLoading]         = useState(false);
 
-  // Step 1 — verify email exists
+
   const handleEmailSubmit = async () => {
     setError("");
     if (!email.trim()) { setError("Please enter your email."); return; }
