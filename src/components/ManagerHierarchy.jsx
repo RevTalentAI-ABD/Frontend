@@ -50,6 +50,10 @@ export default function OrgHierarchy() {
   const [targetMgr,     setTargetMgr]     = useState(null);
   const [reassigning,   setReassigning]   = useState(false);
 
+  // Unassign modal
+  const [unassignModal, setUnassignModal] = useState(null); // { employee }
+  const [unassigning,   setUnassigning]   = useState(false);
+
   // ── Fetch ──────────────────────────────────────────────────────────────────
   const fetchHierarchy = useCallback(async () => {
     try {
@@ -110,6 +114,25 @@ export default function OrgHierarchy() {
       alert(err.message || "Failed to reassign.");
     } finally {
       setReassigning(false);
+    }
+  };
+
+  const openUnassign  = (emp) => setUnassignModal({ employee: emp });
+  const closeUnassign = () => setUnassignModal(null);
+
+  const confirmUnassign = async () => {
+    if (!unassignModal) return;
+    try {
+      setUnassigning(true);
+      await api.post("/api/hierarchy/unassign", {
+        employeeIds: [unassignModal.employee.id],
+      });
+      closeUnassign();
+      await fetchHierarchy();
+    } catch (err) {
+      alert(err.message || "Failed to unassign.");
+    } finally {
+      setUnassigning(false);
     }
   };
 
@@ -183,6 +206,14 @@ export default function OrgHierarchy() {
                           onClick={() => openReassign(emp, mgr.id)}
                         >
                           ⇄
+                        </button>
+                        {/* Unassign button */}
+                        <button
+                          style={{ ...S.reassignChipBtn, color: "#EF4444", fontSize: 12, marginLeft: 0 }}
+                          title="Unassign manager"
+                          onClick={() => openUnassign(emp)}
+                        >
+                          ✕
                         </button>
                       </div>
                     ))}
@@ -307,6 +338,35 @@ export default function OrgHierarchy() {
                 disabled={!targetMgr || reassigning}
               >
                 {reassigning ? "Moving…" : "Confirm Reassign"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Unassign Modal ── */}
+      {unassignModal && (
+        <div style={S.overlay} onClick={closeUnassign}>
+          <div style={S.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={S.modalTitle}>Unassign Employee</div>
+            <div style={S.modalSubtitle}>
+              Are you sure you want to unassign <strong style={{ color:"#E8E6F4" }}>{unassignModal.employee.name}</strong> from this manager?
+            </div>
+
+            <div style={{ padding: "16px 20px", background: "rgba(239, 68, 68, 0.1)", borderRadius: 10, border: "1px solid rgba(239, 68, 68, 0.2)", marginBottom: 24 }}>
+              <div style={{ color: "#FCA5A5", fontSize: 13 }}>
+                They will be moved to the <strong>Unassigned Employees</strong> pool. You can reassign them later.
+              </div>
+            </div>
+
+            <div style={S.modalActions}>
+              <button style={S.cancelBtn} onClick={closeUnassign} disabled={unassigning}>Cancel</button>
+              <button
+                style={{ ...S.confirmBtn, background: "#EF4444", opacity: unassigning ? 0.5 : 1, cursor: unassigning ? "not-allowed" : "pointer" }}
+                onClick={confirmUnassign}
+                disabled={unassigning}
+              >
+                {unassigning ? "Unassigning…" : "Confirm Unassign"}
               </button>
             </div>
           </div>

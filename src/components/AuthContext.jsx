@@ -7,7 +7,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("hr_user"));
+      return JSON.parse(localStorage.getItem("user"));
     } catch {
       return null;
     }
@@ -23,10 +23,11 @@ export function AuthProvider({ children }) {
     setError("");
     try {
       const res = await authAPI.login(credentials);
-      const { token, employee, role } = res.data;
-      localStorage.setItem("hr_token", token);
-      const userData = { ...employee, role };
-      localStorage.setItem("hr_user", JSON.stringify(userData));
+      const { token, role } = res.data;
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      const userData = { ...res.data };
+      localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
       return userData;
     } catch (err) {
@@ -38,9 +39,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.removeItem("hr_token");
-    localStorage.removeItem("hr_user");
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     localStorage.removeItem("role");
     setUser(null);
     navigate("/login"); // ✅ add this

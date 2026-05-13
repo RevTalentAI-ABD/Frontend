@@ -379,7 +379,7 @@ const api = axios.create({
 
 // ── Auth token injection ──────────────────────────────────────────────────────
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("hr_token");
+  const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -388,8 +388,8 @@ api.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem("hr_token");
-      localStorage.removeItem("hr_user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       window.location.href = "/login";
     }
     return Promise.reject(err);

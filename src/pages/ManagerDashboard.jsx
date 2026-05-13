@@ -24,7 +24,8 @@ import {
 } from "../api/api";
 import { employeeAPI, performanceAPI, getLeaveHistory,
   getLeaveBalance,
-  applyLeave, } from "../components/api";
+  applyLeave,
+  leaveAPI } from "../components/api";
 import { useNavigate } from "react-router-dom";
 import {
   Users, CheckCircle, Home, Laptop, ClipboardList, BarChart2,
@@ -759,7 +760,7 @@ function PageNotifications() {
 
 // ─── Apply Leave Page ─────────────────────────────────────────────────────────
 function PageApplyLeave() {
-  const storedUser = JSON.parse(localStorage.getItem("hr_user") || "{}");
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const empId = storedUser?.employeeId || storedUser?.id;
 
   const [form, setForm] = useState({
@@ -780,8 +781,8 @@ function PageApplyLeave() {
       if (!empId) return;
       try {
         const [hist, bal] = await Promise.allSettled([
-          getHistory(empId),
-          getBalance(empId),
+          getLeaveHistory(empId),
+          getLeaveBalance(empId),
         ]);
         if (hist.status === "fulfilled") setHistory(hist.value || []);
         if (bal.status === "fulfilled") setBalance(bal.value);
@@ -812,7 +813,7 @@ function PageApplyLeave() {
       setSuccess("Leave applied successfully!");
       setForm({ leaveType: "CASUAL", fromDate: "", toDate: "", reason: "" });
       // refresh history
-      const hist = await leaveAPI.getHistory(empId);
+      const hist = await getLeaveHistory(empId);
       setHistory(hist || []);
     } catch (e) {
       setError(e.message || "Failed to apply leave.");
@@ -843,13 +844,13 @@ function PageApplyLeave() {
       <h2 className="md-page-heading">Apply Leave</h2>
 
       {/* ── Balance Cards ── */}
-      {balance && (
+      {Array.isArray(balance) && balance.length > 0 && (
         <div className="md-stats-grid" style={{ marginBottom: 24 }}>
-          {Object.entries(balance).map(([type, val]) => (
-            <div key={type} className="md-stat-card" style={{ "--accent": "#7c5af0" }}>
+          {balance.map((item, idx) => (
+            <div key={idx} className="md-stat-card" style={{ "--accent": "#7c5af0" }}>
               <div className="md-stat-body">
-                <div className="md-stat-value">{val}</div>
-                <div className="md-stat-label">{type}</div>
+                <div className="md-stat-value">{item.total - item.used}</div>
+                <div className="md-stat-label">{item.type}</div>
                 <div className="md-stat-sub">days remaining</div>
               </div>
               <div className="md-stat-glow" />
@@ -1031,7 +1032,7 @@ export default function ManagerDashboard() {
     notifs:     <PageNotifications />,
   };
 
-  const storedUser      = JSON.parse(localStorage.getItem("hr_user") || "{}");
+  const storedUser      = JSON.parse(localStorage.getItem("user") || "{}");
   const managerName     = profile?.name || storedUser?.name || "Manager";
   const managerRole     = storedUser?.role === "MANAGER" ? "Manager" : profile?.designation || "Manager";
   const managerInitials = getInitials(managerName);
