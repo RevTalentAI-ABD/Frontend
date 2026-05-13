@@ -1,89 +1,44 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, Pause, Play } from "lucide-react";
-import "./PageEmployees.css";
+import { Pause, Play } from "lucide-react";
+
+function authHeaders() {
+  const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+  return token
+    ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+    : { "Content-Type": "application/json" };
+}
 
 const BASE_URL = "http://localhost:8080/api";
 
-const employeeAPI = {
-  getAll: async () => {
-    const res = await fetch(`${BASE_URL}/employees`);
-    return res.json();
-  },
-  getById: async (id) => {
-    const res = await fetch(`${BASE_URL}/employees/${id}`);
-    return res.json();
-  },
-  create: async (body) => {
-    const res = await fetch(`${BASE_URL}/employees`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    return res.json();
-  },
-  updateFull: async (id, body) => {
-    return fetch(`${BASE_URL}/employees/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-  },
-};
+const COLORS = [
+  "#7C3AED","#06B6D4","#10B981","#EC4899",
+  "#F59E0B","#8B5CF6","#14B8A6","#EF4444","#3B82F6","#F97316",
+];
+const colorFor = (id) => COLORS[Number(id) % COLORS.length];
 
 function getDisplayName(e) {
   if (e.name && e.name.trim()) return e.name.trim();
   if (e.email) return e.email.split("@")[0];
-  if (e.username) return e.username;
   return "Unknown";
 }
 
-function getAvatarInitials(name) {
+function getInitials(name) {
   return name.split(" ").map((n) => n[0] || "").join("").slice(0, 2).toUpperCase();
 }
 
 export default function PageEmployees() {
-  const [employees, setEmployees]       = useState([]);
-  const [managerMap, setManagerMap]     = useState({});
-  const [loading, setLoading]           = useState(true);
-  const [search, setSearch]             = useState("");
-  const [showActiveOnly, setShowActiveOnly] = useState(false); // "Active employees" toggle
-  const [showModal, setShowModal]       = useState(false);
-  const [form, setForm] = useState({
-    name: "", username: "", email: "", password: "",
-    role: "EMPLOYEE", employeeCode: "", designation: "",
-    joiningDate: "", phone: "", address: "", departmentId: "",
-  });
+  const [employees, setEmployees]           = useState([]);
+  const [loading,   setLoading]             = useState(true);
+  const [search,    setSearch]              = useState("");
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
 
-  /* =========================================================
-     LOAD — fetch all employees + resolve ACTIVE manager names
-  ========================================================= */
   async function loadEmployees() {
     try {
       setLoading(true);
-      const data = await employeeAPI.getAll();
+      const res = await fetch(`${BASE_URL}/employees`, { headers: authHeaders() });
+      const data = await res.json();
       const list = Array.isArray(data) ? data : (data.content || data.data || []);
-
-      setEmployees(list); // store everyone, filtering happens in useMemo
-
-      // Collect unique managerIds across all employees
-      const ids = [
-        ...new Set(list.map((e) => e.managerId).filter((id) => id != null && id !== 0)),
-      ];
-
-      if (ids.length > 0) {
-        const results = await Promise.allSettled(ids.map((id) => employeeAPI.getById(id)));
-        const map = {};
-        results.forEach((r, i) => {
-          if (r.status === "fulfilled" && r.value) {
-            const mgr = r.value;
-            // Only add ACTIVE managers — INACTIVE ones stay out → "Not Assigned"
-            if ((mgr.status || "ACTIVE").toUpperCase() === "ACTIVE") {
-              map[ids[i]] = mgr.name || mgr.email?.split("@")[0] || null;
-            }
-          }
-        });
-        setManagerMap(map);
-      }
+      setEmployees(list);
     } catch (err) {
       console.error("loadEmployees error:", err);
     } finally {
@@ -93,180 +48,112 @@ export default function PageEmployees() {
 
   useEffect(() => { loadEmployees(); }, []);
 
-  /* =========================================================
-     FILTER — search + active-only toggle applied together
-  ========================================================= */
   const filtered = useMemo(() => {
     let list = employees;
-
-    // "Active employees" button filters to ACTIVE only
-    if (showActiveOnly) {
-      list = list.filter((e) => (e.status || "ACTIVE").toUpperCase() === "ACTIVE");
-    }
-
-    // Search
+    if (showActiveOnly) list = list.filter((e) => (e.status || "ACTIVE").toUpperCase() === "ACTIVE");
     const q = search.toLowerCase().trim();
-    if (q) {
-      list = list.filter((e) => {
-        const name  = (e.name  || "").toLowerCase();
-        const email = (e.email || "").toLowerCase();
-        const dept  = (e.departmentName || "").toLowerCase();
-        return name.includes(q) || email.includes(q) || dept.includes(q);
-      });
-    }
-
+    if (q) list = list.filter((e) =>
+      (e.name || "").toLowerCase().includes(q) ||
+      (e.email || "").toLowerCase().includes(q) ||
+      (e.departmentName || "").toLowerCase().includes(q)
+    );
     return list;
   }, [employees, search, showActiveOnly]);
 
-  /* =========================================================
-     TOGGLE STATUS
-  ========================================================= */
   async function toggleStatus(emp) {
-    const currentStatus = (emp.status || "ACTIVE").toUpperCase();
-    const nextStatus    = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-
-    // Optimistic: flip badge only, keep employee in list
-    setEmployees((prev) =>
-      prev.map((e) => e.id === emp.id ? { ...e, status: nextStatus } : e)
-    );
-
-    // Update managerMap: INACTIVE → remove so reports show "Not Assigned"
-    //                    ACTIVE   → add back so reports show their name
-    if (nextStatus === "INACTIVE") {
-      setManagerMap((prev) => {
-        const updated = { ...prev };
-        delete updated[emp.id];
-        return updated;
-      });
-    } else {
-      setManagerMap((prev) => ({
-        ...prev,
-        [emp.id]: emp.name || emp.email?.split("@")[0] || null,
-      }));
-    }
-
+    const next = (emp.status || "ACTIVE").toUpperCase() === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    setEmployees((prev) => prev.map((e) => e.id === emp.id ? { ...e, status: next } : e));
     try {
-      const res = await employeeAPI.updateFull(emp.id, { ...emp, status: nextStatus });
-      if (!res.ok) {
-        console.error("Status update failed:", res.status, await res.text());
-        loadEmployees(); // revert by reloading fresh data
-      }
-    } catch (err) {
-      console.error("toggleStatus error:", err);
-      loadEmployees();
-    }
+      const res = await fetch(`${BASE_URL}/employees/${emp.id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ ...emp, status: next }),
+      });
+      if (!res.ok) loadEmployees();
+    } catch { loadEmployees(); }
   }
 
-  /* =========================================================
-     ADD EMPLOYEE
-  ========================================================= */
-  async function addEmployee() {
-    try {
-      const created = await employeeAPI.create(form);
-      setEmployees((prev) => [...prev, created]);
-      setShowModal(false);
-      setForm({
-        name: "", username: "", email: "", password: "",
-        role: "EMPLOYEE", employeeCode: "", designation: "",
-        joiningDate: "", phone: "", address: "", departmentId: "",
-      });
-    } catch (err) {
-      console.error("addEmployee error:", err);
-    }
-  }
-
-  if (loading) return <div className="emp-loading">Loading employees...</div>;
+  if (loading) return (
+    <div style={S.loadWrap}>
+      <div style={S.spinner} />
+      <span style={{ color: "#7B7890", fontSize: 14, marginTop: 12 }}>Loading employees…</span>
+    </div>
+  );
 
   return (
-    <div className="emp-page">
-
-      {/* HEADER */}
-      <div className="emp-header">
-        <h1>Employee Management</h1>
-        <div className="emp-header-actions">
-          <div className="emp-tabs">
-            {/* Clicking toggles between all employees / active-only */}
-            <button
-              className={`emp-tab ${showActiveOnly ? "active" : ""}`}
-              onClick={() => setShowActiveOnly((prev) => !prev)}
-            >
-              {showActiveOnly ? "All employees" : "Active employees"}
-            </button>
-          </div>
-          <button className="emp-add-btn" onClick={() => setShowModal(true)}>
-            <Plus size={15} /> Add employee
-          </button>
-        </div>
+    <div style={S.page}>
+      <div style={S.header}>
+        <h1 style={S.title}>Employee Management</h1>
+        <button
+          style={{ ...S.filterBtn, ...(showActiveOnly ? S.filterBtnActive : {}) }}
+          onClick={() => setShowActiveOnly((p) => !p)}
+        >
+          {showActiveOnly ? "All Employees" : "Active Employees"}
+        </button>
       </div>
 
-      {/* SEARCH */}
-      <div className="emp-search-wrap">
+      <div style={S.searchWrap}>
         <input
+          style={S.searchInput}
           type="text"
-          placeholder="Search employees..."
-          className="emp-search"
+          placeholder="Search by name, email, department…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {/* TABLE */}
-      <div className="emp-table-panel">
-        <table className="emp-table">
+      <div style={S.tableWrap}>
+        <table style={S.table}>
           <thead>
             <tr>
-              <th>Employee</th>
-              <th>Department</th>
-              <th>Role</th>
-              <th>Manager</th>
-              <th>Status</th>
-              <th>Actions</th>
+              {["Employee", "Department", "Role", "Status", "Actions"].map((h) => (
+                <th key={h} style={S.th}>{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {filtered.map((e) => {
-              const status      = (e.status || "ACTIVE").toUpperCase();
-              const displayName = getDisplayName(e);
-
-              // If managerId exists but not in map → manager is INACTIVE → "Not Assigned"
-              const managerLabel = e.managerId
-                ? (managerMap[e.managerId] || "Not Assigned")
-                : "Not Assigned";
-
+            {filtered.map((emp) => {
+              const status      = (emp.status || "ACTIVE").toUpperCase();
+              const displayName = getDisplayName(emp);
               return (
-                <tr key={e.id}>
-                  <td>
-                    <div className="emp-user">
-                      <div className="emp-avatar">{getAvatarInitials(displayName)}</div>
+                <tr key={emp.id} style={S.tr}>
+                  <td style={S.td}>
+                    <div style={S.userCell}>
+                      <div style={{ ...S.avatar, background: colorFor(emp.id) }}>
+                        {getInitials(displayName)}
+                      </div>
                       <div>
-                        <div className="emp-name">{displayName}</div>
-                        <div className="emp-email">{e.email || "—"}</div>
+                        <div style={S.empName}>{displayName}</div>
+                        <div style={S.empEmail}>{emp.email || "—"}</div>
                       </div>
                     </div>
                   </td>
-                  <td>{e.departmentName || "—"}</td>
-                  <td><span className="emp-role">{e.role || "EMPLOYEE"}</span></td>
-                  <td>{managerLabel}</td>
-                  <td>
-                    <span className={`emp-status ${status === "ACTIVE" ? "active" : "inactive"}`}>
+                  <td style={S.td}>{emp.departmentName || "—"}</td>
+                  <td style={S.td}>
+                    <span style={S.roleBadge}>{emp.role || "EMPLOYEE"}</span>
+                  </td>
+                  <td style={S.td}>
+                    <span style={{
+                      ...S.statusBadge,
+                      background: status === "ACTIVE" ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.12)",
+                      color:      status === "ACTIVE" ? "#10B981" : "#F87171",
+                    }}>
                       {status}
                     </span>
                   </td>
-                  <td>
-                    <div className="emp-actions">
-                      <button className="emp-action-btn" onClick={() => toggleStatus(e)}>
-                        {status === "ACTIVE"
-                          ? <><Pause size={14} /> Inactive</>
-                          : <><Play  size={14} /> Active</>}
-                      </button>
-                    </div>
+                  <td style={S.td}>
+                    <button style={S.actionBtn} onClick={() => toggleStatus(emp)}>
+                      {status === "ACTIVE"
+                        ? <><Pause size={13} style={{ marginRight: 4 }} />Inactive</>
+                        : <><Play  size={13} style={{ marginRight: 4 }} />Active</>}
+                    </button>
                   </td>
                 </tr>
               );
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: "center", padding: "2rem", opacity: 0.5 }}>
+                <td colSpan={5} style={{ textAlign: "center", padding: "2.5rem", color: "#4E4B63", fontSize: 14 }}>
                   No employees found.
                 </td>
               </tr>
@@ -274,34 +161,30 @@ export default function PageEmployees() {
           </tbody>
         </table>
       </div>
-
-      {/* ADD MODAL */}
-      {showModal && (
-        <div className="emp-modal-overlay">
-          <div className="emp-modal">
-            <h2>Add Employee</h2>
-            <div className="emp-form-grid">
-              <input placeholder="Full Name"     value={form.name}         onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <input placeholder="Username"      value={form.username}     onChange={(e) => setForm({ ...form, username: e.target.value })} />
-              <input placeholder="Email"         value={form.email}        onChange={(e) => setForm({ ...form, email: e.target.value })} />
-              <input placeholder="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-              <input placeholder="Employee Code" value={form.employeeCode} onChange={(e) => setForm({ ...form, employeeCode: e.target.value })} />
-              <input placeholder="Designation"   value={form.designation}  onChange={(e) => setForm({ ...form, designation: e.target.value })} />
-              <input placeholder="Department ID" type="number" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: Number(e.target.value) })} />
-              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                <option value="EMPLOYEE">EMPLOYEE</option>
-                <option value="MANAGER">MANAGER</option>
-                <option value="HR_ADMIN">HR ADMIN</option>
-              </select>
-            </div>
-            <div className="emp-modal-actions">
-              <button className="emp-cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="emp-save-btn"   onClick={addEmployee}>Save Employee</button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
+
+const S = {
+  page:     { background: "#13111C", minHeight: "100vh", padding: "36px 40px", fontFamily: "'Segoe UI', system-ui, sans-serif", color: "#E2E0EA" },
+  loadWrap: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#13111C" },
+  spinner:  { width: 36, height: 36, border: "3px solid #2A2640", borderTopColor: "#7C3AED", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
+  header:   { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 },
+  title:    { fontSize: 26, fontWeight: 700, color: "#F0EEF8", margin: 0 },
+  filterBtn:       { background: "transparent", border: "1px solid #2A2640", borderRadius: 8, color: "#7B7890", fontSize: 13, fontWeight: 600, padding: "8px 18px", cursor: "pointer" },
+  filterBtnActive: { borderColor: "#7C3AED", color: "#A78BFA" },
+  searchWrap:  { marginBottom: 20 },
+  searchInput: { width: "100%", maxWidth: 360, background: "#1C1929", border: "1px solid #2A2640", borderRadius: 10, padding: "10px 16px", color: "#E2E0EA", fontSize: 14, outline: "none", boxSizing: "border-box" },
+  tableWrap: { background: "#1C1929", border: "1px solid #2A2640", borderRadius: 14, overflow: "hidden" },
+  table:     { width: "100%", borderCollapse: "collapse" },
+  th:        { padding: "13px 16px", fontSize: 11, fontWeight: 700, letterSpacing: "1px", color: "#5B5773", textAlign: "left", borderBottom: "1px solid #2A2640", background: "#181525" },
+  tr:        { borderBottom: "1px solid #1E1B2E" },
+  td:        { padding: "14px 16px", fontSize: 13, color: "#C4C0D8", verticalAlign: "middle" },
+  userCell:  { display: "flex", alignItems: "center", gap: 10 },
+  avatar:    { width: 38, height: 38, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0 },
+  empName:   { fontSize: 13, fontWeight: 600, color: "#E8E6F4" },
+  empEmail:  { fontSize: 11, color: "#5B5773", marginTop: 2 },
+  roleBadge:   { fontSize: 11, fontWeight: 600, background: "rgba(124,58,237,0.15)", color: "#A78BFA", borderRadius: 20, padding: "3px 10px" },
+  statusBadge: { fontSize: 11, fontWeight: 600, borderRadius: 20, padding: "4px 10px" },
+  actionBtn:   { display: "flex", alignItems: "center", background: "#251F38", border: "1px solid #312B4A", borderRadius: 7, color: "#C4C0D8", fontSize: 12, fontWeight: 600, padding: "6px 14px", cursor: "pointer" },
+};

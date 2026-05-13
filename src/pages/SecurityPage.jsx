@@ -46,6 +46,8 @@ export default function SecurityPage() {
     setError("");
     setLoading(true);
     try {
+      // /register now validates the data, stores it in memory, and sends OTP automatically.
+      // No need to call /resend-otp separately.
       await api.post("/api/auth/register", {
         name:       `${profileData.firstName} ${profileData.lastName}`,
         username:   profileData.email,
@@ -55,8 +57,7 @@ export default function SecurityPage() {
         department: profileData.department,
       });
 
-      // ✅ Registration success — send OTP and go to OTP page
-      await api.post("/api/auth/resend-otp", { email: profileData.email });
+      // ✅ OTP was sent by the backend — move to OTP verification page
       setOtpEmail(profileData.email);
       setPage("otp");
       startResendTimer();

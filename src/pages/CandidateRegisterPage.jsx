@@ -82,20 +82,18 @@ export default function CandidateRegisterPage() {
     setRegisterLoading(true);
 
     try {
-      // 1 — Create candidate account
+      // /register validates, caches the data, and sends OTP automatically.
+      // No need to call /resend-otp separately anymore.
       await axios.post(`${BASE_URL}/api/auth/register`, {
-  name:       `${firstName} ${lastName}`,
-  username:   email,
-  email:      email,
-  password:   password,
-  role:       "CANDIDATE",
-  department: "NA",
-});
+        name:       `${firstName} ${lastName}`,
+        username:   email,
+        email:      email,
+        password:   password,
+        role:       "CANDIDATE",
+        department: "NA",
+      });
 
-     
-      await axios.post(`${BASE_URL}/api/auth/resend-otp`, { email });
-
-      // 3 — Move to OTP page
+      // ✅ OTP was sent by the backend — move to OTP page
       setPage("otp");
       startResendTimer();
 
