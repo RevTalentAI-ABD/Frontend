@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/EmployeeDashboard.css";
 import api from "../api/axiosConfig";
 import PageMyReviews from "./PageMyReviews";
+import FloatingAI from "../components/FloatingAI";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid
@@ -957,6 +958,8 @@ export default function EmployeeDashboard() {
         </header>
         <div className="ed-content">{PAGE[active]}</div>
       </main>
+
+      <FloatingAI />
     </div>
   );
 }

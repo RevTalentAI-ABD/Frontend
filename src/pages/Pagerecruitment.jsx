@@ -291,6 +291,21 @@ export default function PageRecruitment() {
                             </div>
                           </div>
 
+                          {/* AI Screening Results */}
+                          {c.aiScore !== null && c.aiScore !== undefined && (
+                            <div style={{
+                              background: "rgba(124, 90, 240, 0.08)", border: "1px solid rgba(124, 90, 240, 0.2)",
+                              borderRadius: 6, padding: "7px 10px", fontSize: 11, marginTop: 8, marginBottom: 8
+                            }}>
+                              <div style={{ color: "#a78bfa", fontWeight: 600, marginBottom: 4 }}>🤖 AI Match Score: {c.aiScore}/100</div>
+                              {c.aiSummary && (
+                                <div style={{ color: "rgba(255,255,255,0.7)", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.4" }}>
+                                  {c.aiSummary}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Interview schedule details (shown when in INTERVIEW stage) */}
                           {stage === "INTERVIEW" && c.interviewDate && (
                             <div style={{

@@ -28,6 +28,9 @@ export default function PageRecruitment() {
   const [scheduleForm,  setScheduleForm]  = useState({ date: "", time: "", interviewerName: "", interviewerId: "" });
   const [scheduling,    setScheduling]    = useState(false);
   const [employees,     setEmployees]     = useState([]);
+  
+  // ── AI Summary modal state ──────────────────────────────────────────────
+  const [summaryModal, setSummaryModal] = useState(null);
 
   const [newJob, setNewJob] = useState({
     title: "", department: "Engineering", numberOfOpenings: 1, description: "", requirements: ""
@@ -281,6 +284,24 @@ export default function PageRecruitment() {
                             </div>
                           </div>
 
+                          {/* AI Screening Results (Clickable) */}
+                          {c.aiScore !== null && c.aiScore !== undefined && (
+                            <div 
+                              onClick={() => setSummaryModal(c)}
+                              style={{
+                                background: "rgba(124, 90, 240, 0.08)", border: "1px solid rgba(124, 90, 240, 0.2)",
+                                borderRadius: 6, padding: "7px 10px", fontSize: 11, marginTop: 8, marginBottom: 8,
+                                cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center"
+                              }}
+                              title="Click to view full AI screening summary"
+                            >
+                              <div style={{ color: "#a78bfa", fontWeight: 600 }}>🤖 AI Match Score: {c.aiScore}/100</div>
+                              <div style={{ color: "#a78bfa", fontSize: 10, background: "rgba(124,90,240,0.2)", padding: "3px 6px", borderRadius: "4px" }}>
+                                View Details ↗
+                              </div>
+                            </div>
+                          )}
+
                           {/* Interview schedule details (shown when in INTERVIEW stage) */}
                           {stage === "INTERVIEW" && c.interviewDate && (
                             <div style={{
@@ -522,6 +543,65 @@ export default function PageRecruitment() {
                     opacity: scheduling ? 0.7 : 1,
                   }}>
                   {scheduling ? "Scheduling…" : "✓ Confirm Interview"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Summary Modal */}
+        {summaryModal && (
+          <div style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+            display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+          }}>
+            <div style={{
+              background: "#1a1730", border: "1px solid rgba(124,90,240,0.3)",
+              borderRadius: 14, padding: 28, width: "100%", maxWidth: 500,
+              boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}>🤖 AI Screening Summary</h3>
+                <button onClick={() => setSummaryModal(null)}
+                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}>✕</button>
+              </div>
+
+              <div style={{
+                background: "rgba(124,90,240,0.08)", border: "1px solid rgba(124,90,240,0.2)",
+                borderRadius: 8, padding: "10px 14px", marginBottom: 20,
+                display: "flex", justifyContent: "space-between", alignItems: "center"
+              }}>
+                <div>
+                  <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>{summaryModal.name}</div>
+                  <div style={{ color: "#9b96b8", fontSize: 12, marginTop: 2 }}>{summaryModal.email}</div>
+                </div>
+                <div style={{ color: "#a78bfa", fontWeight: "bold", fontSize: 16 }}>Score: {summaryModal.aiScore}/100</div>
+              </div>
+
+              <div style={{ 
+                color: "rgba(255,255,255,0.8)", 
+                lineHeight: "1.6", 
+                fontSize: 14,
+                background: "#12102a",
+                padding: "16px",
+                borderRadius: "8px",
+                border: "1px solid rgba(255,255,255,0.1)",
+                maxHeight: "350px",
+                overflowY: "auto",
+                whiteSpace: "pre-wrap"
+              }}>
+                {summaryModal.aiSummary || "No detailed summary provided by AI."}
+              </div>
+
+              <div style={{ marginTop: 22, display: "flex", justifyContent: "flex-end" }}>
+                <button
+                  onClick={() => setSummaryModal(null)}
+                  style={{
+                    background: "rgba(255,255,255,0.05)", color: "#9b96b8",
+                    border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8,
+                    padding: "8px 20px", fontSize: 14, cursor: "pointer",
+                  }}>
+                  Close
                 </button>
               </div>
             </div>

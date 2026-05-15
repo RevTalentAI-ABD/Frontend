@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "../styles/ManagerDashboard.css";
 import PagePerformanceReview from "./PagePerformanceReview";
+import FloatingAI from "../components/FloatingAI";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, PieChart, Pie, Cell, Legend,
@@ -1093,6 +1094,8 @@ export default function ManagerDashboard() {
 
         <div className="md-content">{PAGE[active]}</div>
       </main>
+
+      <FloatingAI />
     </div>
   );
 }
