@@ -3,16 +3,19 @@ import { useNavigate } from "react-router-dom";
 import "../styles/EmployeeDashboard.css";
 import api from "../api/axiosConfig";
 import PageMyReviews from "./PageMyReviews";
+import PageCalendar from "../components/PageCalendar";
 import FloatingAI from "../components/FloatingAI";
+import AttendanceClock from "../components/AttendanceClock";
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid
 } from "recharts";
+import PageKudos from "./PageKudos";
 import {
-  Home, Calendar, Umbrella, Wallet, Building2, User, Bell,
+  Home, Calendar as CalIcon, Umbrella, Wallet, Building2, User, Bell,
   CheckCircle2, XCircle, Timer, Play, Square, Pencil, Save,
   Plus, X, Download, LogOut, ChevronRight, Megaphone,
-  ClipboardList, CreditCard, BadgeCheck, AlertCircle, Award
+  ClipboardList, CreditCard, BadgeCheck, AlertCircle, Award, Clock, Star
 } from "lucide-react";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -82,54 +85,6 @@ function StatusBadge({ status }) {
 
 // ✅ CHANGE 4a — added announcements prop
 function PageHome({ employee, attendance, announcements }) {
-  const [clocked, setClocked] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const [checkInTime, setCheckInTime] = useState(null);
-  const timerRef = useRef(null);
-
-  const toggle = async () => {
-    if (!clocked) {
-      try {
-        await api.post(`/api/attendance/employee/${employee.id}/checkin`, {
-          attendanceType: "WFO"
-        });
-        const now = new Date();
-        setCheckInTime(now);
-        setClocked(true);
-        timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
-      } catch (err) {
-        const msg = err.response?.data;
-        const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
-        if (msgStr.toLowerCase().includes("already")) {
-          alert("You have already clocked in today! Come back tomorrow.");
-        } else {
-          alert("Clock in failed: " + msgStr);
-        }
-      }
-    } else {
-      try {
-        await api.put(`/api/attendance/employee/${employee.id}/checkout`);
-        clearInterval(timerRef.current);
-        setClocked(false);
-        setElapsed(0);
-        setCheckInTime(null);
-      } catch (err) {
-        const msg = err.response?.data;
-        const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
-        if (msgStr.toLowerCase().includes("already")) {
-          alert("You have already clocked out today!");
-        } else {
-          alert("Clock out failed: " + msgStr);
-        }
-      }
-    }
-  };
-
-  useEffect(() => () => clearInterval(timerRef.current), []);
-
-  const fmt = s =>
-    `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-
   const presentDays = attendance.filter(a => a.status === "PRESENT").length;
 
   return (
@@ -145,35 +100,14 @@ function PageHome({ employee, attendance, announcements }) {
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "auto" }}>
-          {clocked && (
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontFamily: "monospace", fontSize: "18px", color: "#7c5af0", fontWeight: 700 }}>
-                {fmt(elapsed)}
-              </div>
-              {checkInTime && (
-                <div style={{ fontSize: "11px", color: "#9b96b8" }}>
-                  Since {checkInTime.toLocaleTimeString()}
-                </div>
-              )}
-            </div>
-          )}
-          <button onClick={toggle} style={{
-            background: clocked ? "#ef4444" : "#7c5af0",
-            color: "white", border: "none", borderRadius: "10px",
-            padding: "10px 20px", fontWeight: 600, cursor: "pointer", fontSize: "14px",
-            display: "flex", alignItems: "center", gap: "6px"
-          }}>
-            {clocked
-              ? <><Square size={14} /> Clock Out</>
-              : <><Play size={14} /> Clock In</>}
-          </button>
+          {employee?.id && <AttendanceClock employeeId={employee.id} />}
         </div>
       </div>
 
       {/* Stats */}
       <div className="ed-stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
         <StatCard
-          icon={<Calendar size={20} />}
+          icon={<CalIcon size={20} />}
           label="Present Days"
           value={presentDays}
           sub="this month"
@@ -775,8 +709,21 @@ function PageProfile({ employee, onProfileUpdated }) {
   );
 }
 
-function PageNotifications({ notifications, setNotifications }) {
-  const markAll = () => setNotifications(n => n.map(x => ({ ...x, read: true })));
+function PageNotifications({ employee, notifications, setNotifications }) {
+  const markAll = async () => {
+    try {
+      await api.put(`/api/notifications/${employee.id}/read-all`);
+      setNotifications(n => n.map(x => ({ ...x, read: true })));
+    } catch (e) { console.error(e); }
+  };
+
+  const markOne = async (index, notif) => {
+    if (notif.read) return;
+    try {
+      await api.put(`/api/notifications/${notif.id}/read`);
+      setNotifications(ns => ns.map((x, j) => j === index ? { ...x, read: true } : x));
+    } catch (e) { console.error(e); }
+  };
   return (
     <div className="ed-page">
       <div className="ed-page-header-row">
@@ -790,7 +737,7 @@ function PageNotifications({ notifications, setNotifications }) {
           notifications.map((n, i) => (
             <div key={i}
               className={`ed-notif-row ${!n.read ? "unread" : ""}`}
-              onClick={() => setNotifications(ns => ns.map((x, j) => j === i ? { ...x, read: true } : x))}
+              onClick={() => markOne(i, n)}
             >
               <div className="ed-notif-icon"><Bell size={16}/></div>
               <div className="ed-notif-body">
@@ -809,10 +756,12 @@ function PageNotifications({ notifications, setNotifications }) {
 // ── NAV ───────────────────────────────────────────────────────────────────────
 const NAV = [
   { id: "home",          icon: <Home size={16}/>,     label: "Home"          },
-  { id: "attendance",    icon: <Calendar size={16}/>, label: "Attendance"    },
+  { id: "attendance",    icon: <Clock size={16}/>,    label: "Attendance"    },
   { id: "leave",         icon: <Umbrella size={16}/>, label: "Leave"         },
   { id: "payroll",       icon: <Wallet size={16}/>,   label: "Payroll"       },
+  { id: "calendar",      icon: <CalIcon size={16}/>,  label: "Calendar"      },
   { id: "reviews",       icon: <Award size={16}/>,    label: "My Reviews"    },
+  { id: "kudos",         icon: <Star size={16}/>,     label: "Kudos"         },
   { id: "profile",       icon: <User size={16}/>,     label: "Profile"       },
   { id: "notifications", icon: <Bell size={16}/>,     label: "Notifications" },
 ];
@@ -910,9 +859,11 @@ export default function EmployeeDashboard() {
     leave:         <PageLeave leaves={leaves} leaveHistory={leaveHistory}
                      employeeId={employee?.id} onLeaveApplied={fetchDashboard}/>,
     payroll:       <PagePayroll payslips={payslips}/>,
+    calendar:      <PageCalendar />,
     reviews:       <PageMyReviews employee={employee}/>,
+    kudos:         <PageKudos employee={employee}/>,
     profile:       <PageProfile employee={employee} onProfileUpdated={fetchDashboard}/>,
-    notifications: <PageNotifications notifications={notifications} setNotifications={setNotifications}/>,
+    notifications: <PageNotifications employee={employee} notifications={notifications} setNotifications={setNotifications} />,
   };
 
   return (

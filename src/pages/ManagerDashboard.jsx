@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "../styles/ManagerDashboard.css";
 import PagePerformanceReview from "./PagePerformanceReview";
+import PageCalendar from "../components/PageCalendar";
+import PageKudos from "./PageKudos";
+import AttendanceClock from "../components/AttendanceClock";
 import FloatingAI from "../components/FloatingAI";
+import api from "../api/axiosConfig";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, PieChart, Pie, Cell, Legend,
@@ -31,6 +35,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Users, CheckCircle, Home, Laptop, ClipboardList, BarChart2,
   Bell, AlertTriangle, Pin, Clock, Umbrella, Check, X, Award,
+  Calendar as CalIcon, Star
 } from "lucide-react";
 
 
@@ -153,18 +158,21 @@ function ErrorMsg({ msg }) {
 function PageHome() {
   const [dashboard, setDashboard] = useState(null);
   const [activity, setActivity] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const [dash, act] = await Promise.all([
+        const [dash, act, announceRes] = await Promise.all([
           getManagerDashboard(),
           getManagerActivity(),
+          api.get("/api/announcements")
         ]);
         setDashboard(dash);
         setActivity(act || []);
+        setAnnouncements(announceRes?.data || []);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -192,7 +200,7 @@ function PageHome() {
 
   return (
     <div className="md-page">
-      <div className="md-welcome-banner">
+      <div className="md-welcome-banner" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <p className="md-welcome-date">
             {new Date().toLocaleDateString("en-IN", {
@@ -205,7 +213,12 @@ function PageHome() {
             <strong>{absent} absent today</strong>.
           </p>
         </div>
-        <div className="md-banner-tag" />
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {(() => {
+            const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+            return storedUser?.employeeId ? <AttendanceClock employeeId={storedUser.employeeId} /> : null;
+          })()}
+        </div>
       </div>
 
       <div className="md-stats-grid">
@@ -248,6 +261,33 @@ function PageHome() {
                 <div className="md-activity-time">{a.time || a.timestamp}</div>
               </div>
             ))}
+          </div>
+        </div>
+
+        <div className="md-panel">
+          <h3 className="md-panel-title">Announcements</h3>
+          <div className="md-activity-list">
+            {announcements.length === 0 ? (
+              <div style={{ color: "rgba(255,255,255,0.4)", padding: 16 }}>No announcements at this time.</div>
+            ) : (
+              announcements.map((a, i) => (
+                <div key={i} className="md-activity-row" style={{ alignItems: "flex-start" }}>
+                  <span className="md-activity-icon" style={{
+                    color: a.priority === "URGENT" ? "#ef4444" :
+                           a.priority === "HIGH"   ? "#f59e0b" :
+                           a.priority === "LOW"    ? "#7c5af0" : "#10b981",
+                    background: "none", width: "auto", height: "auto"
+                  }}>
+                    ●
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <div className="md-activity-text" style={{ fontWeight: 600, color: "#fff" }}>{a.title}</div>
+                    <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>{a.message}</div>
+                    <div className="md-activity-time" style={{ marginTop: "4px" }}>By {a.postedBy || "HR"} · {a.createdAt || ""}</div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -986,7 +1026,9 @@ const NAV = [
   { id: "attendance", icon: <ClipboardList size={18} />, label: "Team Attendance" },
   { id: "approvals",  icon: <ClipboardList size={18} />, label: "Leave Approvals" },
   { id: "members",    icon: <Users size={18} />,         label: "Team Members"    },
+  { id: "calendar",   icon: <CalIcon size={18} />,       label: "Calendar"        },
   { id: "reviews",    icon: <Award size={18} />,         label: "Performance"     },
+  { id: "kudos",      icon: <Star size={18} />,          label: "Kudos"           },
   { id: "myleave",    icon: <Umbrella size={18} />,      label: "My Leave"        },
   { id: "notifs",     icon: <Bell size={18} />,          label: "Notifications"   },
 ];
@@ -1028,7 +1070,9 @@ export default function ManagerDashboard() {
     attendance: <PageTeamAttendance />,
     approvals:  <PageLeaveApprovals />,
     members:    <PageTeamMembers />,
+    calendar:   <PageCalendar />,
     reviews:    <PagePerformanceReview managerProfile={profile} />,
+    kudos:      <PageKudos />,
     myleave:    <PageApplyLeave />,
     notifs:     <PageNotifications />,
   };

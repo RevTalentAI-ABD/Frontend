@@ -6,6 +6,7 @@ import { useFetch } from "./hooks";
 import { leaveAPI, employeeAPI, notificationAPI, recruitmentAPI } from "./api";
 import { Spinner, ErrorState } from "./UI";
 import { useAuth } from "./AuthContext";
+import AttendanceClock from "./AttendanceClock";
 import {
    Users,
    ClipboardList,
@@ -117,12 +118,12 @@ export default function PageOverview({ setActive }) {
           }}
         >
 
+          {/* ATTENDANCE CLOCK */}
+          {user?.employeeId && <AttendanceClock employeeId={user.employeeId} />}
+
           {/* NOTIFICATION BUTTON */}
-
           <button className="hr-top-bell">
-
             <Bell size={18} />
-
             {
               unreadCount > 0 && (
                 <span className="hr-top-bell-count">
@@ -130,11 +131,9 @@ export default function PageOverview({ setActive }) {
                 </span>
               )
             }
-
           </button>
 
           {/* ADMIN TAG */}
-
           <div className="hr-banner-tag">
             HR Admin
           </div>

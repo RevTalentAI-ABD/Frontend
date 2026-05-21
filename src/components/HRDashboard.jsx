@@ -343,6 +343,8 @@ import PageNotifications from "./PageNotifications";
 import PageDocuments     from "./PageDocuments";
 import PageAnnouncements from "./PageAnnouncements";
 import ManagerHierarchy  from "./ManagerHierarchy";
+import PageCalendar      from "./PageCalendar";
+import PageKudos         from "../pages/PageKudos";
 
 // ── Styles & Floating AI ──────────────────────────────────────────────────
 import "./HRDashboard.css";
@@ -359,6 +361,8 @@ import {
   Bell,
   FileText,
   Network,
+  Calendar as CalIcon,
+  Star,
 } from "lucide-react";
 
 // ── Nav config (no AI — using FloatingAI instead) ─────────────────────────
@@ -370,6 +374,8 @@ const NAV = [
   { id: "recruitment",   icon: <Briefcase size={18} />,       label: "Recruitment"   },
 
   { id: "hierarchy",     icon: <Network size={18} />,         label: "Hierarchy"     },
+  { id: "calendar",      icon: <CalIcon size={18} />,         label: "Calendar"      },
+  { id: "kudos",         icon: <Star size={18} />,            label: "Kudos"         },
   { id: "notifications", icon: <Bell size={18} />,            label: "Notifications" },
   { id: "announcement", icon: <Bell size={18} />,              label: "Announcement" },
   { id: "documents",     icon: <FileText size={18} />,        label: "Documents"     },
@@ -417,6 +423,8 @@ export default function HRDashboard() {
     payroll:       <PagePayroll />,
     recruitment:   <PageRecruitment />,
     hierarchy:     <ManagerHierarchy />,
+    calendar:      <PageCalendar isHr={true} />,
+    kudos:         <PageKudos />,
     notifications: <PageNotifications />,
     announcement: <PageAnnouncements />,
     documents:     <PageDocuments />,
@@ -426,7 +434,7 @@ export default function HRDashboard() {
     ? `${user.firstName || ""} ${user.lastName || user.name || ""}`.trim()
     : "HR Admin";
 
-  const role = user?.role || user?.designation || "HR Admin";
+  const role = "HR Admin";
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
