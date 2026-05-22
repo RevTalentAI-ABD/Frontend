@@ -252,9 +252,10 @@ function PageAttendance({ attendance }) {
                     <td>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
                     <td>{a.durationMin ? `${(a.durationMin / 60).toFixed(1)}h` : "—"}</td>
                     <td><StatusBadge status={
-                      a.status === "PRESENT"  ? "Approved" :
-                      a.status === "ABSENT"   ? "Rejected" :
-                      a.status === "ON_LEAVE" ? "Pending"  : "Pending"
+                      a.status === "PRESENT"  ? "PRESENT" :
+                      a.status === "ABSENT"   ? "ABSENT" :
+                      a.status === "ON_LEAVE" ? "ON_LEAVE"  :
+                      a.status === "LATE"     ? "LATE" : "Pending"
                     }/></td>
                   </tr>
                 ))
@@ -887,7 +888,9 @@ export default function EmployeeDashboard() {
           <Avatar initials={employee?.name?.charAt(0) || "?"} size={34} color="#7c5af0"/>
           <div className="ed-sidebar-user">
             <div className="ed-sidebar-name">{employee?.name}</div>
-            <div className="ed-sidebar-role">{employee?.designation || employee?.role}</div>
+            <div className="ed-sidebar-role">
+              {(employee?.designation || employee?.role || "Employee").replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
+            </div>
           </div>
           <button className="ed-logout-btn" onClick={handleLogout} title="Logout">
             <LogOut size={16}/>

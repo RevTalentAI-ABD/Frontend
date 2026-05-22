@@ -50,9 +50,12 @@ export default function FloatingAI() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/ai/ask", {
+      const response = await fetch((import.meta.env.VITE_API_URL + "/api/ai/ask"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
         body: JSON.stringify({ question: currentQuestion }),
         signal: controller.signal,
       });

@@ -1,4 +1,4 @@
-// const BASE_URL = "http://localhost:8080/api";
+// const BASE_URL = (import.meta.env.VITE_API_URL + "/api");
 
 // // ─── Auth helpers ────────────────────────────────────────────────────────────
 // function getToken() {
@@ -44,28 +44,28 @@
 // // ─── Manager Dashboard ───────────────────────────────────────────────────────
 // export async function getManagerDashboard() {
 //   const res = await fetch(`${BASE_URL}/manager/dashboard`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 
 // export async function getManagerActivity() {
 //   const res = await fetch(`${BASE_URL}/manager/activity`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 
 // export async function getManagerProfile() {
 //   const res = await fetch(`${BASE_URL}/manager/profile`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 
 // export async function getDashboardSummary() {
 //   const res = await fetch(`${BASE_URL}/manager/dashboard-summary`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
@@ -73,7 +73,7 @@
 // // ─── Team / Employees ────────────────────────────────────────────────────────
 // export async function getTeam() {
 //   const res = await fetch(`${BASE_URL}/manager/team`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
@@ -81,21 +81,21 @@
 // export async function searchTeam(query) {
 //   const res = await fetch(
 //     `${BASE_URL}/manager/search?query=${encodeURIComponent(query)}`,
-//     { headers: authHeaders() }
+//     { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
 //   );
 //   return handleResponse(res);
 // }
 
 // export async function getEmployee(id) {
 //   const res = await fetch(`${BASE_URL}/employees/${id}`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 
 // export async function getAllEmployees() {
 //   const res = await fetch(`${BASE_URL}/employees`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
@@ -103,14 +103,14 @@
 // // ─── Attendance ──────────────────────────────────────────────────────────────
 // export async function getAllAttendance() {
 //   const res = await fetch(`${BASE_URL}/attendance`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 
 // export async function getAttendanceSummary() {
 //   const res = await fetch(`${BASE_URL}/attendance/summary`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
@@ -118,7 +118,7 @@
 // export async function getAttendanceHrSummary(from, to) {
 //   const res = await fetch(
 //     `${BASE_URL}/attendance/hr/summary?from=${from}&to=${to}`,
-//     { headers: authHeaders() }
+//     { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
 //   );
 //   return handleResponse(res);
 // }
@@ -140,14 +140,14 @@
 // // ─── Leaves ──────────────────────────────────────────────────────────────────
 // export async function getAllLeaves() {
 //   const res = await fetch(`${BASE_URL}/leaves`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 
 // export async function getPendingLeaves() {
 //   const res = await fetch(`${BASE_URL}/leaves/pending`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
@@ -155,33 +155,21 @@
 // export async function approveLeave(id) {
 //   const res = await fetch(`${BASE_URL}/leaves/${id}/approve`, {
 //     method: "PUT",
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
-// }
-
-// export async function rejectLeave(id, reason = "") {
-//   const res = await fetch(
-//     `${BASE_URL}/leaves/${id}/reject?reason=${encodeURIComponent(reason)}`,
-//     {
-//       method: "PUT",
-//       headers: authHeaders(),
-//     }
-//   );
-//   return handleResponse(res);
-// }
 
 // // ─── Notifications ───────────────────────────────────────────────────────────
 // export async function getAllNotifications() {
 //   const res = await fetch(`${BASE_URL}/notifications`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 
 // export async function getAllUnreadNotifications() {
 //   const res = await fetch(`${BASE_URL}/notifications/unread`, {
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
@@ -189,7 +177,7 @@
 // export async function markAllNotificationsRead() {
 //   const res = await fetch(`${BASE_URL}/notifications/read-all`, {
 //     method: "PUT",
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
@@ -197,13 +185,13 @@
 // export async function markNotificationRead(notifId) {
 //   const res = await fetch(`${BASE_URL}/notifications/${notifId}/read`, {
 //     method: "PUT",
-//     headers: authHeaders(),
+//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
 //   });
 //   return handleResponse(res);
 // }
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080/api";
+const BASE_URL = (import.meta.env.VITE_API_URL + "/api");
 
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 function getToken() {
@@ -229,7 +217,7 @@ async function handleResponse(res) {
 // ─── Axios instance with token ───────────────────────────────────────────────
 const axiosAuth = axios.create({ baseURL: BASE_URL });
 axiosAuth.interceptors.request.use((config) => {
-  const token = getToken();
+  const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -239,7 +227,7 @@ export async function login(email, password) {
   const res = await fetch(`${BASE_URL}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ username: email, password }),
   });
   return handleResponse(res);
 }
@@ -256,28 +244,28 @@ export async function register(data) {
 // ─── Manager Dashboard ───────────────────────────────────────────────────────
 export async function getManagerDashboard() {
   const res = await fetch(`${BASE_URL}/manager/dashboard`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getManagerActivity() {
   const res = await fetch(`${BASE_URL}/manager/activity`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getManagerProfile() {
   const res = await fetch(`${BASE_URL}/manager/profile`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getDashboardSummary() {
   const res = await fetch(`${BASE_URL}/manager/dashboard-summary`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -285,7 +273,7 @@ export async function getDashboardSummary() {
 // ─── Team / Employees ────────────────────────────────────────────────────────
 export async function getTeam() {
   const res = await fetch(`${BASE_URL}/manager/team`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -293,21 +281,21 @@ export async function getTeam() {
 export async function searchTeam(query) {
   const res = await fetch(
     `${BASE_URL}/manager/search?query=${encodeURIComponent(query)}`,
-    { headers: authHeaders() }
+    { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
   );
   return handleResponse(res);
 }
 
 export async function getEmployee(id) {
   const res = await fetch(`${BASE_URL}/employees/${id}`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getAllEmployees() {
   const res = await fetch(`${BASE_URL}/employees`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -315,14 +303,14 @@ export async function getAllEmployees() {
 // ─── Attendance ──────────────────────────────────────────────────────────────
 export async function getAllAttendance() {
   const res = await fetch(`${BASE_URL}/attendance`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getAttendanceSummary() {
   const res = await fetch(`${BASE_URL}/attendance/summary`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -330,7 +318,7 @@ export async function getAttendanceSummary() {
 export async function getAttendanceHrSummary(from, to) {
   const res = await fetch(
     `${BASE_URL}/attendance/hr/summary?from=${from}&to=${to}`,
-    { headers: authHeaders() }
+    { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
   );
   return handleResponse(res);
 }
@@ -352,14 +340,14 @@ export async function exportAttendance() {
 // ─── Leaves ──────────────────────────────────────────────────────────────────
 export async function getAllLeaves() {
   const res = await fetch(`${BASE_URL}/leaves`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getPendingLeaves() {
   const res = await fetch(`${BASE_URL}/leaves/pending`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -367,7 +355,7 @@ export async function getPendingLeaves() {
 export async function approveLeave(id) {
   const res = await fetch(`${BASE_URL}/leaves/${id}/approve`, {
     method: "PUT",
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -375,21 +363,21 @@ export async function approveLeave(id) {
 export async function rejectLeave(id, reason = "") {
   const res = await fetch(
     `${BASE_URL}/leaves/${id}/reject?reason=${encodeURIComponent(reason)}`,
-    { method: "PUT", headers: authHeaders() }
+    { method: "PUT", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
   );
   return handleResponse(res);
 }
 
 export async function getLeaveHistory(empId) {
   const res = await fetch(`${BASE_URL}/leaves/history/${empId}`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getLeaveBalance(empId) {
   const res = await fetch(`${BASE_URL}/leaves/balance/${empId}`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -397,7 +385,7 @@ export async function getLeaveBalance(empId) {
 export async function applyLeave(data) {
   const res = await fetch(`${BASE_URL}/leaves/apply`, {
     method: "POST",
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
   return handleResponse(res);
@@ -406,7 +394,7 @@ export async function applyLeave(data) {
 export async function applyLeaveHR(data) {
   const res = await fetch(`${BASE_URL}/leaves/apply/hr`, {
     method: "POST",
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
   return handleResponse(res);
@@ -415,14 +403,14 @@ export async function applyLeaveHR(data) {
 // ─── Notifications ───────────────────────────────────────────────────────────
 export async function getAllNotifications() {
   const res = await fetch(`${BASE_URL}/notifications`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
 
 export async function getAllUnreadNotifications() {
   const res = await fetch(`${BASE_URL}/notifications/unread`, {
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -430,7 +418,7 @@ export async function getAllUnreadNotifications() {
 export async function markAllNotificationsRead() {
   const res = await fetch(`${BASE_URL}/notifications/read-all`, {
     method: "PUT",
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }
@@ -438,7 +426,7 @@ export async function markAllNotificationsRead() {
 export async function markNotificationRead(notifId) {
   const res = await fetch(`${BASE_URL}/notifications/${notifId}/read`, {
     method: "PUT",
-    headers: authHeaders(),
+    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
   });
   return handleResponse(res);
 }

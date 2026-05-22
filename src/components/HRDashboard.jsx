@@ -342,6 +342,7 @@ import PageRecruitment   from "./PageRecruitment";
 import PageNotifications from "./PageNotifications";
 import PageDocuments     from "./PageDocuments";
 import PageAnnouncements from "./PageAnnouncements";
+import PageReports       from "./PageReports";
 import ManagerHierarchy  from "./ManagerHierarchy";
 import PageCalendar      from "./PageCalendar";
 import PageKudos         from "../pages/PageKudos";
@@ -422,6 +423,7 @@ export default function HRDashboard() {
     leaves:        <PageLeaves />,
     payroll:       <PagePayroll />,
     recruitment:   <PageRecruitment />,
+    reports:       <PageReports />,
     hierarchy:     <ManagerHierarchy />,
     calendar:      <PageCalendar isHr={true} />,
     kudos:         <PageKudos />,
@@ -434,7 +436,8 @@ export default function HRDashboard() {
     ? `${user.firstName || ""} ${user.lastName || user.name || ""}`.trim()
     : "HR Admin";
 
-  const role = "HR Admin";
+  const roleStr = user?.role || user?.designation || "HR Admin";
+  const role = roleStr.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (

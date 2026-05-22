@@ -8,7 +8,7 @@ function authHeaders() {
     : { "Content-Type": "application/json" };
 }
 
-const BASE_URL = "http://localhost:8080/api";
+const BASE_URL = (import.meta.env.VITE_API_URL + "/api");
 
 const COLORS = [
   "#7C3AED","#06B6D4","#10B981","#EC4899",

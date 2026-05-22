@@ -10,7 +10,7 @@ export default function ResumePage() {
     formData.append("file", file);
 
     const res = await axios.post(
-      "http://localhost:8080/api/resume/analyze",
+      (import.meta.env.VITE_API_URL + "/api/resume/analyze"),
       formData
     );
 

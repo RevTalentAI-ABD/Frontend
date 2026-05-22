@@ -53,14 +53,14 @@ export default function PageKudos() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [kudosRes, statsRes, empRes, meRes] = await Promise.all([
-        api.get("/api/kudos"),
-        api.get("/api/kudos/stats"),
+      const [kudosRes, empRes, meRes] = await Promise.all([
+        api.get("/api/kudos/recent"),
         api.get("/api/employees"),
         api.get("/api/me")
       ]);
       setKudosList(kudosRes.data);
-      setStats(statsRes.data);
+      // Mock stats since backend doesn't have an endpoint for it yet
+      setStats({ receivedThisMonth: 0, givenThisMonth: 0, companyWideThisMonth: kudosRes.data.length });
       
       const currentUser = meRes.data;
       // Filter out the current user so they can't send kudos to themselves

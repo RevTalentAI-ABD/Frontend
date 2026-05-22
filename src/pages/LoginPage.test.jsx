@@ -3,9 +3,11 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import LoginPage from "./LoginPage";
-import { login } from "../api/api";
+import api from "../api/axiosConfig";
 
-jest.mock("../api/api");
+jest.mock("../api/axiosConfig", () => ({
+  post: jest.fn(),
+}));
 
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
@@ -132,7 +134,7 @@ describe("Validation - Error Messages on Invalid Input", () => {
   });
 
   test("shows API error message when credentials are wrong", async () => {
-    login.mockRejectedValueOnce(new Error("Invalid credentials. Please try again."));
+    api.post.mockRejectedValueOnce(new Error("Invalid credentials. Please try again."));
     renderPage();
     await userEvent.type(screen.getByPlaceholderText("you@company.com"), "bad@email.com");
     await userEvent.type(screen.getByPlaceholderText("Enter your password"), "wrongpass");
@@ -144,7 +146,7 @@ describe("Validation - Error Messages on Invalid Input", () => {
   });
 
   test("shows generic error if API throws without a message", async () => {
-    login.mockRejectedValueOnce({});
+    api.post.mockRejectedValueOnce({});
     renderPage();
     await userEvent.type(screen.getByPlaceholderText("you@company.com"), "user@test.com");
     await userEvent.type(screen.getByPlaceholderText("Enter your password"), "pass123");
@@ -164,28 +166,28 @@ describe("Successful Login - Navigation by Role", () => {
   };
 
   test("navigates to /employee-dashboard for EMPLOYEE", async () => {
-    login.mockResolvedValueOnce({ token: "tok", role: "EMPLOYEE", name: "Alice" });
+    api.post.mockResolvedValueOnce({ data: { token: "tok", role: "EMPLOYEE", name: "Alice" } });
     renderPage();
     await fillAndSubmit("emp@co.com", "pass123");
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/employee-dashboard"));
   });
 
   test("navigates to /managerdashboard for MANAGER", async () => {
-    login.mockResolvedValueOnce({ token: "tok", role: "MANAGER", name: "Bob" });
+    api.post.mockResolvedValueOnce({ data: { token: "tok", role: "MANAGER", name: "Bob" } });
     renderPage();
     await fillAndSubmit("mgr@co.com", "pass123");
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/managerdashboard"));
   });
 
   test("navigates to /hr-dashboard for HR_ADMIN", async () => {
-    login.mockResolvedValueOnce({ token: "tok", role: "HR_ADMIN", name: "Carol" });
+    api.post.mockResolvedValueOnce({ data: { token: "tok", role: "HR_ADMIN", name: "Carol" } });
     renderPage();
     await fillAndSubmit("hr@co.com", "pass123");
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith("/hr-dashboard"));
   });
 
   test("shows error for unknown role", async () => {
-    login.mockResolvedValueOnce({ token: "tok", role: "UNKNOWN", name: "Ghost" });
+    api.post.mockResolvedValueOnce({ data: { token: "tok", role: "UNKNOWN", name: "Ghost" } });
     renderPage();
     await fillAndSubmit("x@co.com", "pass123");
     await waitFor(() =>

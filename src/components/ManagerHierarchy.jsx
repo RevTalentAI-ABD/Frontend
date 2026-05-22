@@ -9,12 +9,12 @@ function authHeaders() {
 
 const api = {
   get: async (url) => {
-    const res = await fetch(`http://localhost:8080${url}`, { headers: authHeaders() });
+    const res = await fetch(`${import.meta.env.VITE_API_URL}${url}`, { headers: authHeaders() });
     if (!res.ok) throw new Error(`${res.status}`);
     return { data: await res.json() };
   },
   post: async (url, body) => {
-    const res = await fetch(`http://localhost:8080${url}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
       method: "POST", headers: authHeaders(), body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`${res.status}`);

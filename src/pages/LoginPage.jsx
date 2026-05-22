@@ -58,7 +58,7 @@ export default function LoginPage() {
       else setError("Unknown role. Contact admin.");
 
     } catch (err) {
-      setError(err.response?.data || "Invalid credentials. Please try again.");
+      setError(err.response?.data?.message || (typeof err.response?.data === "string" ? err.response?.data : "Invalid credentials. Please try again."));
     } finally {
       setLoading(false);
     }

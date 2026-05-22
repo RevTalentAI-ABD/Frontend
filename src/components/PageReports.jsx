@@ -18,7 +18,13 @@ function useFetch(url) {
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
-    fetch(url)
+    const token = localStorage.getItem("token");
+    fetch(url, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+    })
       .then(res => {
         if (!res.ok) throw new Error("API ERROR: " + res.status);
         return res.json();
@@ -38,16 +44,16 @@ export default function PageReports() {
 
   // ✅ FULL URLs (IMPORTANT)
   const { data: summary, loading: l1, error: e1 } =
-    useFetch("http://localhost:8080/api/manager/reports/summary");
+    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/summary"));
 
   const { data: attendance, loading: l2 } =
-    useFetch("http://localhost:8080/api/manager/reports/attendance");
+    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/attendance"));
 
   const { data: productivity, loading: l3 } =
-    useFetch("http://localhost:8080/api/manager/reports/productivity");
+    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/productivity"));
 
   const { data: team, loading: l4 } =
-    useFetch("http://localhost:8080/api/manager/reports/team-summary");
+    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/team-summary"));
 
   const loading = l1 || l2 || l3 || l4;
   if (loading) return <Spinner />;

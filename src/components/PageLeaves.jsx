@@ -43,9 +43,10 @@ export default function PageLeaves() {
   const pendingLeaves = rawPending.filter(isManagerLeave);
   const allLeaves     = rawAll.filter(isManagerLeave);
 
-  const doneLeaves = allLeaves.filter(l =>
-    (l.status || l.leaveStatus) !== "Pending" && (l.status || l.leaveStatus) !== "PENDING"
-  );
+  const doneLeaves = allLeaves.filter(l => {
+    const s = l.status || l.leaveStatus;
+    return s !== "Pending" && s !== "PENDING" && s !== "Applied" && s !== "APPLIED";
+  });
 
   const handle = async (id, action) => {
     setActing(id);

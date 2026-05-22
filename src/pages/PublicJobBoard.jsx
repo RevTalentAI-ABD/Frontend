@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/PublicJobBoard.css";
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = (import.meta.env.VITE_API_URL + "");
 
 export default function PublicJobBoard() {
   const navigate = useNavigate();

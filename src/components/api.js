@@ -1,6 +1,6 @@
 // // import axios from "axios";
 
-// // const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// // const BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL + "");
 
 // // const api = axios.create({
 // //   baseURL: BASE_URL,
@@ -167,7 +167,7 @@
 
 // import axios from "axios";
 
-// const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// const BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.VITE_API_URL + "");
 
 // const api = axios.create({
 //   baseURL: BASE_URL,
@@ -370,7 +370,7 @@
 
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8090";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -423,11 +423,11 @@ export const managerAPI = {
   getDashSummary: ()  => api.get("/api/manager/dashboard-summary"),
   getActivity:    ()  => api.get("/api/manager/activity"),
   getTeam:        ()  => api.get("/api/manager/team"),
-  searchTeam:     (q) => api.get(`/api/manager/search?q=${q}`),
+  searchTeam:     (q) => api.get(`/api/manager/search?query=${q}`),
   getReports: {
     teamSummary:   () => api.get("/api/manager/reports/team-summary"),
     productivity:  () => api.get("/api/manager/reports/productivity"),
-    hrTeamSummary: () => api.get("/api/manager/reports/hr/team-summary"),
+    hrTeamSummary: () => api.get("/api/manager/reports/team-summary"),
     attendance:    () => api.get("/api/manager/reports/attendance"),
   },
 };

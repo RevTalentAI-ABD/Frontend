@@ -7,7 +7,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try { await login(form); } catch {}
+    try { await login({ username: form.email, password: form.password }); } catch {}
   };
 
   return (

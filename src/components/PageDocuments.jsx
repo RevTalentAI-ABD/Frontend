@@ -31,7 +31,7 @@ export default function PageDocuments() {
   const [deleting, setDeleting]   = useState(null);
   const [toast, setToast]         = useState({ message:"", type:"success" });
 
-  const API = "http://localhost:8080/api/documents";
+  const API = (import.meta.env.VITE_API_URL + "/api/documents");
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });

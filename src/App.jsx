@@ -153,6 +153,7 @@ function App() {
           <HRDashboard />
         </ProtectedRoute>
       } />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
