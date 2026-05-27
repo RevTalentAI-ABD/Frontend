@@ -13,10 +13,17 @@ import {
 import PageKudos from "./PageKudos";
 import {
   Home, Calendar as CalIcon, Umbrella, Wallet, Building2, User, Bell,
-  CheckCircle2, XCircle, Timer, Play, Square, Pencil, Save,
-  Plus, X, Download, LogOut, ChevronRight, Megaphone,
-  ClipboardList, CreditCard, BadgeCheck, AlertCircle, Award, Clock, Star
+  CheckCircle2, XCircle, Timer, Pencil, Save,
+  Plus, X, Download, LogOut,
+  ClipboardList, CreditCard, Award, Clock, Star
 } from "lucide-react";
+
+// ── Import leave API functions ─────────────────────────────────────────────
+import {
+  applyLeave,
+  getMyLeaves,
+  getLeaveBalance,
+} from "../api/api";
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function Logo() {
@@ -73,7 +80,7 @@ function StatCard({ icon, label, value, sub, color }) {
 function StatusBadge({ status }) {
   const map = {
     Approved:  "badge-green",  APPROVED: "badge-green",
-    APPLIED:   "badge-yellow", Pending:  "badge-yellow",
+    APPLIED:   "badge-yellow", Pending:  "badge-yellow", PENDING: "badge-yellow",
     Rejected:  "badge-red",    REJECTED: "badge-red",
     CANCELLED: "badge-gray",
     Ready:     "badge-purple", Downloaded: "badge-gray"
@@ -83,13 +90,11 @@ function StatusBadge({ status }) {
 
 // ── PAGES ─────────────────────────────────────────────────────────────────────
 
-// ✅ CHANGE 4a — added announcements prop
 function PageHome({ employee, attendance, announcements }) {
   const presentDays = attendance.filter(a => a.status === "PRESENT").length;
 
   return (
     <div className="ed-page">
-      {/* Welcome Banner */}
       <div className="ed-welcome-banner">
         <div>
           <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 700, color: "#fff" }}>
@@ -104,32 +109,12 @@ function PageHome({ employee, attendance, announcements }) {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="ed-stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-        <StatCard
-          icon={<CalIcon size={20} />}
-          label="Present Days"
-          value={presentDays}
-          sub="this month"
-          color="#06b6d4"
-        />
-        <StatCard
-          icon={<CreditCard size={20} />}
-          label="Employee ID"
-          value={employee?.employeeCode ?? "—"}
-          sub="your ID"
-          color="#f59e0b"
-        />
-        <StatCard
-          icon={<Building2 size={20} />}
-          label="Department"
-          value={employee?.departmentName ?? "—"}
-          sub="your team"
-          color="#10b981"
-        />
+        <StatCard icon={<CalIcon size={20} />}    label="Present Days"  value={presentDays}                  sub="this month" color="#06b6d4" />
+        <StatCard icon={<CreditCard size={20} />} label="Employee ID"   value={employee?.employeeCode ?? "—"} sub="your ID"    color="#f59e0b" />
+        <StatCard icon={<Building2 size={20} />}  label="Department"    value={employee?.departmentName ?? "—"} sub="your team" color="#10b981" />
       </div>
 
-      {/* Manager Info Card */}
       <div className="ed-panel" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "18px 24px" }}>
         <div style={{
           width: 44, height: 44, borderRadius: "50%",
@@ -149,7 +134,6 @@ function PageHome({ employee, attendance, announcements }) {
         </div>
       </div>
 
-      {/* ✅ CHANGE 4b — Updated Announcements section */}
       <div className="ed-panel">
         <h3 className="ed-panel-title">Announcements</h3>
         <div className="ed-announcements">
@@ -160,7 +144,7 @@ function PageHome({ employee, attendance, announcements }) {
             </div>
           ) : (
             announcements.map((a, i) => (
-              <div key={i} className="ed-announce-item">
+              <div key={a.id || i} className="ed-announce-item">
                 <span className="ed-announce-dot" style={{
                   background:
                     a.priority === "URGENT" ? "#ef4444" :
@@ -168,12 +152,8 @@ function PageHome({ employee, attendance, announcements }) {
                     a.priority === "LOW"    ? "#7c5af0" : "#10b981"
                 }}/>
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: "14px", color: "#fff" }}>
-                    {a.title}
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#9b96b8", marginTop: "2px" }}>
-                    {a.message}
-                  </div>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "#fff" }}>{a.title}</div>
+                  <div style={{ fontSize: "13px", color: "#9b96b8", marginTop: "2px" }}>{a.message}</div>
                   <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "4px" }}>
                     By {a.postedBy || "HR"} · {a.createdAt || ""}
                   </div>
@@ -246,16 +226,16 @@ function PageAttendance({ attendance }) {
                 <tr><td colSpan={5} style={{ textAlign: "center", color: "#9b96b8", padding: "20px" }}>No records found</td></tr>
               ) : (
                 attendance.slice(-10).reverse().map((a, i) => (
-                  <tr key={i}>
+                  <tr key={a.id || i}>
                     <td>{a.workDate ? new Date(a.workDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
                     <td>{a.checkIn  ? new Date(a.checkIn).toLocaleTimeString("en-IN",  { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
                     <td>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
                     <td>{a.durationMin ? `${(a.durationMin / 60).toFixed(1)}h` : "—"}</td>
                     <td><StatusBadge status={
-                      a.status === "PRESENT"  ? "PRESENT" :
-                      a.status === "ABSENT"   ? "ABSENT" :
-                      a.status === "ON_LEAVE" ? "ON_LEAVE"  :
-                      a.status === "LATE"     ? "LATE" : "Pending"
+                      a.status === "PRESENT"  ? "PRESENT"  :
+                      a.status === "ABSENT"   ? "ABSENT"   :
+                      a.status === "ON_LEAVE" ? "ON_LEAVE" :
+                      a.status === "LATE"     ? "LATE"     : "Pending"
                     }/></td>
                   </tr>
                 ))
@@ -268,31 +248,41 @@ function PageAttendance({ attendance }) {
   );
 }
 
-function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
+// ── Leave page — uses getMyLeaves (GET /api/leaves/my) for history ─────────
+function PageLeave({ leaveBalance, leaveHistory, employeeId, onLeaveApplied }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm]         = useState({ type: "CASUAL", from: "", to: "", reason: "" });
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast]       = useState("");
 
   const handleSubmit = async () => {
-    if (!form.from || !form.to || !form.reason) return;
+    if (!form.from || !form.to || !form.reason) {
+      setToast("Please fill all fields.");
+      setTimeout(() => setToast(""), 3000);
+      return;
+    }
     setSubmitting(true);
     try {
-      await api.post("/api/leaves/apply", {
+      // POST /api/leaves/apply
+      // Backend routes approval:
+      //   - EMPLOYEE leave → assigned MANAGER approves
+      //   - MANAGER leave  → HR_ADMIN approves
+      await applyLeave({
         employeeId: employeeId,
         leaveType:  form.type,
-        fromDate:  form.from,
-        toDate:    form.to,
+        fromDate:   form.from,
+        toDate:     form.to,
         reason:     form.reason,
       });
-      setToast("Leave request submitted!");
+      setToast("Leave request submitted successfully!");
       setShowForm(false);
       setForm({ type: "CASUAL", from: "", to: "", reason: "" });
-      onLeaveApplied();
+      onLeaveApplied(); // refresh dashboard data
       setTimeout(() => setToast(""), 3000);
-    } catch {
-      setToast("Failed to submit. Try again.");
-      setTimeout(() => setToast(""), 3000);
+    } catch (e) {
+      const msg = e.response?.data?.message || e.response?.data || "Failed to submit. Try again.";
+      setToast(msg);
+      setTimeout(() => setToast(""), 4000);
     } finally {
       setSubmitting(false);
     }
@@ -313,6 +303,9 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
       {showForm && (
         <div className="ed-panel ed-form-panel">
           <h3 className="ed-panel-title">New Leave Request</h3>
+          <p style={{ color: "#9b96b8", fontSize: 13, marginBottom: 16 }}>
+            Your leave will be sent to your manager for approval.
+          </p>
           <div className="ed-form-grid">
             <div className="ed-form-field">
               <label>Leave Type</label>
@@ -320,9 +313,6 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
                 <option value="CASUAL">Casual</option>
                 <option value="SICK">Sick</option>
                 <option value="ANNUAL">Annual</option>
-                <option value="MATERNITY">Maternity</option>
-                <option value="PATERNITY">Paternity</option>
-                <option value="UNPAID">Unpaid</option>
               </select>
             </div>
             <div className="ed-form-field">
@@ -346,21 +336,22 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
         </div>
       )}
 
+      {/* Leave Balance Cards */}
       <div className="ed-leave-balance-grid">
-        {leaves.length === 0 ? (
+        {leaveBalance.length === 0 ? (
           <p style={{ color: "#9b96b8" }}>No leave balance data available.</p>
         ) : (
-          leaves.map((l, i) => (
+          leaveBalance.map((l, i) => (
             <div key={i} className="ed-leave-card" style={{ "--lc": "#7c5af0" }}>
               <div className="ed-leave-type">{l.leaveType || l.type} Leave</div>
               <div className="ed-leave-numbers">
-                <span className="ed-leave-used">{l.total - l.used}</span>
+                <span className="ed-leave-used">{l.used}</span>
                 <span className="ed-leave-sep">/</span>
                 <span className="ed-leave-total">{l.total}</span>
               </div>
               <div className="ed-leave-bar-bg">
                 <div className="ed-leave-bar-fill"
-                  style={{ width: `${((l.total - l.used) / l.total) * 100}%` }}/>
+                  style={{ width: `${l.total > 0 ? (l.used / l.total) * 100 : 0}%` }}/>
               </div>
               <div className="ed-leave-remaining">{l.total - l.used} days remaining</div>
             </div>
@@ -368,6 +359,7 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
         )}
       </div>
 
+      {/* Leave History — from GET /api/leaves/my */}
       <div className="ed-panel">
         <h3 className="ed-panel-title">Leave History</h3>
         <div className="ed-table-wrap">
@@ -388,7 +380,7 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
                 <tr><td colSpan={7} style={{ textAlign: "center", color: "#9b96b8", padding: "20px" }}>No history found</td></tr>
               ) : (
                 leaveHistory.map((r, i) => (
-                  <tr key={i}>
+                  <tr key={r.id || i}>
                     <td>{r.leaveType}</td>
                     <td>{r.startDate}</td>
                     <td>{r.endDate}</td>
@@ -396,9 +388,9 @@ function PageLeave({ leaves, leaveHistory, employeeId, onLeaveApplied }) {
                     <td>{r.reason}</td>
                     <td>
                       {r.rejectionReason ? (
-                        <span style={{ color: r.status === "REJECTED" ? "#f87171" : "#10b981" }}>
-                          {r.rejectionReason}
-                        </span>
+                        <span style={{ color: "#f87171" }}>{r.rejectionReason}</span>
+                      ) : r.approveComment || r.comment ? (
+                        <span style={{ color: "#10b981" }}>{r.approveComment || r.comment}</span>
                       ) : "—"}
                     </td>
                     <td><StatusBadge status={r.status}/></td>
@@ -429,33 +421,24 @@ function PagePayroll({ payslips }) {
   const downloadPayslip = (payslip) => {
     const gross = Number(payslip.basicSalary || 0) + Number(payslip.hra || 0) + Number(payslip.allowances || 0);
     const mName = monthName(payslip.payMonth, payslip.payYear);
-
     const html = `
-      <html>
-      <head>
-        <title>Payslip - ${mName}</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 40px; color: #1a1040; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c5af0; padding-bottom: 16px; margin-bottom: 24px; }
-          .logo { font-size: 22px; font-weight: 700; color: #5b3de8; }
-          .title { font-size: 18px; font-weight: 600; color: #333; }
-          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; background: #f5f4fb; padding: 16px; border-radius: 8px; }
-          .info-item label { font-size: 11px; color: #9b96b8; text-transform: uppercase; }
-          .info-item p { font-size: 14px; font-weight: 600; margin: 2px 0 0; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
-          th { background: #7c5af0; color: white; padding: 10px 14px; text-align: left; font-size: 13px; }
-          td { padding: 10px 14px; border-bottom: 1px solid #e2dff0; font-size: 13px; }
-          .debit { color: #ef4444; }
-          .credit { color: #10b981; }
-          .net-row { background: #f5f4fb; font-weight: 700; font-size: 15px; }
-          .footer { text-align: center; font-size: 11px; color: #9b96b8; margin-top: 32px; border-top: 1px solid #e2dff0; padding-top: 16px; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="logo">RevTalent</div>
-          <div class="title">Payslip — ${mName}</div>
-        </div>
+      <html><head><title>Payslip - ${mName}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; color: #1a1040; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #7c5af0; padding-bottom: 16px; margin-bottom: 24px; }
+        .logo { font-size: 22px; font-weight: 700; color: #5b3de8; }
+        .title { font-size: 18px; font-weight: 600; color: #333; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; background: #f5f4fb; padding: 16px; border-radius: 8px; }
+        .info-item label { font-size: 11px; color: #9b96b8; text-transform: uppercase; }
+        .info-item p { font-size: 14px; font-weight: 600; margin: 2px 0 0; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+        th { background: #7c5af0; color: white; padding: 10px 14px; text-align: left; font-size: 13px; }
+        td { padding: 10px 14px; border-bottom: 1px solid #e2dff0; font-size: 13px; }
+        .debit { color: #ef4444; } .credit { color: #10b981; }
+        .net-row { background: #f5f4fb; font-weight: 700; font-size: 15px; }
+        .footer { text-align: center; font-size: 11px; color: #9b96b8; margin-top: 32px; border-top: 1px solid #e2dff0; padding-top: 16px; }
+      </style></head><body>
+        <div class="header"><div class="logo">RevTalent</div><div class="title">Payslip — ${mName}</div></div>
         <div class="info-grid">
           <div class="info-item"><label>Employee Name</label><p>${payslip.employeeName || "—"}</p></div>
           <div class="info-item"><label>Employee Code</label><p>${payslip.employeeCode || "—"}</p></div>
@@ -464,27 +447,17 @@ function PagePayroll({ payslips }) {
           <div class="info-item"><label>Status</label><p>${payslip.status || "—"}</p></div>
           <div class="info-item"><label>Processed At</label><p>${payslip.processedAt ? new Date(payslip.processedAt).toLocaleDateString() : "—"}</p></div>
         </div>
-        <table>
-          <thead>
-            <tr><th>Description</th><th>Type</th><th>Amount</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Basic Salary</td><td class="credit">Credit</td><td class="credit">₹${Number(payslip.basicSalary || 0).toLocaleString()}</td></tr>
-            <tr><td>HRA</td><td class="credit">Credit</td><td class="credit">₹${Number(payslip.hra || 0).toLocaleString()}</td></tr>
-            <tr><td>Allowances</td><td class="credit">Credit</td><td class="credit">₹${Number(payslip.allowances || 0).toLocaleString()}</td></tr>
-            <tr><td>PF Deduction</td><td class="debit">Debit</td><td class="debit">-₹${Number(payslip.pfDeduction || 0).toLocaleString()}</td></tr>
-            <tr><td>Tax (TDS)</td><td class="debit">Debit</td><td class="debit">-₹${Number(payslip.taxDeduction || 0).toLocaleString()}</td></tr>
-            <tr><td>Other Deductions</td><td class="debit">Debit</td><td class="debit">-₹${Number(payslip.deductions || 0).toLocaleString()}</td></tr>
-            <tr class="net-row"><td colspan="2">Net Take Home</td><td>₹${Number(payslip.netPay || 0).toLocaleString()}</td></tr>
-          </tbody>
-        </table>
-        <div class="footer">
-          This is a system-generated payslip. For queries contact HR. — RevTalent HRMS
-        </div>
-      </body>
-      </html>
-    `;
-
+        <table><thead><tr><th>Description</th><th>Type</th><th>Amount</th></tr></thead><tbody>
+          <tr><td>Basic Salary</td><td class="credit">Credit</td><td class="credit">₹${Number(payslip.basicSalary || 0).toLocaleString()}</td></tr>
+          <tr><td>HRA</td><td class="credit">Credit</td><td class="credit">₹${Number(payslip.hra || 0).toLocaleString()}</td></tr>
+          <tr><td>Allowances</td><td class="credit">Credit</td><td class="credit">₹${Number(payslip.allowances || 0).toLocaleString()}</td></tr>
+          <tr><td>PF Deduction</td><td class="debit">Debit</td><td class="debit">-₹${Number(payslip.pfDeduction || 0).toLocaleString()}</td></tr>
+          <tr><td>Tax (TDS)</td><td class="debit">Debit</td><td class="credit">-₹${Number(payslip.taxDeduction || 0).toLocaleString()}</td></tr>
+          <tr><td>Other Deductions</td><td class="debit">Debit</td><td class="debit">-₹${Number(payslip.deductions || 0).toLocaleString()}</td></tr>
+          <tr class="net-row"><td colspan="2">Net Take Home</td><td>₹${Number(payslip.netPay || 0).toLocaleString()}</td></tr>
+        </tbody></table>
+        <div class="footer">This is a system-generated payslip. For queries contact HR. — RevTalent HRMS</div>
+      </body></html>`;
     const win = window.open("", "_blank");
     win.document.write(html);
     win.document.close();
@@ -494,7 +467,6 @@ function PagePayroll({ payslips }) {
   return (
     <div className="ed-page">
       <h2 className="ed-page-heading">Payroll</h2>
-
       <div className="ed-payslip-hero">
         <div className="ed-payslip-month">
           {latest ? monthName(latest.payMonth, latest.payYear) : "No payslip yet"}
@@ -502,9 +474,7 @@ function PagePayroll({ payslips }) {
         <div className="ed-payslip-amounts">
           <div>
             <div className="ed-ps-label">Gross Salary</div>
-            <div className="ed-ps-amount">
-              {grossSalary != null ? `₹${grossSalary.toLocaleString()}` : "—"}
-            </div>
+            <div className="ed-ps-amount">{grossSalary != null ? `₹${grossSalary.toLocaleString()}` : "—"}</div>
           </div>
           <div className="ed-ps-divider"/>
           <div>
@@ -516,8 +486,7 @@ function PagePayroll({ payslips }) {
         </div>
         <button className="ed-download-btn" onClick={() => latest && downloadPayslip(latest)}
           style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <Download size={16}/>
-          Download Payslip
+          <Download size={16}/> Download Payslip
         </button>
       </div>
 
@@ -582,7 +551,42 @@ function PageProfile({ employee, onProfileUpdated }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving]   = useState(false);
   const [toast, setToast]     = useState("");
-  const [info, setInfo]       = useState({
+  const [passwordForm, setPasswordForm] = useState({ current: "", newPass: "", confirm: "" });
+  const [passError, setPassError]       = useState("");
+  const [passSuccess, setPassSuccess]   = useState(false);
+  const [passLoading, setPassLoading]   = useState(false);
+
+  const handlePasswordChange = async () => {
+    setPassError("");
+    setPassSuccess(false);
+    if (!passwordForm.current || !passwordForm.newPass || !passwordForm.confirm) {
+      setPassError("All fields are required.");
+      return;
+    }
+    if (passwordForm.newPass !== passwordForm.confirm) {
+      setPassError("New passwords do not match.");
+      return;
+    }
+    if (passwordForm.newPass.length < 8) {
+      setPassError("Password must be at least 8 characters.");
+      return;
+    }
+    setPassLoading(true);
+    try {
+      await api.put("/api/auth/change-password", {
+        currentPassword: passwordForm.current,
+        newPassword: passwordForm.newPass
+      });
+      setPassSuccess(true);
+      setPasswordForm({ current: "", newPass: "", confirm: "" });
+    } catch (err) {
+      setPassError(err.response?.data?.message || err.response?.data || "Failed to change password.");
+    } finally {
+      setPassLoading(false);
+    }
+  };
+
+  const [info, setInfo] = useState({
     name:        employee?.name            || "",
     email:       employee?.email           || "",
     phone:       employee?.phone           || "",
@@ -612,7 +616,8 @@ function PageProfile({ employee, onProfileUpdated }) {
       setToast("Profile updated!");
       onProfileUpdated();
       setTimeout(() => setToast(""), 3000);
-    } catch {
+    } catch (err) {
+      console.error(err);
       setToast("Update failed.");
       setTimeout(() => setToast(""), 3000);
     } finally {
@@ -643,34 +648,34 @@ function PageProfile({ employee, onProfileUpdated }) {
       <div className="ed-panel">
         <h3 className="ed-panel-title">Personal Information</h3>
         <div className="ed-form-grid">
-          <div className="ed-form-field">
-            <label>Full Name</label>
-            {editing
-              ? <input value={info.name} onChange={e => setInfo(i => ({ ...i, name: e.target.value }))}/>
-              : <div className="ed-profile-value">{info.name || "—"}</div>}
-          </div>
-          <div className="ed-form-field">
-            <label>Email</label>
-            {editing
-              ? <input value={info.email} onChange={e => setInfo(i => ({ ...i, email: e.target.value }))}/>
-              : <div className="ed-profile-value">{info.email || "—"}</div>}
-          </div>
-          <div className="ed-form-field">
-            <label>Phone</label>
-            {editing
-              ? <input value={info.phone} onChange={e => setInfo(i => ({ ...i, phone: e.target.value }))}/>
-              : <div className="ed-profile-value">{info.phone || "—"}</div>}
-          </div>
+          {[
+            { label: "Full Name",    key: "name",        type: "text" },
+            { label: "Email",        key: "email",       type: "email" },
+            { label: "Phone",        key: "phone",       type: "text" },
+            { label: "Date of Birth",key: "dateOfBirth", type: "date" },
+          ].map(({ label, key, type }) => (
+            <div key={key} className="ed-form-field">
+              <label>{label}</label>
+              {editing
+                ? <input type={type} value={info[key]} onChange={e => setInfo(i => ({ ...i, [key]: e.target.value }))}/>
+                : <div className="ed-profile-value">{info[key] || "—"}</div>}
+            </div>
+          ))}
           <div className="ed-form-field">
             <label>Department</label>
             <div className="ed-profile-value">{info.dept || "—"}</div>
           </div>
           <div className="ed-form-field">
-            <label>Date of Birth</label>
-            {editing
-              ? <input type="date" value={info.dateOfBirth}
-                  onChange={e => setInfo(i => ({ ...i, dateOfBirth: e.target.value }))}/>
-              : <div className="ed-profile-value">{info.dateOfBirth || "—"}</div>}
+            <label>Gender</label>
+            {editing ? (
+              <select value={info.gender} onChange={e => setInfo(i => ({ ...i, gender: e.target.value }))}>
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            ) : <div className="ed-profile-value">{info.gender || "—"}</div>}
           </div>
           <div className="ed-form-field ed-form-full">
             <label>Address</label>
@@ -680,51 +685,57 @@ function PageProfile({ employee, onProfileUpdated }) {
                   placeholder="Enter your address..."/>
               : <div className="ed-profile-value">{info.address || "—"}</div>}
           </div>
-          <div className="ed-form-field">
-            <label>Gender</label>
-            {editing
-              ? (
-                <select value={info.gender} onChange={e => setInfo(i => ({ ...i, gender: e.target.value }))}>
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
-                </select>
-              )
-              : <div className="ed-profile-value">{info.gender || "—"}</div>}
-          </div>
         </div>
       </div>
 
       <div className="ed-panel">
         <h3 className="ed-panel-title">Change Password</h3>
         <div className="ed-form-grid">
-          <div className="ed-form-field"><label>Current Password</label><input type="password" placeholder="••••••••"/></div>
-          <div className="ed-form-field"><label>New Password</label><input type="password" placeholder="••••••••"/></div>
-          <div className="ed-form-field"><label>Confirm Password</label><input type="password" placeholder="••••••••"/></div>
+          <div className="ed-form-field">
+            <label>Current Password</label>
+            <input type="password" placeholder="••••••••" value={passwordForm.current}
+              onChange={e => setPasswordForm(f => ({ ...f, current: e.target.value }))} />
+          </div>
+          <div className="ed-form-field">
+            <label>New Password</label>
+            <input type="password" placeholder="••••••••" value={passwordForm.newPass}
+              onChange={e => setPasswordForm(f => ({ ...f, newPass: e.target.value }))} />
+          </div>
+          <div className="ed-form-field">
+            <label>Confirm Password</label>
+            <input type="password" placeholder="••••••••" value={passwordForm.confirm}
+              onChange={e => setPasswordForm(f => ({ ...f, confirm: e.target.value }))} />
+          </div>
         </div>
-        <button className="ed-primary-btn" style={{ marginTop: 8 }}>Update Password</button>
+        {passError   && <div style={{ color: "#ef4444", marginTop: 8, fontSize: 13 }}>{passError}</div>}
+        {passSuccess && <div style={{ color: "#10b981", marginTop: 8, fontSize: 13 }}>Password updated successfully!</div>}
+        <button className="ed-primary-btn" style={{ marginTop: 8 }}
+          onClick={handlePasswordChange} disabled={passLoading}>
+          {passLoading ? "Updating..." : "Update Password"}
+        </button>
       </div>
     </div>
   );
 }
 
 function PageNotifications({ employee, notifications, setNotifications }) {
+  const isUnread = (n) => !n.read && !n.isRead;
+
   const markAll = async () => {
     try {
       await api.put(`/api/notifications/${employee.id}/read-all`);
-      setNotifications(n => n.map(x => ({ ...x, read: true })));
+      setNotifications(n => n.map(x => ({ ...x, read: true, unread: false })));
     } catch (e) { console.error(e); }
   };
 
   const markOne = async (index, notif) => {
-    if (notif.read) return;
+    if (!isUnread(notif)) return;
     try {
       await api.put(`/api/notifications/${notif.id}/read`);
-      setNotifications(ns => ns.map((x, j) => j === index ? { ...x, read: true } : x));
+      setNotifications(ns => ns.map((x, j) => j === index ? { ...x, read: true, unread: false } : x));
     } catch (e) { console.error(e); }
   };
+
   return (
     <div className="ed-page">
       <div className="ed-page-header-row">
@@ -736,16 +747,15 @@ function PageNotifications({ employee, notifications, setNotifications }) {
           <p style={{ color: "#9b96b8", textAlign: "center", padding: "40px 0" }}>No notifications yet.</p>
         ) : (
           notifications.map((n, i) => (
-            <div key={i}
-              className={`ed-notif-row ${!n.read ? "unread" : ""}`}
-              onClick={() => markOne(i, n)}
-            >
+            <div key={n.id || i}
+              className={`ed-notif-row ${isUnread(n) ? "unread" : ""}`}
+              onClick={() => markOne(i, n)}>
               <div className="ed-notif-icon"><Bell size={16}/></div>
               <div className="ed-notif-body">
                 <div className="ed-notif-text">{n.message}</div>
                 <div className="ed-notif-time">{n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}</div>
               </div>
-              {!n.read && <div className="ed-notif-dot"/>}
+              {isUnread(n) && <div className="ed-notif-dot"/>}
             </div>
           ))
         )}
@@ -771,17 +781,17 @@ const NAV = [
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
 
-  const [active,         setActive]         = useState("home");
-  const [sidebarOpen,    setSidebarOpen]     = useState(false);
-  const [loading,        setLoading]         = useState(true);
-  const [error,          setError]           = useState("");
-  const [employee,       setEmployee]        = useState(null);
-  const [attendance,     setAttendance]      = useState([]);
-  const [leaves,         setLeaves]          = useState([]);
-  const [leaveHistory,   setLeaveHistory]    = useState([]);
-  const [payslips,       setPayslips]        = useState([]);
-  const [notifications,  setNotifications]   = useState([]);
-  const [announcements,  setAnnouncements]   = useState([]); // ✅ CHANGE 1
+  const [active,        setActive]        = useState("home");
+  const [sidebarOpen,   setSidebarOpen]   = useState(false);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState("");
+  const [employee,      setEmployee]      = useState(null);
+  const [attendance,    setAttendance]    = useState([]);
+  const [leaveBalance,  setLeaveBalance]  = useState([]);
+  const [leaveHistory,  setLeaveHistory]  = useState([]);
+  const [payslips,      setPayslips]      = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
 
   const fetchDashboard = async () => {
     try {
@@ -789,23 +799,23 @@ export default function EmployeeDashboard() {
       setEmployee(empRes.data);
       const empId = empRes.data.id;
 
-      // ✅ CHANGE 2 — added announceRes
       const [attRes, leaveBalRes, leaveHistRes,
              payRes, notifRes, announceRes] = await Promise.allSettled([
         api.get(`/api/attendance/employee/${empId}`),
         api.get(`/api/leaves/balance/${empId}`),
-        api.get(`/api/leaves/history/${empId}`),
+        // GET /api/leaves/my — returns current user's own leaves regardless of role
+        api.get("/api/leaves/my"),
         api.get(`/api/payroll/employee/${empId}`),
         api.get(`/api/notifications/${empId}`),
-        api.get(`/api/announcements`),
+        api.get("/api/announcements"),
       ]);
 
-      if (attRes.status       === "fulfilled") setAttendance(attRes.value.data);
-      if (leaveBalRes.status  === "fulfilled") setLeaves(leaveBalRes.value.data);
-      if (leaveHistRes.status === "fulfilled") setLeaveHistory(leaveHistRes.value.data);
-      if (payRes.status       === "fulfilled") setPayslips(payRes.value.data);
-      if (notifRes.status     === "fulfilled") setNotifications(notifRes.value.data);
-      if (announceRes.status  === "fulfilled") setAnnouncements(announceRes.value.data); // ✅
+      if (attRes.status       === "fulfilled") setAttendance(attRes.value.data || []);
+      if (leaveBalRes.status  === "fulfilled") setLeaveBalance(leaveBalRes.value.data || []);
+      if (leaveHistRes.status === "fulfilled") setLeaveHistory(leaveHistRes.value.data || []);
+      if (payRes.status       === "fulfilled") setPayslips(payRes.value.data || []);
+      if (notifRes.status     === "fulfilled") setNotifications(notifRes.value.data || []);
+      if (announceRes.status  === "fulfilled") setAnnouncements(announceRes.value.data || []);
 
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
@@ -830,7 +840,8 @@ export default function EmployeeDashboard() {
     navigate("/login");
   };
 
-  const unread = notifications.filter(n => !n.read).length;
+  const isUnread = (n) => !n.read && !n.isRead;
+  const unread = notifications.filter(isUnread).length;
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center",
@@ -854,17 +865,20 @@ export default function EmployeeDashboard() {
   );
 
   const PAGE = {
-    // ✅ CHANGE 3 — pass announcements to PageHome
     home:          <PageHome employee={employee} attendance={attendance} announcements={announcements}/>,
     attendance:    <PageAttendance attendance={attendance}/>,
-    leave:         <PageLeave leaves={leaves} leaveHistory={leaveHistory}
-                     employeeId={employee?.id} onLeaveApplied={fetchDashboard}/>,
+    // PageLeave receives leaveBalance + leaveHistory (from /api/leaves/my)
+    leave:         <PageLeave
+                     leaveBalance={leaveBalance}
+                     leaveHistory={leaveHistory}
+                     employeeId={employee?.id}
+                     onLeaveApplied={fetchDashboard}/>,
     payroll:       <PagePayroll payslips={payslips}/>,
     calendar:      <PageCalendar />,
     reviews:       <PageMyReviews employee={employee}/>,
     kudos:         <PageKudos employee={employee}/>,
     profile:       <PageProfile employee={employee} onProfileUpdated={fetchDashboard}/>,
-    notifications: <PageNotifications employee={employee} notifications={notifications} setNotifications={setNotifications} />,
+    notifications: <PageNotifications employee={employee} notifications={notifications} setNotifications={setNotifications}/>,
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FileText, Upload, Trash2, CheckCircle2, XCircle } from "lucide-react";
 import axios from "axios";
+import api from "../api/axiosConfig";
 import "./HRDashboard.css";
 
 // ── Simple inline toast (no external dep needed) ──────────────────────────
@@ -31,7 +32,7 @@ export default function PageDocuments() {
   const [deleting, setDeleting]   = useState(null);
   const [toast, setToast]         = useState({ message:"", type:"success" });
 
-  const API = (import.meta.env.VITE_API_URL + "/api/documents");
+  const API = "/api/documents";
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -40,7 +41,7 @@ export default function PageDocuments() {
 
   const fetchDocuments = async () => {
     try {
-      const res = await axios.get(API);
+      const res = await api.get(API);
       setDocuments(res.data);
     } catch (err) {
       console.error(err);
@@ -55,7 +56,7 @@ export default function PageDocuments() {
       setLoading(true);
       const formData = new FormData();
       formData.append("file", file);
-      await axios.post(`${API}/upload`, formData, {
+      await api.post(`${API}/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setFile(null);
@@ -71,7 +72,7 @@ export default function PageDocuments() {
 
   const toggleDocument = async (id) => {
     try {
-      await axios.put(`${API}/${id}/toggle`);
+      await api.put(`${API}/${id}/toggle`);
       fetchDocuments();
     } catch (err) {
       console.error(err);
@@ -83,7 +84,7 @@ export default function PageDocuments() {
     if (!window.confirm(`Delete "${fileName}"? This cannot be undone.`)) return;
     try {
       setDeleting(id);
-      await axios.delete(`${API}/${id}`);
+      await api.delete(`${API}/${id}`);
       setDocuments((prev) => prev.filter((d) => d.id !== id));
       showToast("Document deleted");
     } catch (err) {

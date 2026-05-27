@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { getApiBase } from "../utils/apiBase";
 
 export default function ResumePage() {
   const [file, setFile] = useState(null);
@@ -10,7 +11,7 @@ export default function ResumePage() {
     formData.append("file", file);
 
     const res = await axios.post(
-      (import.meta.env.VITE_API_URL + "/api/resume/analyze"),
+      `${getApiBase()}/resume/analyze`,
       formData
     );
 

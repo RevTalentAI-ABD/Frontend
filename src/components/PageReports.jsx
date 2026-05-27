@@ -1,4 +1,5 @@
 import React from "react";
+import { getApiBase } from "../utils/apiBase";
 import {
   AreaChart, Area, LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -42,18 +43,18 @@ function useFetch(url) {
 
 export default function PageReports() {
 
-  // ✅ FULL URLs (IMPORTANT)
+  const apiBase = getApiBase();
   const { data: summary, loading: l1, error: e1 } =
-    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/summary"));
+    useFetch(`${apiBase}/manager/reports/summary`);
 
   const { data: attendance, loading: l2 } =
-    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/attendance"));
+    useFetch(`${apiBase}/manager/reports/attendance`);
 
   const { data: productivity, loading: l3 } =
-    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/productivity"));
+    useFetch(`${apiBase}/manager/reports/productivity`);
 
   const { data: team, loading: l4 } =
-    useFetch((import.meta.env.VITE_API_URL + "/api/manager/reports/team-summary"));
+    useFetch(`${apiBase}/manager/reports/team-summary`);
 
   const loading = l1 || l2 || l3 || l4;
   if (loading) return <Spinner />;

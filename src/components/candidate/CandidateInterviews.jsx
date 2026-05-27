@@ -1,3 +1,5 @@
+import { Calendar, Clock, User, CalendarOff, HelpCircle } from "lucide-react";
+
 export default function CandidateInterviews({ applications }) {
   const interviewApps = applications.filter(a =>
     (a.status || "").toLowerCase() === "interview"
@@ -27,7 +29,7 @@ export default function CandidateInterviews({ applications }) {
       <div className="cd-card">
         {interviewApps.length === 0 ? (
           <div className="cd-empty">
-            <i className="ti ti-calendar-off" aria-hidden="true" />
+            <CalendarOff size={32} style={{ opacity: 0.4 }} />
             <p>No interviews scheduled yet.</p>
           </div>
         ) : (
@@ -60,14 +62,14 @@ export default function CandidateInterviews({ applications }) {
                       gap: 10,
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 18 }}>📅</span>
+                        <Calendar size={18} color="#93c5fd" />
                         <div>
                           <div style={{ color: "#93c5fd", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Date</div>
                           <div style={{ color: "#e0e7ff", fontSize: 15, fontWeight: 600 }}>{dateStr}</div>
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 18 }}>🕐</span>
+                        <Clock size={18} color="#93c5fd" />
                         <div>
                           <div style={{ color: "#93c5fd", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Time</div>
                           <div style={{ color: "#e0e7ff", fontSize: 15, fontWeight: 600 }}>{timeStr}</div>
@@ -75,7 +77,7 @@ export default function CandidateInterviews({ applications }) {
                       </div>
                       {(app.interviewerName || app.interviewer) && (
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 18 }}>👤</span>
+                          <User size={18} color="#93c5fd" />
                           <div>
                             <div style={{ color: "#93c5fd", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Interviewer</div>
                             <div style={{ color: "#e0e7ff", fontSize: 15, fontWeight: 600 }}>{app.interviewerName || app.interviewer}</div>
@@ -93,7 +95,7 @@ export default function CandidateInterviews({ applications }) {
                       alignItems: "center",
                       gap: 8,
                     }}>
-                      <span style={{ fontSize: 16 }}>⏳</span>
+                      <HelpCircle size={16} color="#fde68a" />
                       <span style={{ color: "#fde68a", fontSize: 13 }}>
                         Interview date &amp; time will be confirmed by HR shortly.
                       </span>

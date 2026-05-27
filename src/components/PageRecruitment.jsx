@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { recruitmentAPI, candidateAPI, resumeAPI, employeeAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
 import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
+import {
+  Calendar, FileText, Bot, X, Check, ArrowRight, RotateCcw,
+  Trash2, Users, CheckCircle, XCircle, AlertCircle, Briefcase
+} from "lucide-react";
 
 const PIPELINE_STAGES = ["APPLIED", "SCREENING", "INTERVIEW", "OFFERED", "HIRED"];
 const STAGE_LABELS    = { APPLIED: "Applied", SCREENING: "Screening", INTERVIEW: "Interview", OFFERED: "Offered", HIRED: "Hired" };
@@ -23,24 +27,36 @@ export default function PageRecruitment() {
   const [addingCand,    setAddingCand]    = useState(false);
   const [movingId,      setMovingId]      = useState(null);
 
-  // ── Schedule interview modal state ────────────────────────────────────────
-  const [scheduleModal, setScheduleModal] = useState(null); // candidate object or null
+  const [scheduleModal, setScheduleModal] = useState(null);
   const [scheduleForm,  setScheduleForm]  = useState({ date: "", time: "", interviewerName: "", interviewerId: "" });
   const [scheduling,    setScheduling]    = useState(false);
   const [employees,     setEmployees]     = useState([]);
-  
-  // ── AI Summary modal state ──────────────────────────────────────────────
-  const [summaryModal, setSummaryModal] = useState(null);
+  const [summaryModal,  setSummaryModal]  = useState(null);
 
   const [newJob, setNewJob] = useState({
     title: "", department: "Engineering", numberOfOpenings: 1, description: "", requirements: ""
   });
 
   const [newCand, setNewCand] = useState({ name: "", email: "", phone: "" });
+  const [downloadingResumeId, setDownloadingResumeId] = useState(null);
 
   const jobs = Array.isArray(data) ? data : (data?.jobs || data?.content || []);
 
-  // ── Open a job and load its candidates ───────────────────────────────────
+  const handleViewResume = async (candidateId) => {
+    setDownloadingResumeId(candidateId);
+    try {
+      const res = await resumeAPI.download(candidateId);
+      const blob = res.data;
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch {
+      showToast("Could not open resume. It may not be uploaded yet.");
+    } finally {
+      setDownloadingResumeId(null);
+    }
+  };
+
   const viewJob = async (job) => {
     setSelectedJob(job);
     setShowAddCand(false);
@@ -51,15 +67,14 @@ export default function PageRecruitment() {
       setCandidates(Array.isArray(res.data) ? res.data : []);
     } catch {
       setCandidates([]);
-      showToast("⚠️ Could not load candidates");
+      showToast("Could not load candidates");
     } finally {
       setLoadingCands(false);
     }
   };
 
-  // ── Post a new job ────────────────────────────────────────────────────────
   const postJob = async () => {
-    if (!newJob.title.trim()) { showToast("❌ Job title is required"); return; }
+    if (!newJob.title.trim()) { showToast("Job title is required"); return; }
     setPosting(true);
     try {
       await recruitmentAPI.createJob({
@@ -69,21 +84,20 @@ export default function PageRecruitment() {
         vacancies:    Number(newJob.numberOfOpenings),
         status:       "OPEN",
       });
-      showToast("✅ Job posted successfully!");
+      showToast("Job posted successfully!");
       setNewJob({ title: "", department: "Engineering", numberOfOpenings: 1, description: "", requirements: "" });
       setShowForm(false);
       refetch();
     } catch {
-      showToast("❌ Failed to post job");
+      showToast("Failed to post job");
     } finally {
       setPosting(false);
     }
   };
 
-  // ── Add candidate to current job ──────────────────────────────────────────
   const addCandidate = async () => {
     if (!newCand.name.trim() || !newCand.email.trim()) {
-      showToast("❌ Name and email are required");
+      showToast("Name and email are required");
       return;
     }
     setAddingCand(true);
@@ -97,19 +111,17 @@ export default function PageRecruitment() {
       setCandidates((prev) => [...prev, res.data]);
       setNewCand({ name: "", email: "", phone: "" });
       setShowAddCand(false);
-      showToast("✅ Candidate added!");
+      showToast("Candidate added!");
     } catch (e) {
-      showToast("❌ " + (e.response?.data || "Failed to add candidate"));
+      showToast(e.response?.data || "Failed to add candidate");
     } finally {
       setAddingCand(false);
     }
   };
 
-  // ── Open schedule interview modal ─────────────────────────────────────────
   const openScheduleModal = async (candidate) => {
     setScheduleModal(candidate);
     setScheduleForm({ date: "", time: "", interviewerName: "", interviewerId: "" });
-    // Load employees list for interviewer selection
     if (employees.length === 0) {
       try {
         const res = await employeeAPI.getAll();
@@ -120,10 +132,9 @@ export default function PageRecruitment() {
     }
   };
 
-  // ── Confirm schedule interview ─────────────────────────────────────────────
   const confirmSchedule = async () => {
     if (!scheduleForm.date || !scheduleForm.time) {
-      showToast("❌ Please select date and time");
+      showToast("Please select date and time");
       return;
     }
     setScheduling(true);
@@ -133,16 +144,15 @@ export default function PageRecruitment() {
       const interviewerId = rawId && rawId !== "" ? Number(rawId) : null;
       const res = await candidateAPI.scheduleInterview(scheduleModal.id, interviewDate, interviewerId);
       setCandidates((prev) => prev.map((c) => (c.id === scheduleModal.id ? res.data : c)));
-      showToast("✅ Interview scheduled!");
+      showToast("Interview scheduled!");
       setScheduleModal(null);
     } catch (e) {
-      showToast("❌ " + (e.response?.data || e.message || "Failed to schedule interview"));
+      showToast(e.response?.data || e.message || "Failed to schedule interview");
     } finally {
       setScheduling(false);
     }
   };
 
-  // ── Move candidate to next/different stage ────────────────────────────────
   const moveCandidate = async (candidateId, newStatus) => {
     setMovingId(candidateId);
     try {
@@ -150,51 +160,47 @@ export default function PageRecruitment() {
       setCandidates((prev) =>
         prev.map((c) => (c.id === candidateId ? res.data : c))
       );
-      showToast(`✅ Moved to ${STAGE_LABELS[newStatus] || newStatus}`);
+      showToast(`Moved to ${STAGE_LABELS[newStatus] || newStatus}`);
     } catch {
-      showToast("❌ Failed to update status");
+      showToast("Failed to update status");
     } finally {
       setMovingId(null);
     }
   };
 
-  // ── Remove candidate ──────────────────────────────────────────────────────
   const removeCandidate = async (candidateId) => {
     if (!window.confirm("Remove this candidate?")) return;
     try {
       await candidateAPI.delete(candidateId);
       setCandidates((prev) => prev.filter((c) => c.id !== candidateId));
-      showToast("✅ Candidate removed");
+      showToast("Candidate removed");
     } catch {
-      showToast("❌ Failed to remove candidate");
+      showToast("Failed to remove candidate");
     }
   };
 
-  // ── Update job status ─────────────────────────────────────────────────────
   const updateJobStatus = async (jobId, status, e) => {
     e.stopPropagation();
     try {
       await recruitmentAPI.updateJobStatus(jobId, status);
-      showToast("✅ Status updated");
+      showToast("Status updated");
       refetch();
     } catch {
-      showToast("❌ Failed to update status");
+      showToast("Failed to update status");
     }
   };
 
   if (loading) return <Spinner />;
   if (error)   return <ErrorState message={error} onRetry={refetch} />;
 
-  // ── Job detail + pipeline view ────────────────────────────────────────────
   if (selectedJob) {
-    const activeCandidates  = candidates.filter(c => !REJECTED_STAGES.includes(c.status));
+    const activeCandidates   = candidates.filter(c => !REJECTED_STAGES.includes(c.status));
     const rejectedCandidates = candidates.filter(c => REJECTED_STAGES.includes(c.status));
 
     return (
       <div className="hr-page">
         <Toast message={toast} />
 
-        {/* Back + header */}
         <button className="hr-back-btn" onClick={() => { setSelectedJob(null); setCandidates([]); }}>
           ← Back to Jobs
         </button>
@@ -215,7 +221,7 @@ export default function PageRecruitment() {
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <Badge status={selectedJob.status || "OPEN"} />
               <button className="hr-primary-btn" onClick={() => setShowAddCand(s => !s)}>
-                {showAddCand ? "✕ Cancel" : "+ Add Candidate"}
+                {showAddCand ? "Cancel" : "+ Add Candidate"}
               </button>
             </div>
           </div>
@@ -274,67 +280,75 @@ export default function PageRecruitment() {
                             <Avatar name={c.name} size={32} />
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div className="hr-ac-name">{c.name}</div>
-                              <div className="hr-ac-job" style={{
-                                fontSize: 11, whiteSpace: "nowrap",
-                                overflow: "hidden", textOverflow: "ellipsis"
-                              }}>{c.email}</div>
+                              <div className="hr-ac-job" style={{ fontSize: 11, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {c.email}
+                              </div>
                               {c.phone && (
                                 <div className="hr-ac-job" style={{ fontSize: 11 }}>{c.phone}</div>
                               )}
                             </div>
                           </div>
 
-                          {/* AI Screening Results (Clickable) */}
+                          {/* AI Screening Results */}
                           {c.aiScore !== null && c.aiScore !== undefined && (
-                            <div 
+                            <div
                               onClick={() => setSummaryModal(c)}
                               style={{
                                 background: "rgba(124, 90, 240, 0.08)", border: "1px solid rgba(124, 90, 240, 0.2)",
                                 borderRadius: 6, padding: "7px 10px", fontSize: 11, marginTop: 8, marginBottom: 8,
-                                cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center"
+                                cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center",
                               }}
                               title="Click to view full AI screening summary"
                             >
-                              <div style={{ color: "#a78bfa", fontWeight: 600 }}>🤖 AI Match Score: {c.aiScore}/100</div>
-                              <div style={{ color: "#a78bfa", fontSize: 10, background: "rgba(124,90,240,0.2)", padding: "3px 6px", borderRadius: "4px" }}>
-                                View Details ↗
+                              <div style={{ color: "#a78bfa", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                                <Bot size={12} /> AI Match Score: {c.aiScore}/100
+                              </div>
+                              <div style={{ color: "#a78bfa", fontSize: 10, background: "rgba(124,90,240,0.2)", padding: "3px 6px", borderRadius: 4 }}>
+                                View Details
                               </div>
                             </div>
                           )}
 
-                          {/* Interview schedule details (shown when in INTERVIEW stage) */}
+                          {/* Interview schedule details */}
                           {stage === "INTERVIEW" && c.interviewDate && (
                             <div style={{
                               background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
                               borderRadius: 6, padding: "7px 10px", fontSize: 11,
                             }}>
-                              <div style={{ color: "#f59e0b", fontWeight: 600, marginBottom: 2 }}>📅 Scheduled Interview</div>
+                              <div style={{ color: "#f59e0b", fontWeight: 600, marginBottom: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                                <Calendar size={11} /> Scheduled Interview
+                              </div>
                               <div style={{ color: "#d1c9a8" }}>
                                 {new Date(c.interviewDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                                 {" at "}
                                 {new Date(c.interviewDate).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                               </div>
                               {c.interviewerName && (
-                                <div style={{ color: "#9b96b8", marginTop: 2 }}>👤 {c.interviewerName}</div>
+                                <div style={{ color: "#9b96b8", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                                  <Users size={10} /> {c.interviewerName}
+                                </div>
                               )}
                             </div>
                           )}
-                          {/* Row 2: Resume button */}
-                          <a
-                            href={resumeAPI.getDownloadUrl(c.id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
+
+                          {/* Resume button */}
+                          <button
+                            type="button"
+                            onClick={() => handleViewResume(c.id)}
+                            disabled={downloadingResumeId === c.id}
                             style={{
                               display: "flex", alignItems: "center", justifyContent: "center",
-                              gap: 5, textDecoration: "none",
+                              gap: 5, width: "100%",
                               background: "rgba(99,102,241,0.1)", color: "#818cf8",
                               border: "1px solid rgba(99,102,241,0.25)", borderRadius: 6,
                               padding: "5px 8px", fontSize: 11, fontWeight: 500,
-                              cursor: "pointer",
+                              cursor: downloadingResumeId === c.id ? "wait" : "pointer",
                             }}>
-                            📄 View Resume
-                          </a>
-                          {/* Row 3: stage action buttons */}
+                            <FileText size={11} />
+                            {downloadingResumeId === c.id ? "Opening…" : "View Resume"}
+                          </button>
+
+                          {/* Stage action buttons */}
                           <div style={{ display: "flex", gap: 6 }}>
                             {nextStage && (
                               nextStage === "INTERVIEW" ? (
@@ -349,8 +363,9 @@ export default function PageRecruitment() {
                                     borderRadius: 6, padding: "5px 6px",
                                     fontSize: 11, fontWeight: 500, cursor: "pointer",
                                     whiteSpace: "nowrap",
+                                    display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                                   }}>
-                                  📅 Schedule Interview
+                                  <Calendar size={11} /> Schedule Interview
                                 </button>
                               ) : (
                                 <button
@@ -365,8 +380,9 @@ export default function PageRecruitment() {
                                     fontSize: 11, fontWeight: 500, cursor: "pointer",
                                     whiteSpace: "nowrap",
                                     opacity: movingId === c.id ? 0.5 : 1,
+                                    display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
                                   }}>
-                                  {movingId === c.id ? "…" : `→ ${STAGE_LABELS[nextStage]}`}
+                                  {movingId === c.id ? "…" : <><ArrowRight size={11} /> {STAGE_LABELS[nextStage]}</>}
                                 </button>
                               )
                             )}
@@ -379,8 +395,9 @@ export default function PageRecruitment() {
                                 padding: "5px 10px", fontSize: 11, fontWeight: 500,
                                 cursor: "pointer", whiteSpace: "nowrap",
                                 opacity: movingId === c.id ? 0.5 : 1,
+                                display: "flex", alignItems: "center", gap: 4,
                               }}>
-                              ✕ Reject
+                              <XCircle size={11} /> Reject
                             </button>
                           </div>
                         </div>
@@ -417,8 +434,9 @@ export default function PageRecruitment() {
                     background: "rgba(124,90,240,0.2)", color: "#a78bfa",
                     border: "1px solid rgba(124,90,240,0.3)", borderRadius: 6,
                     padding: "4px 10px", fontSize: 11, cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 4,
                   }}>
-                  ↩ Reconsider
+                  <RotateCcw size={11} /> Reconsider
                 </button>
                 <button
                   onClick={() => removeCandidate(c.id)}
@@ -426,13 +444,15 @@ export default function PageRecruitment() {
                     background: "rgba(239,68,68,0.1)", color: "#f87171",
                     border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6,
                     padding: "4px 10px", fontSize: 11, cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 4,
                   }}>
-                  🗑
+                  <Trash2 size={11} />
                 </button>
               </div>
             ))}
           </div>
         )}
+
         {/* Schedule Interview Modal */}
         {scheduleModal && (
           <div style={{
@@ -445,12 +465,15 @@ export default function PageRecruitment() {
               boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}>📅 Schedule Interview</h3>
+                <h3 style={{ color: "#fff", fontSize: 18, margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Calendar size={18} color="#f59e0b" /> Schedule Interview
+                </h3>
                 <button onClick={() => setScheduleModal(null)}
-                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}>✕</button>
+                  style={{ background: "none", border: "none", color: "#9b96b8", cursor: "pointer" }}>
+                  <X size={20} />
+                </button>
               </div>
 
-              {/* Candidate info */}
               <div style={{
                 background: "rgba(124,90,240,0.08)", border: "1px solid rgba(124,90,240,0.2)",
                 borderRadius: 8, padding: "10px 14px", marginBottom: 20,
@@ -541,8 +564,9 @@ export default function PageRecruitment() {
                     padding: "10px", fontSize: 14, fontWeight: 600,
                     cursor: scheduling ? "not-allowed" : "pointer",
                     opacity: scheduling ? 0.7 : 1,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   }}>
-                  {scheduling ? "Scheduling…" : "✓ Confirm Interview"}
+                  <Check size={15} /> {scheduling ? "Scheduling…" : "Confirm Interview"}
                 </button>
               </div>
             </div>
@@ -561,15 +585,19 @@ export default function PageRecruitment() {
               boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}>🤖 AI Screening Summary</h3>
+                <h3 style={{ color: "#fff", fontSize: 18, margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Bot size={18} color="#a78bfa" /> AI Screening Summary
+                </h3>
                 <button onClick={() => setSummaryModal(null)}
-                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}>✕</button>
+                  style={{ background: "none", border: "none", color: "#9b96b8", cursor: "pointer" }}>
+                  <X size={20} />
+                </button>
               </div>
 
               <div style={{
                 background: "rgba(124,90,240,0.08)", border: "1px solid rgba(124,90,240,0.2)",
                 borderRadius: 8, padding: "10px 14px", marginBottom: 20,
-                display: "flex", justifyContent: "space-between", alignItems: "center"
+                display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
                 <div>
                   <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>{summaryModal.name}</div>
@@ -578,17 +606,11 @@ export default function PageRecruitment() {
                 <div style={{ color: "#a78bfa", fontWeight: "bold", fontSize: 16 }}>Score: {summaryModal.aiScore}/100</div>
               </div>
 
-              <div style={{ 
-                color: "rgba(255,255,255,0.8)", 
-                lineHeight: "1.6", 
-                fontSize: 14,
-                background: "#12102a",
-                padding: "16px",
-                borderRadius: "8px",
+              <div style={{
+                color: "rgba(255,255,255,0.8)", lineHeight: "1.6", fontSize: 14,
+                background: "#12102a", padding: "16px", borderRadius: "8px",
                 border: "1px solid rgba(255,255,255,0.1)",
-                maxHeight: "350px",
-                overflowY: "auto",
-                whiteSpace: "pre-wrap"
+                maxHeight: "350px", overflowY: "auto", whiteSpace: "pre-wrap",
               }}>
                 {summaryModal.aiSummary || "No detailed summary provided by AI."}
               </div>
@@ -618,7 +640,7 @@ export default function PageRecruitment() {
       <div className="hr-page-header-row">
         <h2 className="hr-page-heading">Recruitment</h2>
         <button className="hr-primary-btn" onClick={() => setShowForm(s => !s)}>
-          {showForm ? "✕ Cancel" : "+ Post Job"}
+          {showForm ? "Cancel" : "+ Post Job"}
         </button>
       </div>
 
@@ -664,7 +686,7 @@ export default function PageRecruitment() {
       <div className="hr-panel">
         <h3 className="hr-panel-title">Job Postings ({jobs.length})</h3>
         {jobs.length === 0 ? (
-          <EmptyState icon="💼" text="No jobs posted yet" />
+          <EmptyState icon={<Briefcase size={32} />} text="No jobs posted yet" />
         ) : (
           <div className="hr-jobs-grid">
             {jobs.map(j => (
@@ -675,13 +697,15 @@ export default function PageRecruitment() {
                   <span>{j.vacancies || 1} opening{(j.vacancies || 1) > 1 ? "s" : ""}</span>
                 </div>
                 {j.requirements && (
-                  <div style={{ color: "#9b96b8", fontSize: 12, marginTop: 4, 
+                  <div style={{ color: "#9b96b8", fontSize: 12, marginTop: 4,
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {j.requirements}
                   </div>
                 )}
                 <div className="hr-job-row" style={{ marginTop: 10 }}>
-                  <span style={{ color: "#7c5af0", fontSize: 13 }}>👥 View pipeline</span>
+                  <span style={{ color: "#7c5af0", fontSize: 13, display: "flex", alignItems: "center", gap: 4 }}>
+                    <Users size={13} /> View pipeline
+                  </span>
                   <select
                     value={j.status || "OPEN"}
                     onClick={(e) => e.stopPropagation()}

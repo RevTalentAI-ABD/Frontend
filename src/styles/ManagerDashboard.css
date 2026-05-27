@@ -377,3 +377,16 @@ html, body, #root { height: 100%; font-family: 'DM Sans', sans-serif; }
   .md-lr-actions { width: 100%; }
   .md-approve-btn, .md-reject-btn { flex: 1; }
 }
+
+/* Dropdown Option Styles */
+select option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+select option:hover,
+select option:focus,
+select option:active,
+select option:checked {
+  background-color: #5b3de8 !important;
+  color: #ffffff !important;
+}

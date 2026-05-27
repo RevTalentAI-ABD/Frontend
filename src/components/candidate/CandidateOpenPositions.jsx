@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { PartyPopper, FileText } from "lucide-react";
 
-const BASE_URL = (import.meta.env.VITE_API_URL + "");
+import { getApiRoot } from "../../utils/apiBase";
+
+const BASE_URL = getApiRoot();
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
 // ── Robust error message extractor ─────────────────────────────────────────
@@ -108,7 +111,7 @@ export default function CandidateOpenPositions() {
         name:       candidateName,
         email:      candidateEmail,
         phone:      storedUser?.phone || "",
-        githubLink: githubLink.trim() || null,
+        githubUrl: githubLink.trim() || null,
       }, { headers: authHeaders() });
 
       const candidateId = candRes.data?.id;
@@ -139,7 +142,7 @@ export default function CandidateOpenPositions() {
         </div>
       </div>
       <div className="cd-card" style={{ maxWidth: "560px", margin: "0 auto", textAlign: "center", padding: "48px 32px" }}>
-        <div style={{ fontSize: "56px", marginBottom: "16px" }}>🎉</div>
+        <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center" }}><PartyPopper size={56} color="#10b981" /></div>
         <h2 style={{ color: "#10b981", fontSize: "22px", fontWeight: "700", marginBottom: "12px" }}>
           Application Submitted!
         </h2>
@@ -330,7 +333,7 @@ export default function CandidateOpenPositions() {
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px",
               }}>
                 {resume
-                  ? "📄"
+                  ? <FileText size={24} color="#a78bfa" />
                   : <i className="ti ti-upload" style={{ color: "#6b6880", fontSize: "22px" }} />}
               </div>
               <div>

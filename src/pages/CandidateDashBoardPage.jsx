@@ -9,7 +9,9 @@ import CandidateInterviews        from "../components/candidate/CandidateIntervi
 import CandidateProfile           from "../components/candidate/CandidateProfile";
 import CandidateSidebar           from "../components/candidate/CandidateSidebar";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || (import.meta.env.VITE_API_URL + "/api");
+import { getApiBase } from "../utils/apiBase";
+
+const API_BASE = getApiBase();
 
 const safeFetch = async (url) => {
   try {

@@ -18,7 +18,22 @@ export function useFetch(fetchFn, deps = []) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetchFn();
+        if (!cancelled) setData(res.data);
+      } catch (err) {
+        if (!cancelled) setError(err.response?.data?.message || "Failed to load data");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [load]);
 
   return { data, loading, error, refetch: load };
 }

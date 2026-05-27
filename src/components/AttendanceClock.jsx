@@ -3,11 +3,17 @@ import api from "../api/axiosConfig";
 import { Play, Square, CheckCircle } from "lucide-react";
 
 export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
-  const [status, setStatus] = useState("loading"); // loading, not_clocked_in, clocked_in, clocked_out
+  const [status, setStatus] = useState("loading");
   const [elapsed, setElapsed] = useState(0);
   const [checkInTime, setCheckInTime] = useState(null);
   const [durationMin, setDurationMin] = useState(0);
+  const [toast, setToast] = useState(null); // { type: "error"|"info", msg: string }
   const timerRef = useRef(null);
+
+  const showToast = (type, msg) => {
+    setToast({ type, msg });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const fetchTodayAttendance = async () => {
     if (!employeeId) return;
@@ -42,33 +48,34 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
 
   useEffect(() => {
     if (status === "clocked_in" && checkInTime) {
-      // Calculate elapsed time from checkInTime
       const now = new Date();
       const diffInSeconds = Math.floor((now - checkInTime) / 1000);
       setElapsed(diffInSeconds > 0 ? diffInSeconds : 0);
-
-      timerRef.current = setInterval(() => {
-        setElapsed((e) => e + 1);
-      }, 1000);
+      timerRef.current = setInterval(() => setElapsed((e) => e + 1), 1000);
     } else {
       clearInterval(timerRef.current);
     }
-    
     return () => clearInterval(timerRef.current);
   }, [status, checkInTime]);
+
+  const [attendanceType, setAttendanceType] = useState("WFO");
 
   const handleClockIn = async () => {
     try {
       await api.post(`/api/attendance/employee/${employeeId}/checkin`, {
-        attendanceType: "WFO"
+        attendanceType: attendanceType,
       });
       setCheckInTime(new Date());
       setStatus("clocked_in");
       if (onAttendanceUpdate) onAttendanceUpdate();
     } catch (err) {
-      const msg = err.response?.data;
-      const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
-      alert("Clock in failed: " + msgStr);
+      const message = err.response?.data?.message || "";
+      if (message === "Already checked in today") {
+        showToast("info", "You've already clocked in today.");
+        fetchTodayAttendance(); // sync UI to reflect actual state
+      } else {
+        showToast("error", "Clock in failed. Please try again.");
+      }
     }
   };
 
@@ -76,12 +83,16 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
     try {
       await api.put(`/api/attendance/employee/${employeeId}/checkout`);
       clearInterval(timerRef.current);
-      fetchTodayAttendance(); // Re-fetch to get durationMin and confirm checkout
+      fetchTodayAttendance();
       if (onAttendanceUpdate) onAttendanceUpdate();
     } catch (err) {
-      const msg = err.response?.data;
-      const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
-      alert("Clock out failed: " + msgStr);
+      const message = err.response?.data?.message || "";
+      if (message === "Already checked out today") {
+        showToast("info", "You've already clocked out today.");
+        fetchTodayAttendance();
+      } else {
+        showToast("error", "Clock out failed. Please try again.");
+      }
     }
   };
 
@@ -94,6 +105,22 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
     return `${h}h ${m}m`;
+  };
+
+  const toastStyle = {
+    position: "absolute",
+    top: "-48px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    background: toast?.type === "error" ? "rgba(239,68,68,0.9)" : "rgba(16,185,129,0.9)",
+    color: "#fff",
+    padding: "8px 16px",
+    borderRadius: "8px",
+    fontSize: "13px",
+    fontWeight: 500,
+    whiteSpace: "nowrap",
+    pointerEvents: "none",
+    zIndex: 100,
   };
 
   if (status === "loading" || !employeeId) {
@@ -113,7 +140,9 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "16px", position: "relative" }}>
+      {toast && <div style={toastStyle}>{toast.msg}</div>}
+
       {status === "clocked_in" && (
         <div style={{ textAlign: "right" }}>
           <div style={{ fontFamily: "monospace", fontSize: "18px", color: "#7c5af0", fontWeight: 700 }}>
@@ -121,12 +150,32 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
           </div>
           {checkInTime && (
             <div style={{ fontSize: "11px", color: "#9b96b8" }}>
-              Since {checkInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Since {checkInTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </div>
           )}
         </div>
       )}
-      
+
+      {status !== "clocked_in" && (
+        <select
+          value={attendanceType}
+          onChange={(e) => setAttendanceType(e.target.value)}
+          style={{
+            background: "rgba(255,255,255,0.07)",
+            color: "#fff",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: "8px",
+            padding: "8px 12px",
+            fontSize: "13px",
+            cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif"
+          }}
+        >
+          <option value="WFO" style={{ background: "#1e1740", color: "#fff" }}>WFO</option>
+          <option value="WFH" style={{ background: "#1e1740", color: "#fff" }}>WFH</option>
+        </select>
+      )}
+
       <button
         onClick={status === "clocked_in" ? handleClockOut : handleClockIn}
         style={{
@@ -142,7 +191,7 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
           alignItems: "center",
           gap: "6px",
           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          transition: "background 0.2s"
+          transition: "background 0.2s",
         }}
       >
         {status === "clocked_in" ? (

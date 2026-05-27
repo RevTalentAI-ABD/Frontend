@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axiosConfig";
-import { Plus, X, Pencil, Trash2, ArrowLeft, ArrowRight, Calendar as CalIcon } from "lucide-react";
+import { Plus, X, Pencil, Trash2, ArrowLeft, ArrowRight, Building2, Sparkles } from "lucide-react";
 import "../styles/PageCalendar.css";
 
 export default function PageCalendar({ isHr = false }) {
   const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Calendar state
+
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Modal state
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ name: "", date: "", type: "National" });
@@ -64,7 +61,6 @@ export default function PageCalendar({ isHr = false }) {
     setShowModal(true);
   };
 
-  // Calendar Logic
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
@@ -75,20 +71,17 @@ export default function PageCalendar({ isHr = false }) {
   const month = currentDate.getMonth();
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
-  
+
   const today = new Date();
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
 
   const days = [];
-  for (let i = 0; i < firstDay; i++) {
-    days.push(null);
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    days.push(i);
-  }
+  for (let i = 0; i < firstDay; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
-  // Derived Data
-  const upcomingHolidays = holidays.filter(h => new Date(h.date) >= new Date().setHours(0,0,0,0)).sort((a,b) => new Date(a.date) - new Date(b.date));
+  const upcomingHolidays = holidays
+    .filter(h => new Date(h.date) >= new Date().setHours(0,0,0,0))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
   const nationalCount = holidays.filter(h => h.type?.toLowerCase() === "national").length;
   const festivalCount = holidays.filter(h => h.type?.toLowerCase() === "festival").length;
 
@@ -100,8 +93,14 @@ export default function PageCalendar({ isHr = false }) {
           <div className="cal-subtitle">Indian public holidays · {year}</div>
         </div>
         <div className="cal-top-badges">
-          <div className="cal-badge national">🏢 {nationalCount} National</div>
-          <div className="cal-badge festival">🎉 {festivalCount} Festival</div>
+          <div className="cal-badge national">
+            <Building2 size={13} style={{ marginRight: 5 }} />
+            {nationalCount} National
+          </div>
+          <div className="cal-badge festival">
+            <Sparkles size={13} style={{ marginRight: 5 }} />
+            {festivalCount} Festival
+          </div>
         </div>
       </div>
 
@@ -124,7 +123,7 @@ export default function PageCalendar({ isHr = false }) {
             <div className="cal-days-grid">
               {days.map((d, i) => {
                 if (d === null) return <div key={i} className="cal-day-cell empty"></div>;
-                
+
                 const isSunday = (i % 7) === 0;
                 const isToday = isCurrentMonth && d === today.getDate();
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -157,14 +156,16 @@ export default function PageCalendar({ isHr = false }) {
             <div className="cal-section-title">
               UPCOMING HOLIDAYS
               {isHr && (
-                <button className="cal-hr-btn" onClick={() => { setEditingId(null); setForm({name:"", date:"", type:"National"}); setShowModal(true); }}>
+                <button className="cal-hr-btn" onClick={() => { setEditingId(null); setForm({ name: "", date: "", type: "National" }); setShowModal(true); }}>
                   <Plus size={14}/> Add Holiday
                 </button>
               )}
             </div>
-            
+
             {upcomingHolidays.length === 0 ? (
-              <div style={{ color: '#9b96b8', fontSize: '14px', padding: '20px 0', textAlign: 'center' }}>No upcoming holidays</div>
+              <div style={{ color: '#9b96b8', fontSize: '14px', padding: '20px 0', textAlign: 'center' }}>
+                No upcoming holidays
+              </div>
             ) : (
               upcomingHolidays.slice(0, 5).map(h => {
                 const dateObj = new Date(h.date);
@@ -229,7 +230,7 @@ export default function PageCalendar({ isHr = false }) {
               <h3>{editingId ? "Edit Holiday" : "Add Holiday"}</h3>
               <button className="cal-close-btn" onClick={() => setShowModal(false)}><X size={20}/></button>
             </div>
-            
+
             <div className="cal-form-group">
               <label>Holiday Name</label>
               <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g. Diwali" />

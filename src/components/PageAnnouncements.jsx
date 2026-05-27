@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { getApiBase } from "../utils/apiBase";
 import axios from "../api/axiosConfig";
 import { Megaphone, Trash2, AlertTriangle, BellRing, Info, Zap } from "lucide-react";
 
@@ -244,7 +245,7 @@ export default function PageAnnouncements() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await axios.get((import.meta.env.VITE_API_URL + "/api/announcements"));
+      const res = await axios.get(`${getApiBase()}/announcements`);
       setAnnouncements(res.data);
     } catch (err) { console.log(err); }
   };
@@ -269,7 +270,7 @@ const postAnnouncement = async () => {
     };
 
     const res = await axios.post(
-      (import.meta.env.VITE_API_URL + "/api/announcements"),
+      `${getApiBase()}/announcements`,
       payload
     );
 
@@ -315,7 +316,7 @@ const postAnnouncement = async () => {
     // optimistic remove
     setAnnouncements(prev => prev.filter(a => a.id !== id));
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/announcements/${id}`);
+      await axios.delete(`${getApiBase()}/announcements/${id}`);
     } catch (err) {
       console.log(err);
       fetchAnnouncements(); // restore on error

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axiosConfig";
-import { Star, ChevronDown, ChevronUp, BadgeCheck, Clock, AlertTriangle } from "lucide-react";
+import { Star, ChevronDown, ChevronUp, BadgeCheck, Clock, AlertTriangle, Clipboard } from "lucide-react";
 
 const RATING_FIELDS = [
   { key: "technicalSkills", label: "Technical Skills", color: "#7c5af0" },
@@ -91,7 +91,7 @@ function ReviewCard({ review, employeeId, onAcknowledged }) {
     try {
       await api.put(`/api/performance/${review.id}/acknowledge`);
       onAcknowledged(review.id);
-    } catch { /* silent */ }
+    } catch (error) { console.error("Error acknowledging review:", error); }
     setAcking(false);
   };
 
@@ -282,7 +282,7 @@ export default function PageMyReviews({ employee }) {
       {/* Review list */}
       {reviews.length === 0 ? (
         <div className="ed-panel" style={{ textAlign: "center", padding: "60px 20px" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+          <div style={{ marginBottom: 12, display: "flex", justifyContent: "center" }}><Clipboard size={40} color="rgba(255,255,255,0.7)" /></div>
           <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>
             No reviews yet
           </div>

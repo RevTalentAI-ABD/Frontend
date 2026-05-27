@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
+import { getApiRoot } from "../utils/apiBase";
+
+const API_ROOT = getApiRoot();
 
 function authHeaders() {
   const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -9,12 +12,12 @@ function authHeaders() {
 
 const api = {
   get: async (url) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}${url}`, { headers: authHeaders() });
+    const res = await fetch(`${API_ROOT}${url}`, { headers: authHeaders() });
     if (!res.ok) throw new Error(`${res.status}`);
     return { data: await res.json() };
   },
   post: async (url, body) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}${url}`, {
+    const res = await fetch(`${API_ROOT}${url}`, {
       method: "POST", headers: authHeaders(), body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`${res.status}`);

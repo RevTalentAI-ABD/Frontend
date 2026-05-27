@@ -1,455 +1,161 @@
-// const BASE_URL = (import.meta.env.VITE_API_URL + "/api");
-
-// // ─── Auth helpers ────────────────────────────────────────────────────────────
-// function getToken() {
-//   return localStorage.getItem("token");
-// }
-
-// function authHeaders() {
-//   return {
-//     "Content-Type": "application/json",
-//     Authorization: `Bearer ${getToken()}`,
-//   };
-// }
-
-// async function handleResponse(res) {
-//   if (!res.ok) {
-//     const text = await res.text();
-//     throw new Error(text || `HTTP ${res.status}`);
-//   }
-//   // Some endpoints return 204 No Content
-//   if (res.status === 204) return null;
-//   return res.json();
-// }
-
-// // ─── Auth ────────────────────────────────────────────────────────────────────
-// export async function login(email, password) {
-//   const res = await fetch(`${BASE_URL}/auth/login`, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify({ email, password }),
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function register(data) {
-//   const res = await fetch(`${BASE_URL}/auth/register`, {
-//     method: "POST",
-//     headers: { "Content-Type": "application/json" },
-//     body: JSON.stringify(data),
-//   });
-//   return handleResponse(res);
-// }
-
-// // ─── Manager Dashboard ───────────────────────────────────────────────────────
-// export async function getManagerDashboard() {
-//   const res = await fetch(`${BASE_URL}/manager/dashboard`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getManagerActivity() {
-//   const res = await fetch(`${BASE_URL}/manager/activity`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getManagerProfile() {
-//   const res = await fetch(`${BASE_URL}/manager/profile`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getDashboardSummary() {
-//   const res = await fetch(`${BASE_URL}/manager/dashboard-summary`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// // ─── Team / Employees ────────────────────────────────────────────────────────
-// export async function getTeam() {
-//   const res = await fetch(`${BASE_URL}/manager/team`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function searchTeam(query) {
-//   const res = await fetch(
-//     `${BASE_URL}/manager/search?query=${encodeURIComponent(query)}`,
-//     { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
-//   );
-//   return handleResponse(res);
-// }
-
-// export async function getEmployee(id) {
-//   const res = await fetch(`${BASE_URL}/employees/${id}`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getAllEmployees() {
-//   const res = await fetch(`${BASE_URL}/employees`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// // ─── Attendance ──────────────────────────────────────────────────────────────
-// export async function getAllAttendance() {
-//   const res = await fetch(`${BASE_URL}/attendance`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getAttendanceSummary() {
-//   const res = await fetch(`${BASE_URL}/attendance/summary`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getAttendanceHrSummary(from, to) {
-//   const res = await fetch(
-//     `${BASE_URL}/attendance/hr/summary?from=${from}&to=${to}`,
-//     { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
-//   );
-//   return handleResponse(res);
-// }
-
-// export async function exportAttendance() {
-//   const res = await fetch(`${BASE_URL}/attendance/export`, {
-//     headers: { Authorization: `Bearer ${getToken()}` },
-//   });
-//   if (!res.ok) throw new Error("Export failed");
-//   const blob = await res.blob();
-//   const url = window.URL.createObjectURL(blob);
-//   const a = document.createElement("a");
-//   a.href = url;
-//   a.download = "attendance_export.csv";
-//   a.click();
-//   window.URL.revokeObjectURL(url);
-// }
-
-// // ─── Leaves ──────────────────────────────────────────────────────────────────
-// export async function getAllLeaves() {
-//   const res = await fetch(`${BASE_URL}/leaves`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getPendingLeaves() {
-//   const res = await fetch(`${BASE_URL}/leaves/pending`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function approveLeave(id) {
-//   const res = await fetch(`${BASE_URL}/leaves/${id}/approve`, {
-//     method: "PUT",
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-
-// // ─── Notifications ───────────────────────────────────────────────────────────
-// export async function getAllNotifications() {
-//   const res = await fetch(`${BASE_URL}/notifications`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function getAllUnreadNotifications() {
-//   const res = await fetch(`${BASE_URL}/notifications/unread`, {
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function markAllNotificationsRead() {
-//   const res = await fetch(`${BASE_URL}/notifications/read-all`, {
-//     method: "PUT",
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
-
-// export async function markNotificationRead(notifId) {
-//   const res = await fetch(`${BASE_URL}/notifications/${notifId}/read`, {
-//     method: "PUT",
-//     headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-//   });
-//   return handleResponse(res);
-// }
 import axios from "axios";
 
-const BASE_URL = (import.meta.env.VITE_API_URL + "/api");
+// ─── Base instance ──────────────────────────────────────────────────────────
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8090",
+  headers: { "Content-Type": "application/json" },
+});
 
-// ─── Auth helpers ────────────────────────────────────────────────────────────
-function getToken() {
-  return localStorage.getItem("token");
-}
-
-function authHeaders() {
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${getToken()}`,
-  };
-}
-
-async function handleResponse(res) {
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `HTTP ${res.status}`);
-  }
-  if (res.status === 204) return null;
-  return res.json();
-}
-
-// ─── Axios instance with token ───────────────────────────────────────────────
-const axiosAuth = axios.create({ baseURL: BASE_URL });
-axiosAuth.interceptors.request.use((config) => {
+// Attach JWT token to every request
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
-export async function login(email, password) {
-  const res = await fetch(`${BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username: email, password }),
-  });
-  return handleResponse(res);
-}
+// Global 401 redirect
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(err);
+  }
+);
 
-export async function register(data) {
-  const res = await fetch(`${BASE_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return handleResponse(res);
-}
+// ─── Auth ───────────────────────────────────────────────────────────────────
+export const login  = (credentials) => api.post("/api/auth/login", credentials);
+export const logout = () => api.post("/api/auth/logout");
 
-// ─── Manager Dashboard ───────────────────────────────────────────────────────
-export async function getManagerDashboard() {
-  const res = await fetch(`${BASE_URL}/manager/dashboard`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+// ─── Manager / HR dashboard helpers ─────────────────────────────────────────
+export const getManagerDashboard = () => api.get("/api/manager/dashboard").then(r => r.data);
+export const getManagerActivity  = () => api.get("/api/manager/activity").then(r => r.data);
+export const getManagerProfile   = () => api.get("/api/manager/profile").then(r => r.data);
+export const getTeam             = () => api.get("/api/manager/team").then(r => r.data);
+export const searchTeam          = (q) => api.get("/api/manager/team/search", { params: { q } }).then(r => r.data);
+export const getAllAttendance     = () => api.get("/api/attendance").then(r => r.data);
+export const getAttendanceSummary= () => api.get("/api/attendance/summary").then(r => r.data);
+export const getAllNotifications  = () => api.get("/api/notifications").then(r => r.data);
+export const markAllNotificationsRead = () => api.put("/api/notifications/read-all");
+export const markNotificationRead     = (id) => api.put(`/api/notifications/${id}/read`);
 
-export async function getManagerActivity() {
-  const res = await fetch(`${BASE_URL}/manager/activity`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+// ─── Leave — Employee ───────────────────────────────────────────────────────
 
-export async function getManagerProfile() {
-  const res = await fetch(`${BASE_URL}/manager/profile`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Fetch the authenticated user's own leave history.
+ * Works for EMPLOYEE, MANAGER, and HR_ADMIN roles alike.
+ */
+export const getMyLeaves = () => api.get("/api/leaves/my");
 
-export async function getDashboardSummary() {
-  const res = await fetch(`${BASE_URL}/manager/dashboard-summary`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Fetch leave history for a specific employee (used in manager dashboard).
+ */
+export const getLeaveHistory = (empId) =>
+  api.get(`/api/leaves/history/${empId}`).then(r => r.data);
 
-// ─── Team / Employees ────────────────────────────────────────────────────────
-export async function getTeam() {
-  const res = await fetch(`${BASE_URL}/manager/team`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Apply for leave.
+ * Both EMPLOYEE and MANAGER can call this.
+ * Routing is determined server-side:
+ *   - EMPLOYEE leave → goes to their MANAGER for approval
+ *   - MANAGER leave  → goes to HR_ADMIN for approval
+ *
+ * @param {{ employeeId: number, leaveType: string, startDate: string, endDate: string, reason: string }} dto
+ */
+export const applyLeave = (dto) => api.post("/api/leaves/apply", dto);
 
-export async function searchTeam(query) {
-  const res = await fetch(
-    `${BASE_URL}/manager/search?query=${encodeURIComponent(query)}`,
-    { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
-  );
-  return handleResponse(res);
-}
+/**
+ * Cancel a leave request the current user owns.
+ */
+export const cancelLeave = (leaveId) =>
+  api.delete(`/api/leaves/${leaveId}/cancel`);
 
-export async function getEmployee(id) {
-  const res = await fetch(`${BASE_URL}/employees/${id}`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Fetch leave balance for a given employee.
+ */
+export const getLeaveBalance = (empId) =>
+  api.get(`/api/leaves/balance/${empId}`).then(r => r.data);
 
-export async function getAllEmployees() {
-  const res = await fetch(`${BASE_URL}/employees`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Check whether a date range overlaps with the current user's existing leaves.
+ *
+ * @param {string} startDate  ISO date string: "YYYY-MM-DD"
+ * @param {string} endDate    ISO date string: "YYYY-MM-DD"
+ * @returns {Promise<{ hasOverlap: boolean, conflictingLeaves: Array }>}
+ */
+export const checkLeaveOverlap = (startDate, endDate) =>
+  api.get("/api/leaves/overlap", { params: { startDate, endDate } });
 
-// ─── Attendance ──────────────────────────────────────────────────────────────
-export async function getAllAttendance() {
-  const res = await fetch(`${BASE_URL}/attendance`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+// ─── Leave — Manager / HR ───────────────────────────────────────────────────
 
-export async function getAttendanceSummary() {
-  const res = await fetch(`${BASE_URL}/attendance/summary`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Fetch all leaves visible to the current user based on their role:
+ *   HR_ADMIN → all MANAGER leaves pending approval
+ *   MANAGER  → all EMPLOYEE leaves in their team
+ *   EMPLOYEE → their own leaves
+ */
+export const getAllLeaves = () => api.get("/api/leaves").then(r => r.data);
 
-export async function getAttendanceHrSummary(from, to) {
-  const res = await fetch(
-    `${BASE_URL}/attendance/hr/summary?from=${from}&to=${to}`,
-    { headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
-  );
-  return handleResponse(res);
-}
+/**
+ * Fetch only PENDING leaves the current user is authorised to act on:
+ *   MANAGER  → pending leaves from their direct reports (EMPLOYEE)
+ *   HR_ADMIN → pending leaves from all MANAGERs
+ */
+export const getPendingLeaves = () => api.get("/api/leaves/pending/manager").then(r => r.data);
 
-export async function exportAttendance() {
-  const res = await fetch(`${BASE_URL}/attendance/export`, {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error("Export failed");
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "attendance_export.csv";
-  a.click();
-  window.URL.revokeObjectURL(url);
-}
+/**
+ * Approve a leave request.
+ *
+ * POST /api/leaves/{id}/approve — mandatory JSON body { comment }.
+ * Backend enforces:
+ *   - comment must not be blank
+ *   - self-approval blocked
+ *   - MANAGER can only approve EMPLOYEE leaves in their team
+ *   - HR_ADMIN can only approve MANAGER leaves
+ *
+ * @param {number} leaveId
+ * @param {string} comment  Must not be blank.
+ */
+export const approveLeave = (leaveId, comment) =>
+  api.put(`/api/leaves/${leaveId}/approve/manager`, null, { params: { comment } });
 
-// ─── Leaves ──────────────────────────────────────────────────────────────────
-export async function getAllLeaves() {
-  const res = await fetch(`${BASE_URL}/leaves`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Reject a leave request.
+ *
+ * POST /api/leaves/{id}/reject — mandatory JSON body { reason }.
+ * Backend enforces:
+ *   - reason must not be blank
+ *   - self-rejection blocked
+ *   - same role-based access as approveLeave
+ *
+ * @param {number} leaveId
+ * @param {string} reason   Must not be blank.
+ */
+export const rejectLeave = (leaveId, reason) =>
+  api.put(`/api/leaves/${leaveId}/reject`, null, { params: { reason } });
 
-export async function getPendingLeaves() {
-  const res = await fetch(`${BASE_URL}/leaves/pending`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+// ─── Attendance ─────────────────────────────────────────────────────────────
 
-export async function approveLeave(id) {
-  const res = await fetch(`${BASE_URL}/leaves/${id}/approve`, {
-    method: "PUT",
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+/**
+ * Clock-in guard.
+ * Check whether the employee has an approved leave today before punching.
+ * If onLeave === true, block the punch and show
+ * "You are on approved leave today."
+ *
+ * @param {number} empId
+ * @returns {Promise<{ onLeave: boolean }>}
+ */
+export const isOnLeaveToday = (empId) =>
+  api.get(`/api/leaves/on-leave-today/${empId}`);
 
-export async function rejectLeave(id, reason = "") {
-  const res = await fetch(
-    `${BASE_URL}/leaves/${id}/reject?reason=${encodeURIComponent(reason)}`,
-    { method: "PUT", headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" } }
-  );
-  return handleResponse(res);
-}
+export const clockIn  = (empId) => api.post("/api/attendance/clock-in",  { employeeId: empId });
+export const clockOut = (empId) => api.post("/api/attendance/clock-out", { employeeId: empId });
+export const getAttendance = (empId) => api.get(`/api/attendance/employee/${empId}`);
 
-export async function getLeaveHistory(empId) {
-  const res = await fetch(`${BASE_URL}/leaves/history/${empId}`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
+// ─── Employees ──────────────────────────────────────────────────────────────
+export const getEmployeeProfile = (empId) => api.get(`/api/employees/${empId}`);
+export const getMyProfile = () => api.get("/api/employees/me");
 
-export async function getLeaveBalance(empId) {
-  const res = await fetch(`${BASE_URL}/leaves/balance/${empId}`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
-
-export async function applyLeave(data) {
-  const res = await fetch(`${BASE_URL}/leaves/apply`, {
-    method: "POST",
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return handleResponse(res);
-}
-
-export async function applyLeaveHR(data) {
-  const res = await fetch(`${BASE_URL}/leaves/apply/hr`, {
-    method: "POST",
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return handleResponse(res);
-}
-
-// ─── Notifications ───────────────────────────────────────────────────────────
-export async function getAllNotifications() {
-  const res = await fetch(`${BASE_URL}/notifications`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
-
-export async function getAllUnreadNotifications() {
-  const res = await fetch(`${BASE_URL}/notifications/unread`, {
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
-
-export async function markAllNotificationsRead() {
-  const res = await fetch(`${BASE_URL}/notifications/read-all`, {
-    method: "PUT",
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
-
-export async function markNotificationRead(notifId) {
-  const res = await fetch(`${BASE_URL}/notifications/${notifId}/read`, {
-    method: "PUT",
-    headers: { Authorization: "Bearer " + localStorage.getItem("token"), "Content-Type": "application/json" },
-  });
-  return handleResponse(res);
-}
-
-// ─── Employee API ────────────────────────────────────────────────────────────
-export const employeeAPI = {
-  getAll:       () => axiosAuth.get(`/employees`),
-  create:       (data) => axiosAuth.post(`/employees`, data),
-  getDashStats: (id) => axiosAuth.get(`/employees/${id}/dashboard-stats`),
-};
-
-// ─── Performance API ─────────────────────────────────────────────────────────
-export const performanceAPI = {
-  getByEmployee: (empId) => axiosAuth.get(`/performance/employee/${empId}`),
-};
-
-// ─── HR API ──────────────────────────────────────────────────────────────────
-export const hrAPI = {
-  getManagers:      () => axiosAuth.get(`/hr/managers`),
-  assignManager:    (data) => axiosAuth.put(`/hr/assign-manager`, data),
-  removeManager:    (data) => axiosAuth.put(`/hr/remove-manager`, data),
-  changeRole:       (data) => axiosAuth.put(`/hr/change-role`, data),
-  changeDepartment: (data) => axiosAuth.put(`/hr/change-department`, data),
-};
-
-export default axiosAuth;
+export default api;

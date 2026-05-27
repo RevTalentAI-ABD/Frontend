@@ -12,26 +12,10 @@ import { leaveAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
 import { Avatar, Badge, Spinner, ErrorState, Toast, EmptyState } from "./UI";
 
-// Returns true if the leave record belongs to a MANAGER (not a plain EMPLOYEE)
-function isManagerLeave(l) {
-  const role = (
-    l.role ||
-    l.employeeRole ||
-    l.employee?.role ||
-    l.user?.role ||
-    l.employee?.user?.role ||
-    ""
-  ).toUpperCase();
-  // Include if role is explicitly MANAGER, or exclude only if explicitly EMPLOYEE
-  // (covers cases where role field might be absent — we err on showing rather than hiding)
-  if (role === "EMPLOYEE") return false;
-  if (role === "MANAGER")  return true;
-  // If no role info at all, exclude to be safe (only show confirmed managers)
-  return role !== "" && role !== "EMPLOYEE";
-}
+// Remove manager filter to show all leaves
 
 export default function PageLeaves() {
-  const { data: pendingData, loading: lp, error: ep, refetch: rp } = useFetch(leaveAPI.getPending);
+  const { data: pendingData, loading: lp, error: ep, refetch: rp } = useFetch(leaveAPI.getPendingHR);
   const { data: allData,     loading: la, error: ea, refetch: ra } = useFetch(leaveAPI.getAll);
   const { toast, showToast } = useToast();
   const [acting, setActing] = useState(null);
@@ -39,9 +23,9 @@ export default function PageLeaves() {
   const rawPending = Array.isArray(pendingData) ? pendingData : (pendingData?.leaves || pendingData?.content || []);
   const rawAll     = Array.isArray(allData)     ? allData     : (allData?.leaves     || allData?.content     || []);
 
-  // ── Filter: only MANAGER leaves ──────────────────────────────────────────
-  const pendingLeaves = rawPending.filter(isManagerLeave);
-  const allLeaves     = rawAll.filter(isManagerLeave);
+  // ── Filter: show all leaves ──────────────────────────────────────────
+  const pendingLeaves = rawPending;
+  const allLeaves     = rawAll;
 
   const doneLeaves = allLeaves.filter(l => {
     const s = l.status || l.leaveStatus;
@@ -51,7 +35,7 @@ export default function PageLeaves() {
   const handle = async (id, action) => {
     setActing(id);
     try {
-      action === "approve" ? await leaveAPI.approve(id) : await leaveAPI.reject(id);
+      action === "approve" ? await leaveAPI.approveHR(id) : await leaveAPI.reject(id);
       await rp(); await ra();
       showToast(
         <span style={{ display:"flex", alignItems:"center", gap:"8px" }}>

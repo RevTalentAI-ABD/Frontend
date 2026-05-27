@@ -119,7 +119,7 @@ export default function PageOverview({ setActive }) {
         >
 
           {/* ATTENDANCE CLOCK */}
-          {user?.employeeId && <AttendanceClock employeeId={user.employeeId} />}
+          {employees.some(e => String(e.id) === String(user?.id)) && <AttendanceClock employeeId={user?.id} />}
 
           {/* NOTIFICATION BUTTON */}
           <button className="hr-top-bell">
@@ -264,7 +264,6 @@ export default function PageOverview({ setActive }) {
         <h3 className="hr-panel-title">Quick Actions</h3>
         <div className="hr-quick-actions">
           {[
-            { icon: <UserPlus size={19} />,      label: "Add Employee",   page: "employees"     },
             { icon: <ClipboardList size={19} />, label: "Review Leaves",  page: "leaves"        },
             { icon: <Wallet size={19} />,        label: "Run Payroll",    page: "payroll"       },
             { icon: <Briefcase size={19} />,     label: "Post Job",       page: "recruitment"   },

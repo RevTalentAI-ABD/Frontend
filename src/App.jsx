@@ -104,15 +104,29 @@ import ApplyForm              from "./pages/ApplyForm";
 import CandidateRegisterPage  from "./pages/CandidateRegisterPage";
 import CandidateLoginPage     from "./pages/CandidateLoginPage";
 import CandidateDashBoardPage from "./pages/CandidateDashBoardPage";
+import MagicLogin             from "./pages/MagicLogin";
+import ResetPassword          from "./pages/ResetPassword";
 
-const ProtectedRoute = ({ children, allowedRole }) => {
+import { getRoleFromToken, isTokenExpired } from "./utils/authToken";
+
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const token = localStorage.getItem("token");
-  const role  = localStorage.getItem("role");
-  if (!token) {
-    return <Navigate to={allowedRole === "CANDIDATE" ? "/candidate-login" : "/login"} replace />;
+  const candidateRoute = allowedRoles.includes("CANDIDATE");
+  if (!token || isTokenExpired(token)) {
+    if (token) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("user");
+      localStorage.removeItem("name");
+    }
+    return <Navigate to={candidateRoute ? "/candidate-login" : "/login"} replace />;
   }
-  if (allowedRole && role !== allowedRole) {
-    return <Navigate to={allowedRole === "CANDIDATE" ? "/candidate-login" : "/login"} replace />;
+  const role = getRoleFromToken(token) || localStorage.getItem("role");
+  if (role && role !== localStorage.getItem("role")) {
+    localStorage.setItem("role", role);
+  }
+  if (allowedRoles.length > 0 && role && !allowedRoles.includes(role)) {
+    return <Navigate to={candidateRoute ? "/candidate-login" : "/login"} replace />;
   }
   return children;
 };
@@ -132,24 +146,26 @@ function App() {
       <Route path="/security"           element={<SecurityPage />} />
       <Route path="/candidate-register" element={<CandidateRegisterPage />} />
       <Route path="/candidate-login"    element={<CandidateLoginPage />} />
-
+      <Route path="/magic-login"        element={<MagicLogin />} />
+      <Route path="/reset-password"     element={<ResetPassword />} />
+         
       <Route path="/candidate/dashboard" element={
-        <ProtectedRoute allowedRole="CANDIDATE">
+        <ProtectedRoute allowedRoles={["CANDIDATE"]}>
           <CandidateDashBoardPage />
         </ProtectedRoute>
       } />
       <Route path="/managerdashboard" element={
-        <ProtectedRoute allowedRole="MANAGER">
+        <ProtectedRoute allowedRoles={["MANAGER"]}>
           <ManagerDashboard />
         </ProtectedRoute>
       } />
       <Route path="/employee-dashboard" element={
-        <ProtectedRoute allowedRole="EMPLOYEE">
+        <ProtectedRoute allowedRoles={["EMPLOYEE", "MANAGER"]}>
           <EmployeeDashboard />
         </ProtectedRoute>
       } />
       <Route path="/hr-dashboard" element={
-        <ProtectedRoute allowedRole="HR_ADMIN">
+        <ProtectedRoute allowedRoles={["HR_ADMIN"]}>
           <HRDashboard />
         </ProtectedRoute>
       } />

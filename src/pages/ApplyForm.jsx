@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { FileText } from "lucide-react";
 import axios from "axios";
+import { getApiRoot } from "../utils/apiBase";
 
-const BASE_URL = (import.meta.env.VITE_API_URL + "");
+const BASE_URL = getApiRoot();
 
 export default function ApplyForm() {
   const navigate = useNavigate();
@@ -282,7 +284,7 @@ export default function ApplyForm() {
                 background: "rgba(124,90,240,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
-                📄
+                <FileText size={24} color="#a78bfa" />
               </div>
               <div>
                 <div style={{ color: resumeName ? "#a78bfa" : "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 500 }}>

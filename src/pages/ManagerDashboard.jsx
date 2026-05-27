@@ -8,7 +8,7 @@ import FloatingAI from "../components/FloatingAI";
 import api from "../api/axiosConfig";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, PieChart, Pie, Cell, Legend,
+  CartesianGrid, PieChart, Pie, Cell, Legend, AreaChart, Area
 } from "recharts";
 import {
   getManagerDashboard,
@@ -25,19 +25,16 @@ import {
   getAllNotifications,
   markAllNotificationsRead,
   markNotificationRead,
-  
-} from "../api/api";
-import { employeeAPI, performanceAPI, getLeaveHistory,
+  getMyLeaves,
   getLeaveBalance,
   applyLeave,
-  leaveAPI } from "../components/api";
+} from "../api/api";
 import { useNavigate } from "react-router-dom";
 import {
-  Users, CheckCircle, Home, Laptop, ClipboardList, BarChart2,
+  Users, CheckCircle, Home, Laptop, ClipboardList,
   Bell, AlertTriangle, Pin, Clock, Umbrella, Check, X, Award,
-  Calendar as CalIcon, Star
+  Calendar as CalIcon, Star, Timer, XCircle, CreditCard
 } from "lucide-react";
-
 
 function getInitials(name = "") {
   return name.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
@@ -65,7 +62,6 @@ function pickColor(id) {
   return AVATAR_COLORS[(id || 0) % AVATAR_COLORS.length];
 }
 
-// ─── Small reusable components ────────────────────────────────────────────────
 function Logo() {
   return (
     <div className="md-logo">
@@ -159,20 +155,23 @@ function PageHome() {
   const [dashboard, setDashboard] = useState(null);
   const [activity, setActivity] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [managerProfile, setManagerProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const [dash, act, announceRes] = await Promise.all([
+        const [dash, act, announceRes, profile] = await Promise.all([
           getManagerDashboard(),
           getManagerActivity(),
-          api.get("/api/announcements")
+          api.get("/api/announcements"),
+          getManagerProfile().catch(() => null)
         ]);
         setDashboard(dash);
         setActivity(act || []);
         setAnnouncements(announceRes?.data || []);
+        setManagerProfile(profile);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -184,11 +183,11 @@ function PageHome() {
   if (loading) return <Spinner />;
   if (error) return <ErrorMsg msg={error} />;
 
-  const present  = dashboard?.presentCount ?? 0;
-  const wfh      = dashboard?.wfhCount     ?? 0;
-  const absent   = dashboard?.absentCount  ?? 0;
-  const onLeave  = dashboard?.onLeaveCount ?? 0;
-  const teamSize = dashboard?.teamSize     ?? (present + wfh + absent + onLeave);
+  const present  = dashboard?.presentCount  ?? 0;
+  const wfh      = dashboard?.wfhCount      ?? 0;
+  const absent   = dashboard?.absentCount   ?? 0;
+  const onLeave  = dashboard?.onLeaveCount  ?? 0;
+  const teamSize = dashboard?.teamSize      ?? (present + wfh + absent + onLeave);
   const pending  = dashboard?.pendingLeaves ?? 0;
 
   const PIE_DATA = [
@@ -216,17 +215,24 @@ function PageHome() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           {(() => {
             const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-            return storedUser?.employeeId ? <AttendanceClock employeeId={storedUser.employeeId} /> : null;
+            const empId = storedUser?.id || storedUser?.employeeId;
+            return empId ? <AttendanceClock employeeId={empId} /> : null;
           })()}
         </div>
       </div>
-
-      <div className="md-stats-grid">
-        <StatCard icon={<Users size={20} />}        label="Team Size"         value={teamSize} sub="total members" color="#7c5af0" />
-        <StatCard icon={<CheckCircle size={20} />}  label="Present Today"     value={present}  sub="in office"     color="#10b981" />
-        <StatCard icon={<Laptop size={20} />}       label="WFH Today"         value={wfh}      sub="remote"        color="#06b6d4" />
-        <StatCard icon={<ClipboardList size={20} />} label="Pending Approvals" value={pending}  sub="need action"   color="#f59e0b" />
-      </div>
+{(() => {
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const managerCode = managerProfile?.employeeCode || storedUser?.employeeCode || storedUser?.code || "—";
+  return (
+    <div className="md-stats-grid" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
+      <StatCard icon={<CreditCard size={20} />}     label="Manager ID"        value={managerCode} sub="your ID"       color="#8b5cf6" />
+      <StatCard icon={<Users size={20} />}          label="Team Size"         value={teamSize}    sub="total members" color="#7c5af0" />
+      <StatCard icon={<CheckCircle size={20} />}    label="Present Today"     value={present}     sub="in office"     color="#10b981" />
+      <StatCard icon={<Laptop size={20} />}         label="WFH Today"         value={wfh}         sub="remote"        color="#06b6d4" />
+      <StatCard icon={<ClipboardList size={20} />}  label="Pending Approvals" value={pending}     sub="need action"   color="#f59e0b" />
+    </div>
+  );
+})()}
 
       <div className="md-two-col">
         <div className="md-panel">
@@ -276,10 +282,8 @@ function PageHome() {
                     color: a.priority === "URGENT" ? "#ef4444" :
                            a.priority === "HIGH"   ? "#f59e0b" :
                            a.priority === "LOW"    ? "#7c5af0" : "#10b981",
-                    background: "none", width: "auto", height: "auto"
-                  }}>
-                    ●
-                  </span>
+                    background: "none", width: "auto", height: "auto",
+                  }}>●</span>
                   <div style={{ flex: 1 }}>
                     <div className="md-activity-text" style={{ fontWeight: 600, color: "#fff" }}>{a.title}</div>
                     <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>{a.message}</div>
@@ -320,12 +324,18 @@ function PageTeamAttendance() {
     })();
   }, []);
 
-  const statuses = ["All", "PRESENT", "WFH", "ABSENT", "ON_LEAVE"];
-  const displayLabel = { PRESENT: "Present", WFH: "WFH", ABSENT: "Absent", ON_LEAVE: "On Leave" };
+  const statuses = ["All", "PRESENT", "ON_LEAVE"];
+  const displayLabel = { PRESENT: "Present", ON_LEAVE: "On Leave" };
 
   const filtered = filter === "All"
     ? attendance
     : attendance.filter((a) => (a.attendanceType || a.status || "").toUpperCase() === filter);
+
+  function getDeptLabel(m) {
+    if (m.department && m.department !== "N/A" && m.department.trim() !== "") return m.department;
+    if (m.employeeCode && m.employeeCode.trim() !== "") return m.employeeCode;
+    return "—";
+  }
 
   if (loading) return <Spinner />;
 
@@ -353,7 +363,7 @@ function PageTeamAttendance() {
             <Avatar initials={getInitials(m.employeeName)} size={44} color={pickColor(m.employeeId || i)} />
             <div className="md-tac-info">
               <div className="md-tac-name">{m.employeeName}</div>
-              <div className="md-tac-role">{m.department || m.employeeCode}</div>
+              <div className="md-tac-role">{getDeptLabel(m)}</div>
             </div>
             <StatusBadge status={statusFromEmployee(m)} />
           </div>
@@ -386,6 +396,9 @@ function PageTeamAttendance() {
 }
 
 // ─── Leave Approvals Page ─────────────────────────────────────────────────────
+// MANAGER sees EMPLOYEE pending leaves; approves/rejects via POST with comment/reason
+// HR_ADMIN sees MANAGER pending leaves; approves/rejects via POST with comment/reason
+// Self-approval is blocked on the backend
 function PageLeaveApprovals() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -401,6 +414,9 @@ function PageLeaveApprovals() {
   useEffect(() => {
     (async () => {
       try {
+        // GET /api/leaves — backend filters by role:
+        //   MANAGER  → returns their team's employee leaves
+        //   HR_ADMIN → returns all manager leaves
         const data = await getAllLeaves();
         setRequests(data || []);
       } catch (e) {
@@ -416,14 +432,16 @@ function PageLeaveApprovals() {
     setApproveSubmitting(true);
     setActionError("");
     try {
+      // POST /api/leaves/{id}/approve  { comment }
       await approveLeave(approveModal, approveComment);
       setRequests(rs => rs.map(r =>
-        r.id === approveModal ? { ...r, status: "APPROVED", comment: approveComment } : r
+        r.id === approveModal ? { ...r, status: "APPROVED", approveComment } : r
       ));
       setApproveModal(null);
       setApproveComment("");
     } catch (e) {
-      setActionError(e.message);
+      const msg = e.response?.data?.message || e.response?.data || e.message;
+      setActionError(msg);
     } finally {
       setApproveSubmitting(false);
     }
@@ -434,6 +452,7 @@ function PageLeaveApprovals() {
     setRejectSubmitting(true);
     setActionError("");
     try {
+      // POST /api/leaves/{id}/reject  { reason }
       await rejectLeave(rejectModal, rejectComment);
       setRequests(rs => rs.map(r =>
         r.id === rejectModal ? { ...r, status: "REJECTED", rejectionReason: rejectComment } : r
@@ -441,7 +460,8 @@ function PageLeaveApprovals() {
       setRejectModal(null);
       setRejectComment("");
     } catch (e) {
-      setActionError(e.message);
+      const msg = e.response?.data?.message || e.response?.data || e.message;
+      setActionError(msg);
     } finally {
       setRejectSubmitting(false);
     }
@@ -461,15 +481,15 @@ function PageLeaveApprovals() {
     background: "#1e1740", borderRadius: 14, padding: 28, width: 420,
     boxShadow: "0 20px 60px rgba(0,0,0,0.4)", border: "1px solid rgba(255,255,255,0.1)",
   };
-  const modalTitle  = { margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff" };
-  const modalSub    = { margin: "0 0 16px", fontSize: 13, color: "rgba(255,255,255,0.5)" };
+  const modalTitle    = { margin: "0 0 8px", fontSize: 17, fontWeight: 700, color: "#fff" };
+  const modalSub      = { margin: "0 0 16px", fontSize: 13, color: "rgba(255,255,255,0.5)" };
   const modalTextarea = {
     width: "100%", minHeight: 90, background: "rgba(255,255,255,0.07)",
     border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8,
     color: "#fff", fontSize: 13, padding: "10px 12px", resize: "vertical",
     outline: "none", boxSizing: "border-box", fontFamily: "inherit",
   };
-  const modalActions = { display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" };
+  const modalActions  = { display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" };
 
   return (
     <div className="md-page">
@@ -584,6 +604,9 @@ function PageLeaveApprovals() {
                     {r.rejectionReason && (
                       <span style={{ color: "#f87171", marginLeft: 8 }}>· Reason: {r.rejectionReason}</span>
                     )}
+                    {(r.approveComment || r.comment) && (
+                      <span style={{ color: "#10b981", marginLeft: 8 }}>· Comment: {r.approveComment || r.comment}</span>
+                    )}
                   </span>
                 </div>
                 <StatusBadge status={r.status} />
@@ -656,10 +679,7 @@ function PageTeamMembers() {
   const handleSearch = useCallback(async (q) => {
     setSearch(q);
     if (!q.trim()) {
-      try {
-        const data = await getTeam();
-        setTeam(data || []);
-      } catch {}
+      try { const data = await getTeam(); setTeam(data || []); } catch {}
       return;
     }
     setSearching(true);
@@ -674,10 +694,7 @@ function PageTeamMembers() {
   }, []);
 
   if (loading) return <Spinner />;
-
-  if (selected) {
-    return <MemberDetail emp={selected} onBack={() => setSelected(null)} />;
-  }
+  if (selected) return <MemberDetail emp={selected} onBack={() => setSelected(null)} />;
 
   return (
     <div className="md-page">
@@ -687,12 +704,8 @@ function PageTeamMembers() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
           </svg>
-          <input
-            placeholder="Search name or role…"
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="md-search"
-          />
+          <input placeholder="Search name or role…" value={search}
+            onChange={(e) => handleSearch(e.target.value)} className="md-search" />
         </div>
       </div>
 
@@ -745,23 +758,18 @@ function PageNotifications() {
     try {
       await markAllNotificationsRead();
       setNotes((n) => n.map((x) => ({ ...x, unread: false, read: true })));
-    } catch (e) {
-      setError(e.message);
-    }
+    } catch (e) { setError(e.message); }
   };
 
   const handleMarkOne = async (notif) => {
     try {
       await markNotificationRead(notif.id);
-      setNotes((ns) =>
-        ns.map((x) => (x.id === notif.id ? { ...x, unread: false, read: true } : x))
-      );
+      setNotes((ns) => ns.map((x) => (x.id === notif.id ? { ...x, unread: false, read: true } : x)));
     } catch {}
   };
 
   if (loading) return <Spinner />;
-
-  const isUnread = (n) => n.unread === true || n.read === false;
+  const isUnread = (n) => !n.read && !n.isRead;
 
   return (
     <div className="md-page">
@@ -769,27 +777,20 @@ function PageNotifications() {
         <h2 className="md-page-heading">Notifications</h2>
         <button className="md-text-btn" onClick={handleMarkAll}>Mark all read</button>
       </div>
-
       {error && <ErrorMsg msg={error} />}
-
       <div className="md-panel">
         {notes.length === 0 && (
           <div style={{ color: "rgba(255,255,255,0.4)", padding: 20 }}>No notifications</div>
         )}
         {notes.map((n) => (
-          <div
-            key={n.id}
-            className={`md-notif-row ${isUnread(n) ? "unread" : ""}`}
-            onClick={() => handleMarkOne(n)}
-          >
+          <div key={n.id} className={`md-notif-row ${isUnread(n) ? "unread" : ""}`}
+            onClick={() => handleMarkOne(n)}>
             <div className="md-notif-icon">
               {n.type === "LEAVE" ? <ClipboardList size={16} /> : n.type === "ATTENDANCE" ? <Clock size={16} /> : <Bell size={16} />}
             </div>
             <div className="md-notif-body">
               <div className="md-notif-text">{n.message}</div>
-              <div className="md-notif-time">
-                {n.createdAt ? new Date(n.createdAt).toLocaleString("en-IN") : ""}
-              </div>
+              <div className="md-notif-time">{n.createdAt ? new Date(n.createdAt).toLocaleString("en-IN") : ""}</div>
             </div>
             {isUnread(n) && <div className="md-notif-dot" />}
           </div>
@@ -799,41 +800,144 @@ function PageNotifications() {
   );
 }
 
-// ─── Apply Leave Page ─────────────────────────────────────────────────────────
+// ─── My Attendance Page ────────────────────────────────────────────────────────
+function PageMyAttendance() {
+  const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const empId = storedUser?.employeeId || storedUser?.id;
+
+  useEffect(() => {
+    if (!empId) return;
+    (async () => {
+      try {
+        const res = await api.get(`/api/attendance/employee/${empId}`);
+        setAttendance(res.data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [empId]);
+
+  if (loading) return <Spinner />;
+
+  const chartData = attendance.slice(-7).map(a => ({
+    day: a.workDate ? new Date(a.workDate).toLocaleDateString("en-US", { weekday: "short" }) : "—",
+    hours: a.durationMin ? parseFloat((a.durationMin / 60).toFixed(1)) : 0
+  }));
+
+  const present  = attendance.filter(a => a.status === "PRESENT" || a.status === "WFH").length;
+  const absent   = attendance.filter(a => a.status === "ABSENT").length;
+  const leave    = attendance.filter(a => a.status === "ON_LEAVE").length;
+  const avgHours = attendance.length
+    ? (attendance.reduce((s, a) => s + (a.durationMin ? a.durationMin / 60 : 0), 0) / attendance.length).toFixed(1)
+    : 0;
+
+  return (
+    <div className="md-page">
+      <h2 className="md-page-heading">My Attendance</h2>
+
+      <div className="md-panel">
+        <h3 className="md-panel-title">Weekly Hours</h3>
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="hoursGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%"  stopColor="#7c5af0" stopOpacity={0.35}/>
+                  <stop offset="95%" stopColor="#7c5af0" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(124,90,240,0.1)"/>
+              <XAxis dataKey="day" tick={{ fill: "#9b96b8", fontSize: 12 }} axisLine={false} tickLine={false}/>
+              <YAxis tick={{ fill: "#9b96b8", fontSize: 12 }} axisLine={false} tickLine={false}/>
+              <Tooltip contentStyle={{ background: "#1e1740", border: "none", borderRadius: 10, color: "#fff" }}/>
+              <Area type="monotone" dataKey="hours" stroke="#7c5af0" strokeWidth={2.5} fill="url(#hoursGrad)"/>
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <p style={{ color: "#9b96b8", textAlign: "center", padding: "40px 0" }}>No attendance data yet.</p>
+        )}
+      </div>
+
+      <div className="md-stats-grid">
+        <StatCard icon={<CheckCircle size={20}/>} label="Present/WFH" value={present}  sub="this month" color="#10b981"/>
+        <StatCard icon={<XCircle size={20}/>}      label="Absent Days"  value={absent}   sub="this month" color="#ef4444"/>
+        <StatCard icon={<Umbrella size={20}/>}     label="Leave Days"   value={leave}    sub="this month" color="#f59e0b"/>
+        <StatCard icon={<Timer size={20}/>}        label="Avg Hrs/Day"  value={avgHours} sub="this month" color="#7c5af0"/>
+      </div>
+
+      <div className="md-panel" style={{ marginTop: 24 }}>
+        <h3 className="md-panel-title">Recent Records</h3>
+        <div className="md-table-wrap">
+          <table className="md-table">
+            <thead>
+              <tr><th>Date</th><th>Check In</th><th>Check Out</th><th>Hours</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {attendance.length === 0 ? (
+                <tr><td colSpan={5} style={{ textAlign: "center", color: "#9b96b8", padding: "20px" }}>No records found</td></tr>
+              ) : (
+                attendance.slice(-10).reverse().map((a, i) => (
+                  <tr key={a.id || i}>
+                    <td>{a.workDate ? new Date(a.workDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
+                    <td>{a.checkIn  ? new Date(a.checkIn).toLocaleTimeString("en-IN",  { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                    <td>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                    <td>{a.durationMin ? `${(a.durationMin / 60).toFixed(1)}h` : "—"}</td>
+                    <td>
+                      <span className={`md-status-badge ${
+                        a.status === "PRESENT"  ? "approved" :
+                        a.status === "WFH"      ? "approved" :
+                        a.status === "ABSENT"   ? "rejected" :
+                        a.status === "ON_LEAVE" ? "pending" : "pending"
+                      }`}>{a.status}</span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Apply Leave Page (Manager's own leave) ───────────────────────────────────
+// Manager applies leave here → goes to HR_ADMIN for approval (handled by backend)
 function PageApplyLeave() {
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const empId = storedUser?.employeeId || storedUser?.id;
 
-  const [form, setForm] = useState({
-    leaveType: "CASUAL",
-    fromDate: "",
-    toDate: "",
-    reason: "",
-  });
+  const [form, setForm] = useState({ leaveType: "CASUAL", fromDate: "", toDate: "", reason: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
-  const [balance, setBalance] = useState(null);
+  const [balance, setBalance] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      if (!empId) return;
-      try {
-        const [hist, bal] = await Promise.allSettled([
-          getLeaveHistory(empId),
-          getLeaveBalance(empId),
-        ]);
-        if (hist.status === "fulfilled") setHistory(hist.value || []);
-        if (bal.status === "fulfilled") setBalance(bal.value);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoadingData(false);
-      }
-    })();
-  }, [empId]);
+  const loadData = async () => {
+    if (!empId) return;
+    try {
+      const [histRes, balRes] = await Promise.allSettled([
+        // GET /api/leaves/my — manager's own leave history
+        getMyLeaves(),
+        getLeaveBalance(empId),
+      ]);
+      if (histRes.status === "fulfilled") setHistory(histRes.value?.data || histRes.value || []);
+      if (balRes.status  === "fulfilled") setBalance(balRes.value?.data  || balRes.value  || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  useEffect(() => { loadData(); }, [empId]);
 
   const handleSubmit = async () => {
     if (!form.fromDate || !form.toDate || !form.reason.trim()) {
@@ -844,20 +948,21 @@ function PageApplyLeave() {
     setError("");
     setSuccess("");
     try {
-      await applyLeave({
-        employeeId: empId,
-        leaveType: form.leaveType,
-        fromDate: form.fromDate,
-        toDate: form.toDate,
-        reason: form.reason,
-      });
-      setSuccess("Leave applied successfully!");
+      // POST /api/leaves/apply
+      // Since this is a MANAGER, backend routes approval to HR_ADMIN
+     await applyLeave({
+       employeeId: empId,
+       leaveType:  form.leaveType,
+       fromDate:   form.fromDate,
+       toDate:     form.toDate,
+       reason:     form.reason,
+     });
+      setSuccess("Leave applied! Your request has been sent to HR for approval.");
       setForm({ leaveType: "CASUAL", fromDate: "", toDate: "", reason: "" });
-      // refresh history
-      const hist = await getLeaveHistory(empId);
-      setHistory(hist || []);
+      loadData();
     } catch (e) {
-      setError(e.message || "Failed to apply leave.");
+      const msg = e.response?.data?.message || e.response?.data || "Failed to apply leave.";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -869,29 +974,22 @@ function PageApplyLeave() {
     color: "#fff", fontSize: 13, padding: "10px 12px",
     outline: "none", boxSizing: "border-box", fontFamily: "inherit",
   };
-  const labelStyle = {
-    fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block",
-  };
-
-  const LEAVE_TYPES = ["CASUAL", "ANNUAL", "SICK", "UNPAID", "MATERNITY", "PATERNITY"];
-
-  const statusColor = {
-    APPROVED: "#10b981", PENDING: "#f59e0b", REJECTED: "#ef4444",
-    APPLIED: "#f59e0b", CANCELLED: "#9b96b8",
-  };
+  const labelStyle = { fontSize: 12, color: "rgba(255,255,255,0.5)", marginBottom: 6, display: "block" };
+  const LEAVE_TYPES = ["CASUAL", "ANNUAL", "SICK"];
+  const statusColor = { APPROVED: "#10b981", PENDING: "#f59e0b", APPLIED: "#f59e0b", REJECTED: "#ef4444", CANCELLED: "#9b96b8" };
 
   return (
     <div className="md-page">
       <h2 className="md-page-heading">Apply Leave</h2>
 
-      {/* ── Balance Cards ── */}
+      {/* Balance Cards */}
       {Array.isArray(balance) && balance.length > 0 && (
         <div className="md-stats-grid" style={{ marginBottom: 24 }}>
           {balance.map((item, idx) => (
             <div key={idx} className="md-stat-card" style={{ "--accent": "#7c5af0" }}>
               <div className="md-stat-body">
                 <div className="md-stat-value">{item.total - item.used}</div>
-                <div className="md-stat-label">{item.type}</div>
+                <div className="md-stat-label">{item.type || item.leaveType}</div>
                 <div className="md-stat-sub">days remaining</div>
               </div>
               <div className="md-stat-glow" />
@@ -900,9 +998,12 @@ function PageApplyLeave() {
         </div>
       )}
 
-      {/* ── Apply Form ── */}
+      {/* Apply Form */}
       <div className="md-panel" style={{ marginBottom: 24 }}>
         <h3 className="md-panel-title">New Leave Request</h3>
+        <p style={{ color: "#9b96b8", fontSize: 13, marginBottom: 16 }}>
+          As a manager, your leave request will be sent to HR for approval.
+        </p>
 
         {error   && <ErrorMsg msg={error} />}
         {success && (
@@ -910,72 +1011,49 @@ function PageApplyLeave() {
             background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)",
             color: "#6ee7b7", borderRadius: 10, padding: "12px 16px", marginBottom: 16,
           }}>
-            ✓ {success}
+            {success}
           </div>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <div>
             <label style={labelStyle}>Leave Type</label>
-            <select
-              style={{ ...inputStyle, cursor: "pointer" }}
-              value={form.leaveType}
-              onChange={e => setForm(f => ({ ...f, leaveType: e.target.value }))}
-            >
+            <select style={{ ...inputStyle, cursor: "pointer" }} value={form.leaveType}
+              onChange={e => setForm(f => ({ ...f, leaveType: e.target.value }))}>
               {LEAVE_TYPES.map(t => (
                 <option key={t} value={t} style={{ background: "#1e1740" }}>{t}</option>
               ))}
             </select>
           </div>
-
           <div />
-
           <div>
             <label style={labelStyle}>From Date</label>
-            <input
-              type="date"
-              style={inputStyle}
-              value={form.fromDate}
-              onChange={e => setForm(f => ({ ...f, fromDate: e.target.value }))}
-            />
+            <input type="date" style={inputStyle} value={form.fromDate}
+              onChange={e => setForm(f => ({ ...f, fromDate: e.target.value }))} />
           </div>
-
           <div>
             <label style={labelStyle}>To Date</label>
-            <input
-              type="date"
-              style={inputStyle}
-              value={form.toDate}
-              onChange={e => setForm(f => ({ ...f, toDate: e.target.value }))}
-            />
+            <input type="date" style={inputStyle} value={form.toDate}
+              onChange={e => setForm(f => ({ ...f, toDate: e.target.value }))} />
           </div>
         </div>
-
         <div style={{ marginBottom: 16 }}>
           <label style={labelStyle}>Reason</label>
-          <textarea
-            style={{ ...inputStyle, minHeight: 90, resize: "vertical" }}
-            placeholder="Reason for leave..."
-            value={form.reason}
-            onChange={e => setForm(f => ({ ...f, reason: e.target.value }))}
-          />
+          <textarea style={{ ...inputStyle, minHeight: 90, resize: "vertical" }}
+            placeholder="Reason for leave..." value={form.reason}
+            onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} />
         </div>
-
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          style={{
-            background: submitting ? "rgba(124,90,240,0.4)" : "#7c5af0",
-            color: "#fff", border: "none", borderRadius: 8,
-            padding: "10px 24px", cursor: submitting ? "not-allowed" : "pointer",
-            fontSize: 14, fontWeight: 600,
-          }}
-        >
+        <button onClick={handleSubmit} disabled={submitting} style={{
+          background: submitting ? "rgba(124,90,240,0.4)" : "#7c5af0",
+          color: "#fff", border: "none", borderRadius: 8,
+          padding: "10px 24px", cursor: submitting ? "not-allowed" : "pointer",
+          fontSize: 14, fontWeight: 600,
+        }}>
           {submitting ? "Submitting..." : "Submit Request"}
         </button>
       </div>
 
-      {/* ── Leave History ── */}
+      {/* My Leave History */}
       <div className="md-panel">
         <h3 className="md-panel-title">My Leave History</h3>
         {loadingData ? <Spinner /> : history.length === 0 ? (
@@ -985,12 +1063,8 @@ function PageApplyLeave() {
             <table className="md-table">
               <thead>
                 <tr>
-                  <th>Type</th>
-                  <th>From</th>
-                  <th>To</th>
-                  <th>Days</th>
-                  <th>Reason</th>
-                  <th>Status</th>
+                  <th>Type</th><th>From</th><th>To</th><th>Days</th>
+                  <th>Reason</th><th>HR Comment</th><th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -998,14 +1072,18 @@ function PageApplyLeave() {
                   <tr key={h.id || i}>
                     <td>{h.leaveType}</td>
                     <td>{h.startDate || h.fromDate}</td>
-                    <td>{h.endDate || h.toDate}</td>
+                    <td>{h.endDate   || h.toDate}</td>
                     <td>{h.totalDays ?? "—"}</td>
                     <td>{h.reason}</td>
                     <td>
-                      <span style={{
-                        color: statusColor[h.status] || "#fff",
-                        fontWeight: 600, fontSize: 12,
-                      }}>
+                      {h.rejectionReason ? (
+                        <span style={{ color: "#f87171" }}>{h.rejectionReason}</span>
+                      ) : (h.approveComment || h.comment) ? (
+                        <span style={{ color: "#10b981" }}>{h.approveComment || h.comment}</span>
+                      ) : "—"}
+                    </td>
+                    <td>
+                      <span style={{ color: statusColor[h.status] || "#fff", fontWeight: 600, fontSize: 12 }}>
                         {h.status}
                       </span>
                     </td>
@@ -1029,6 +1107,7 @@ const NAV = [
   { id: "calendar",   icon: <CalIcon size={18} />,       label: "Calendar"        },
   { id: "reviews",    icon: <Award size={18} />,         label: "Performance"     },
   { id: "kudos",      icon: <Star size={18} />,          label: "Kudos"           },
+  { id: "myattendance",icon: <Clock size={18} />,        label: "My Attendance"   },
   { id: "myleave",    icon: <Umbrella size={18} />,      label: "My Leave"        },
   { id: "notifs",     icon: <Bell size={18} />,          label: "Notifications"   },
 ];
@@ -1036,25 +1115,23 @@ const NAV = [
 // ─── Root Dashboard Component ─────────────────────────────────────────────────
 export default function ManagerDashboard() {
   const navigate = useNavigate();
-  const [active, setActive] = useState("home");
+  const [active, setActive]         = useState("home");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
+  const [profile, setProfile]       = useState(null);
   const [pendingCount, setPendingCount] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount]   = useState(0);
 
   useEffect(() => {
     (async () => {
+      try { const p = await getManagerProfile(); setProfile(p); } catch {}
       try {
-        const p = await getManagerProfile();
-        setProfile(p);
-      } catch {}
-      try {
+        // GET /api/leaves/pending — filtered by role on backend
         const leaves = await getPendingLeaves();
         setPendingCount((leaves || []).length);
       } catch {}
       try {
         const notifs = await getAllNotifications();
-        setUnreadCount((notifs || []).filter((n) => n.unread || n.read === false).length);
+        setUnreadCount((notifs || []).filter((n) => !n.read && !n.isRead).length);
       } catch {}
     })();
   }, []);
@@ -1062,6 +1139,8 @@ export default function ManagerDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("role");
+    localStorage.removeItem("name");
     navigate("/login");
   };
 
@@ -1073,6 +1152,7 @@ export default function ManagerDashboard() {
     calendar:   <PageCalendar />,
     reviews:    <PagePerformanceReview managerProfile={profile} />,
     kudos:      <PageKudos />,
+    myattendance:<PageMyAttendance />,
     myleave:    <PageApplyLeave />,
     notifs:     <PageNotifications />,
   };
@@ -1088,19 +1168,13 @@ export default function ManagerDashboard() {
         <Logo />
         <nav className="md-nav">
           {NAV.map((n) => (
-            <button
-              key={n.id}
+            <button key={n.id}
               className={`md-nav-item ${active === n.id ? "active" : ""}`}
-              onClick={() => { setActive(n.id); setSidebarOpen(false); }}
-            >
+              onClick={() => { setActive(n.id); setSidebarOpen(false); }}>
               <span className="md-nav-icon" style={{ display: "flex", alignItems: "center" }}>{n.icon}</span>
               <span className="md-nav-label">{n.label}</span>
-              {n.id === "approvals" && pendingCount > 0 && (
-                <span className="md-nav-badge">{pendingCount}</span>
-              )}
-              {n.id === "notifs" && unreadCount > 0 && (
-                <span className="md-nav-badge">{unreadCount}</span>
-              )}
+              {n.id === "approvals" && pendingCount > 0 && <span className="md-nav-badge">{pendingCount}</span>}
+              {n.id === "notifs"    && unreadCount  > 0 && <span className="md-nav-badge">{unreadCount}</span>}
             </button>
           ))}
         </nav>
@@ -1128,14 +1202,11 @@ export default function ManagerDashboard() {
           <button className="md-hamburger" onClick={() => setSidebarOpen((s) => !s)}>
             <span /><span /><span />
           </button>
-          <div className="md-topbar-title">
-            {NAV.find((n) => n.id === active)?.label}
-          </div>
+          <div className="md-topbar-title">{NAV.find((n) => n.id === active)?.label}</div>
           <button className="md-topbar-notif" onClick={() => setActive("notifs")}>
             <Bell size={18} />{unreadCount > 0 && <span className="md-notif-badge">{unreadCount}</span>}
           </button>
         </header>
-
         <div className="md-content">{PAGE[active]}</div>
       </main>
 

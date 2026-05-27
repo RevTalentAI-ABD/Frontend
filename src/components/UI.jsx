@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Mailbox } from "lucide-react";
 
 export function Logo() {
   return (
@@ -95,7 +96,7 @@ export function Toast({ message }) {
   return <div className="hr-toast">{message}</div>;
 }
 
-export function EmptyState({ icon = "📭", text = "No data found" }) {
+export function EmptyState({ icon = <Mailbox size={48} color="#9ca3af" />, text = "No data found" }) {
   return <div className="hr-empty-state">{icon} {text}</div>;
 }
 

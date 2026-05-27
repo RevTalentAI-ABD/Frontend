@@ -85,11 +85,13 @@ export default function RegisterPage() {
   const handleContinue = (e) => {
     e.preventDefault();
     const errs = validate();
+    if (form.role === "hradmin") {
+      errs.role = "HR Admin accounts must be provisioned by an existing administrator. Choose Employee or Manager, or contact your HR team.";
+    }
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
-    // Pass form data to Security page via router state
     navigate("/security", { state: { profileData: form } });
   };
 
@@ -200,6 +202,7 @@ export default function RegisterPage() {
                 </button>
               ))}
             </div>
+            {errors.role && <span className="hrflow-error">{errors.role}</span>}
           </div>
 
           <button type="submit" className="hrflow-btn">Continue →</button>

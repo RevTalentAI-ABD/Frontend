@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ThumbsUp, MessageSquare, Award, Star, Zap, Users, Heart, Target, Lightbulb, Search, Plus, X } from "lucide-react";
+import { ThumbsUp, MessageSquare, Award, Star, Zap, Users, Heart, Target, Lightbulb, Search, Plus, X, Rocket } from "lucide-react";
 import api from "../api/axiosConfig";
 import "../styles/EmployeeDashboard.css"; // Reuse dashboard styles
 
@@ -55,16 +55,22 @@ export default function PageKudos() {
       setLoading(true);
       const [kudosRes, empRes, meRes] = await Promise.all([
         api.get("/api/kudos/recent"),
-        api.get("/api/employees"),
+        api.get("/api/employees/directory"),
         api.get("/api/me")
       ]);
       setKudosList(kudosRes.data);
-      // Mock stats since backend doesn't have an endpoint for it yet
-      setStats({ receivedThisMonth: 0, givenThisMonth: 0, companyWideThisMonth: kudosRes.data.length });
       
       const currentUser = meRes.data;
+      const myId = currentUser.employeeId || currentUser.id;
+      const allKudos = kudosRes.data || [];
+      
+      const received = allKudos.filter(k => k.receiverId === myId).length;
+      const given = allKudos.filter(k => k.senderId === myId).length;
+      
+      setStats({ receivedThisMonth: received, givenThisMonth: given, companyWideThisMonth: allKudos.length });
+      
       // Filter out the current user so they can't send kudos to themselves
-      const otherEmployees = (empRes.data || []).filter(e => e.id !== currentUser.id);
+      const otherEmployees = (empRes.data || []).filter(e => e.id !== myId);
       setEmployees(otherEmployees);
     } catch (err) {
       console.error("Failed to load kudos data", err);
@@ -177,7 +183,7 @@ export default function PageKudos() {
             </div>
           </div>
           <button className="ed-primary-btn" onClick={handleSubmit} disabled={submitting} style={{marginTop: "16px"}}>
-            {submitting ? "Sending..." : "Send Kudos 🚀"}
+            {submitting ? "Sending..." : <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", justifyContent: "center" }}>Send Kudos <Rocket size={16} /></span>}
           </button>
         </div>
       )}

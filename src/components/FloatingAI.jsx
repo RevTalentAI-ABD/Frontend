@@ -14,6 +14,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import "./FloatingAI.css";
+import { getApiRoot } from "../utils/apiBase";
 
 export default function FloatingAI() {
 
@@ -50,7 +51,8 @@ export default function FloatingAI() {
     setLoading(true);
 
     try {
-      const response = await fetch((import.meta.env.VITE_API_URL + "/api/ai/ask"), {
+      const apiRoot = getApiRoot();
+      const response = await fetch(`${apiRoot}/api/ai/ask`, {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",

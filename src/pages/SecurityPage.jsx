@@ -6,7 +6,15 @@ import "../styles/Security.css";
 export default function SecurityPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const profileData = location.state?.profileData || {};
+  const profileData = location.state?.profileData || { role: "employee" };
+
+  const mapRegisterRole = (roleId) => {
+    if (!roleId) return "EMPLOYEE";
+    const r = roleId.toLowerCase();
+    if (r === "manager") return "MANAGER";
+    if (r === "hradmin" || r === "hr_admin") return "HR_ADMIN";
+    return "EMPLOYEE";
+  };
 
   const [password, setPassword]       = useState("");
   const [confirm, setConfirm]         = useState("");
@@ -30,19 +38,24 @@ export default function SecurityPage() {
   const passwordsMatch    = password === confirm && confirm.length > 0;
 
   // ── Resend timer ───────────────────────────────────────────────────────────
+  React.useEffect(() => {
+    if (resendTimer > 0 && page === "otp") {
+      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendTimer, page]);
+
   const startResendTimer = () => {
     setResendTimer(30);
-    const interval = setInterval(() => {
-      setResendTimer(t => {
-        if (t <= 1) { clearInterval(interval); return 0; }
-        return t - 1;
-      });
-    }, 1000);
   };
 
   // ── Register → go to OTP page ──────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!allValid || !passwordsMatch) return;
+    if (mapRegisterRole(profileData.role) === "HR_ADMIN") {
+      setError("HR Admin accounts must be provisioned by an existing administrator.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
@@ -53,7 +66,7 @@ export default function SecurityPage() {
         username:   profileData.email,
         email:      profileData.email,
         password:   password,
-        role:       profileData.role.toUpperCase(),
+        role:       mapRegisterRole(profileData.role),
         department: profileData.department,
       });
 
@@ -63,7 +76,9 @@ export default function SecurityPage() {
       startResendTimer();
 
     } catch (err) {
-      setError(err.response?.data || "Registration failed. Please try again.");
+      const data = err.response?.data;
+      const msg = typeof data === 'string' ? data : data?.message || data?.error || "Registration failed. Please try again.";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -85,7 +100,9 @@ export default function SecurityPage() {
       // ✅ OTP verified — go to login
       navigate("/login");
     } catch (err) {
-      setOtpError(err.response?.data || "Invalid OTP. Please try again.");
+      const data = err.response?.data;
+      const msg = typeof data === 'string' ? data : data?.message || data?.error || "Invalid OTP. Please try again.";
+      setOtpError(msg);
     } finally {
       setOtpLoading(false);
     }
@@ -93,8 +110,14 @@ export default function SecurityPage() {
 
   // ── Resend OTP ─────────────────────────────────────────────────────────────
   const handleResendOtp = async () => {
-    await api.post("/api/auth/resend-otp", { email: otpEmail });
-    startResendTimer();
+    try {
+      await api.post("/api/auth/resend-otp", { email: otpEmail });
+      startResendTimer();
+    } catch (err) {
+      const data = err.response?.data;
+      const msg = typeof data === "string" ? data : data?.message || "Failed to resend OTP.";
+      setOtpError(msg);
+    }
   };
 
   // ── Shared logo ────────────────────────────────────────────────────────────

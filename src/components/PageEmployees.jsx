@@ -8,7 +8,9 @@ function authHeaders() {
     : { "Content-Type": "application/json" };
 }
 
-const BASE_URL = (import.meta.env.VITE_API_URL + "/api");
+import { getApiBase } from "../utils/apiBase";
+
+const BASE_URL = getApiBase();
 
 const COLORS = [
   "#7C3AED","#06B6D4","#10B981","#EC4899",
@@ -36,6 +38,7 @@ export default function PageEmployees() {
     try {
       setLoading(true);
       const res = await fetch(`${BASE_URL}/employees`, { headers: authHeaders() });
+      if (!res.ok) throw new Error("Failed to fetch employees");
       const data = await res.json();
       const list = Array.isArray(data) ? data : (data.content || data.data || []);
       setEmployees(list);
