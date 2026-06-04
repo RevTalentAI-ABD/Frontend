@@ -19,16 +19,19 @@ html, body, #root {
   width: 100%;
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: center; /* keep this for tall screens */
   justify-content: center;
+  /* Add safe center alignment to prevent top cutoff */
+  /* If safe is not supported, margin: auto on child is better. We will use align-items: flex-start and margin: auto on the card */
+  align-items: flex-start;
+  padding: 40px 24px;
   background-color: #1a0a3c;
   background-image:
     radial-gradient(ellipse 60% 50% at 70% 30%, rgba(120, 60, 220, 0.35) 0%, transparent 70%),
     radial-gradient(ellipse 40% 40% at 20% 80%, rgba(80, 40, 180, 0.25) 0%, transparent 70%);
   font-family: 'DM Sans', sans-serif;
-  padding: 24px;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .hrflow-bg::before {
@@ -53,6 +56,7 @@ html, body, #root {
   box-shadow: 0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.08);
   position: relative;
   z-index: 1;
+  margin: 0; /* Changed from auto to prevent top-cutoff in flex container */
   animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both;
 }
 

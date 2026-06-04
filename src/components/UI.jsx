@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Inbox, AlertTriangle } from "lucide-react";
 
 export function Logo() {
   return (
@@ -95,14 +96,17 @@ export function Toast({ message }) {
   return <div className="hr-toast">{message}</div>;
 }
 
-export function EmptyState({ icon = "📭", text = "No data found" }) {
+export function EmptyState({ icon = <Inbox size={32} />, text = "No data found" }) {
   return <div className="hr-empty-state">{icon} {text}</div>;
 }
 
 export function ErrorState({ message, onRetry }) {
   return (
     <div className="hr-error-state">
-      <div>⚠️ {message}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+        <AlertTriangle size={20} />
+        {message}
+      </div>
       {onRetry && <button className="hr-outline-btn" onClick={onRetry}>Retry</button>}
     </div>
   );

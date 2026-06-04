@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/PublicJobBoard.css";
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 export default function PublicJobBoard() {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ export default function PublicJobBoard() {
 
       {/* ── HERO ── */}
       <div className="jb-hero">
-        <div className="jb-hero-badge">✦ We're hiring</div>
+        <div className="jb-hero-badge"> We're hiring</div>
         <h1 className="jb-hero-title">
           Explore <span>Open Roles</span>
         </h1>
@@ -125,9 +125,6 @@ export default function PublicJobBoard() {
                   <strong>Requirements:</strong> {j.requirements}
                 </p>
               )}
-              {j.description && (
-                <p className="jb-desc">{j.description}</p>
-              )}
             </div>
 
             <button className="jb-apply-btn" onClick={() => handleApplyClick(j)}>
@@ -141,7 +138,7 @@ export default function PublicJobBoard() {
       {showModal && (
         <div className="jb-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="jb-modal" onClick={e => e.stopPropagation()}>
-            <button className="jb-modal-close" onClick={() => setShowModal(false)}>✕</button>
+            <button className="jb-modal-close" onClick={() => setShowModal(false)}></button>
 
             <div className="jb-modal-icon">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">

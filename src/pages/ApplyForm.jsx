@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { AlertTriangle, FileText } from "lucide-react";
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "";
 
 export default function ApplyForm() {
   const navigate = useNavigate();
@@ -186,7 +187,9 @@ export default function ApplyForm() {
               background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)",
               color: "#f87171", borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 14,
             }}>
-              ⚠️ {error}
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <AlertTriangle size={16} /> {error}
+              </div>
             </div>
           )}
 
@@ -282,14 +285,14 @@ export default function ApplyForm() {
                 background: "rgba(124,90,240,0.2)",
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
               }}>
-                📄
+                <FileText size={24} color="#a78bfa" />
               </div>
               <div>
                 <div style={{ color: resumeName ? "#a78bfa" : "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 500 }}>
                   {resumeName || "Click to upload your resume"}
                 </div>
                 <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 2 }}>
-                  {resumeName ? "File selected ✓" : "Drag and drop or click to browse"}
+                  {resumeName ? "File selected " : "Drag and drop or click to browse"}
                 </div>
               </div>
               <input

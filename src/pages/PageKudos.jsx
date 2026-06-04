@@ -177,7 +177,7 @@ export default function PageKudos() {
             </div>
           </div>
           <button className="ed-primary-btn" onClick={handleSubmit} disabled={submitting} style={{marginTop: "16px"}}>
-            {submitting ? "Sending..." : "Send Kudos 🚀"}
+            {submitting ? "Sending..." : "Send Kudos "}
           </button>
         </div>
       )}

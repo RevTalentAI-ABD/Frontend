@@ -7,11 +7,12 @@
   min-height: 100vh;
   background: #1a0a3b;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding: 40px 16px;
   font-family: 'Sora', sans-serif;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* ── Ambient blobs ────────────────────────────── */

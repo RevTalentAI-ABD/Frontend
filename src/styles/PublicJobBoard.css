@@ -7,7 +7,6 @@
     linear-gradient(135deg, #09051d 0%, #120a2f 40%, #050816 100%);
   font-family: 'DM Sans', sans-serif;
   color: #fff;
-  min-height: auto; /* scrolling fix */
 }
 
 /* ===== NAVBAR ===== */

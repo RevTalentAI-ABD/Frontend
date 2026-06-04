@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "../styles/EmployeeDashboard.css";
 import api from "../api/axiosConfig";
 import PageMyReviews from "./PageMyReviews";
+import PageInterviews from "./PageInterviews";
 import PageCalendar from "../components/PageCalendar";
 import FloatingAI from "../components/FloatingAI";
 import AttendanceClock from "../components/AttendanceClock";
@@ -83,7 +84,7 @@ function StatusBadge({ status }) {
 
 // ── PAGES ─────────────────────────────────────────────────────────────────────
 
-// ✅ CHANGE 4a — added announcements prop
+//  CHANGE 4a — added announcements prop
 function PageHome({ employee, attendance, announcements }) {
   const presentDays = attendance.filter(a => a.status === "PRESENT").length;
 
@@ -149,7 +150,7 @@ function PageHome({ employee, attendance, announcements }) {
         </div>
       </div>
 
-      {/* ✅ CHANGE 4b — Updated Announcements section */}
+      {/*  CHANGE 4b — Updated Announcements section */}
       <div className="ed-panel">
         <h3 className="ed-panel-title">Announcements</h3>
         <div className="ed-announcements">
@@ -761,6 +762,7 @@ const NAV = [
   { id: "payroll",       icon: <Wallet size={16}/>,   label: "Payroll"       },
   { id: "calendar",      icon: <CalIcon size={16}/>,  label: "Calendar"      },
   { id: "reviews",       icon: <Award size={16}/>,    label: "My Reviews"    },
+  { id: "interviews",    icon: <CalIcon size={16}/>,  label: "Interviews"    },
   { id: "kudos",         icon: <Star size={16}/>,     label: "Kudos"         },
   { id: "profile",       icon: <User size={16}/>,     label: "Profile"       },
   { id: "notifications", icon: <Bell size={16}/>,     label: "Notifications" },
@@ -780,7 +782,7 @@ export default function EmployeeDashboard() {
   const [leaveHistory,   setLeaveHistory]    = useState([]);
   const [payslips,       setPayslips]        = useState([]);
   const [notifications,  setNotifications]   = useState([]);
-  const [announcements,  setAnnouncements]   = useState([]); // ✅ CHANGE 1
+  const [announcements,  setAnnouncements]   = useState([]); //  CHANGE 1
 
   const fetchDashboard = async () => {
     try {
@@ -788,7 +790,7 @@ export default function EmployeeDashboard() {
       setEmployee(empRes.data);
       const empId = empRes.data.id;
 
-      // ✅ CHANGE 2 — added announceRes
+      //  CHANGE 2 — added announceRes
       const [attRes, leaveBalRes, leaveHistRes,
              payRes, notifRes, announceRes] = await Promise.allSettled([
         api.get(`/api/attendance/employee/${empId}`),
@@ -804,7 +806,7 @@ export default function EmployeeDashboard() {
       if (leaveHistRes.status === "fulfilled") setLeaveHistory(leaveHistRes.value.data);
       if (payRes.status       === "fulfilled") setPayslips(payRes.value.data);
       if (notifRes.status     === "fulfilled") setNotifications(notifRes.value.data);
-      if (announceRes.status  === "fulfilled") setAnnouncements(announceRes.value.data); // ✅
+      if (announceRes.status  === "fulfilled") setAnnouncements(announceRes.value.data); // 
 
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
@@ -853,7 +855,7 @@ export default function EmployeeDashboard() {
   );
 
   const PAGE = {
-    // ✅ CHANGE 3 — pass announcements to PageHome
+    //  CHANGE 3 — pass announcements to PageHome
     home:          <PageHome employee={employee} attendance={attendance} announcements={announcements}/>,
     attendance:    <PageAttendance attendance={attendance}/>,
     leave:         <PageLeave leaves={leaves} leaveHistory={leaveHistory}
@@ -861,6 +863,7 @@ export default function EmployeeDashboard() {
     payroll:       <PagePayroll payslips={payslips}/>,
     calendar:      <PageCalendar />,
     reviews:       <PageMyReviews employee={employee}/>,
+    interviews:    <PageInterviews />,
     kudos:         <PageKudos employee={employee}/>,
     profile:       <PageProfile employee={employee} onProfileUpdated={fetchDashboard}/>,
     notifications: <PageNotifications employee={employee} notifications={notifications} setNotifications={setNotifications} />,

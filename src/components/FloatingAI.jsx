@@ -50,7 +50,7 @@ export default function FloatingAI() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/ai/ask", {
+      const response = await fetch("/api/ai/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: currentQuestion }),

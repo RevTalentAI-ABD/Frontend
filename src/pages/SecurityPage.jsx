@@ -57,7 +57,7 @@ export default function SecurityPage() {
         department: profileData.department,
       });
 
-      // ✅ OTP was sent by the backend — move to OTP verification page
+      //  OTP was sent by the backend — move to OTP verification page
       setOtpEmail(profileData.email);
       setPage("otp");
       startResendTimer();
@@ -82,7 +82,7 @@ export default function SecurityPage() {
         email: otpEmail,
         otp:   otp,
       });
-      // ✅ OTP verified — go to login
+      //  OTP verified — go to login
       navigate("/login");
     } catch (err) {
       setOtpError(err.response?.data || "Invalid OTP. Please try again.");
@@ -350,7 +350,7 @@ export default function SecurityPage() {
             onClick={handleSubmit}
             style={{ opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? "Creating..." : "Create Account ✓"}
+            {loading ? "Creating..." : "Create Account "}
           </button>
         </div>
 

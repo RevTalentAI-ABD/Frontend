@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { recruitmentAPI, candidateAPI, resumeAPI, employeeAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
 import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
+import { Briefcase, X, CheckCircle, AlertTriangle, Calendar, User, FileText, Trash2, Bot, Users } from "lucide-react";
 
 const PIPELINE_STAGES = ["APPLIED", "SCREENING", "INTERVIEW", "OFFERED", "HIRED"];
 const STAGE_LABELS    = { APPLIED: "Applied", SCREENING: "Screening", INTERVIEW: "Interview", OFFERED: "Offered", HIRED: "Hired" };
@@ -25,7 +26,7 @@ export default function PageRecruitment() {
 
   // ── Schedule interview modal state ────────────────────────────────────────
   const [scheduleModal, setScheduleModal] = useState(null); // candidate object or null
-  const [scheduleForm,  setScheduleForm]  = useState({ date: "", time: "", interviewerName: "", interviewerId: "" });
+  const [scheduleForm,  setScheduleForm]  = useState({ roundName: "", date: "", time: "", interviewerName: "", interviewerId: "" });
   const [scheduling,    setScheduling]    = useState(false);
   const [employees,     setEmployees]     = useState([]);
   
@@ -51,7 +52,7 @@ export default function PageRecruitment() {
       setCandidates(Array.isArray(res.data) ? res.data : []);
     } catch {
       setCandidates([]);
-      showToast("⚠️ Could not load candidates");
+      showToast(" Could not load candidates");
     } finally {
       setLoadingCands(false);
     }
@@ -59,7 +60,7 @@ export default function PageRecruitment() {
 
   // ── Post a new job ────────────────────────────────────────────────────────
   const postJob = async () => {
-    if (!newJob.title.trim()) { showToast("❌ Job title is required"); return; }
+    if (!newJob.title.trim()) { showToast(" Job title is required"); return; }
     setPosting(true);
     try {
       await recruitmentAPI.createJob({
@@ -69,12 +70,12 @@ export default function PageRecruitment() {
         vacancies:    Number(newJob.numberOfOpenings),
         status:       "OPEN",
       });
-      showToast("✅ Job posted successfully!");
+      showToast(" Job posted successfully!");
       setNewJob({ title: "", department: "Engineering", numberOfOpenings: 1, description: "", requirements: "" });
       setShowForm(false);
       refetch();
     } catch {
-      showToast("❌ Failed to post job");
+      showToast(" Failed to post job");
     } finally {
       setPosting(false);
     }
@@ -83,7 +84,7 @@ export default function PageRecruitment() {
   // ── Add candidate to current job ──────────────────────────────────────────
   const addCandidate = async () => {
     if (!newCand.name.trim() || !newCand.email.trim()) {
-      showToast("❌ Name and email are required");
+      showToast(" Name and email are required");
       return;
     }
     setAddingCand(true);
@@ -97,9 +98,9 @@ export default function PageRecruitment() {
       setCandidates((prev) => [...prev, res.data]);
       setNewCand({ name: "", email: "", phone: "" });
       setShowAddCand(false);
-      showToast("✅ Candidate added!");
+      showToast(" Candidate added!");
     } catch (e) {
-      showToast("❌ " + (e.response?.data || "Failed to add candidate"));
+      showToast(" " + (e.response?.data || "Failed to add candidate"));
     } finally {
       setAddingCand(false);
     }
@@ -108,7 +109,7 @@ export default function PageRecruitment() {
   // ── Open schedule interview modal ─────────────────────────────────────────
   const openScheduleModal = async (candidate) => {
     setScheduleModal(candidate);
-    setScheduleForm({ date: "", time: "", interviewerName: "", interviewerId: "" });
+    setScheduleForm({ roundName: "", date: "", time: "", interviewerName: "", interviewerId: "" });
     // Load employees list for interviewer selection
     if (employees.length === 0) {
       try {
@@ -123,7 +124,7 @@ export default function PageRecruitment() {
   // ── Confirm schedule interview ─────────────────────────────────────────────
   const confirmSchedule = async () => {
     if (!scheduleForm.date || !scheduleForm.time) {
-      showToast("❌ Please select date and time");
+      showToast(" Please select date and time");
       return;
     }
     setScheduling(true);
@@ -131,12 +132,12 @@ export default function PageRecruitment() {
       const interviewDate = `${scheduleForm.date}T${scheduleForm.time}:00`;
       const rawId = scheduleForm.interviewerId;
       const interviewerId = rawId && rawId !== "" ? Number(rawId) : null;
-      const res = await candidateAPI.scheduleInterview(scheduleModal.id, interviewDate, interviewerId);
+      const res = await candidateAPI.scheduleInterview(scheduleModal.id, scheduleForm.roundName, interviewDate, interviewerId);
       setCandidates((prev) => prev.map((c) => (c.id === scheduleModal.id ? res.data : c)));
-      showToast("✅ Interview scheduled!");
+      showToast(" Interview scheduled!");
       setScheduleModal(null);
     } catch (e) {
-      showToast("❌ " + (e.response?.data || e.message || "Failed to schedule interview"));
+      showToast(" " + (e.response?.data || e.message || "Failed to schedule interview"));
     } finally {
       setScheduling(false);
     }
@@ -150,9 +151,9 @@ export default function PageRecruitment() {
       setCandidates((prev) =>
         prev.map((c) => (c.id === candidateId ? res.data : c))
       );
-      showToast(`✅ Moved to ${STAGE_LABELS[newStatus] || newStatus}`);
+      showToast(` Moved to ${STAGE_LABELS[newStatus] || newStatus}`);
     } catch {
-      showToast("❌ Failed to update status");
+      showToast(" Failed to update status");
     } finally {
       setMovingId(null);
     }
@@ -164,9 +165,9 @@ export default function PageRecruitment() {
     try {
       await candidateAPI.delete(candidateId);
       setCandidates((prev) => prev.filter((c) => c.id !== candidateId));
-      showToast("✅ Candidate removed");
+      showToast(" Candidate removed");
     } catch {
-      showToast("❌ Failed to remove candidate");
+      showToast(" Failed to remove candidate");
     }
   };
 
@@ -175,10 +176,10 @@ export default function PageRecruitment() {
     e.stopPropagation();
     try {
       await recruitmentAPI.updateJobStatus(jobId, status);
-      showToast("✅ Status updated");
+      showToast(" Status updated");
       refetch();
     } catch {
-      showToast("❌ Failed to update status");
+      showToast(" Failed to update status");
     }
   };
 
@@ -215,7 +216,7 @@ export default function PageRecruitment() {
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <Badge status={selectedJob.status || "OPEN"} />
               <button className="hr-primary-btn" onClick={() => setShowAddCand(s => !s)}>
-                {showAddCand ? "✕ Cancel" : "+ Add Candidate"}
+                {showAddCand ? <><X size={14} style={{ marginRight: 4 }} /> Cancel</> : "+ Add Candidate"}
               </button>
             </div>
           </div>
@@ -295,30 +296,46 @@ export default function PageRecruitment() {
                               }}
                               title="Click to view full AI screening summary"
                             >
-                              <div style={{ color: "#a78bfa", fontWeight: 600 }}>🤖 AI Match Score: {c.aiScore}/100</div>
+                              <div style={{ color: "#a78bfa", fontWeight: 600 }}><Bot size={14} style={{ marginRight: 4 }} /> AI Match Score: {c.aiScore}/100</div>
                               <div style={{ color: "#a78bfa", fontSize: 10, background: "rgba(124,90,240,0.2)", padding: "3px 6px", borderRadius: "4px" }}>
                                 View Details ↗
                               </div>
                             </div>
                           )}
 
-                          {/* Interview schedule details (shown when in INTERVIEW stage) */}
-                          {stage === "INTERVIEW" && c.interviewDate && (
-                            <div style={{
-                              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
-                              borderRadius: 6, padding: "7px 10px", fontSize: 11,
-                            }}>
-                              <div style={{ color: "#f59e0b", fontWeight: 600, marginBottom: 2 }}>📅 Scheduled Interview</div>
-                              <div style={{ color: "#d1c9a8" }}>
-                                {new Date(c.interviewDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                {" at "}
-                                {new Date(c.interviewDate).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                              </div>
-                              {c.interviewerName && (
-                                <div style={{ color: "#9b96b8", marginTop: 2 }}>👤 {c.interviewerName}</div>
-                              )}
+                          {/* Interview rounds (shown when in INTERVIEW stage) */}
+                          {stage === "INTERVIEW" && c.interviewRounds && c.interviewRounds.length > 0 && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "8px" }}>
+                              {c.interviewRounds.map((r, idx) => (
+                                <div key={r.id || idx} style={{
+                                  background: r.status === 'COMPLETED' ? "rgba(16,185,129,0.08)" : "rgba(245,158,11,0.08)", 
+                                  border: r.status === 'COMPLETED' ? "1px solid rgba(16,185,129,0.2)" : "1px solid rgba(245,158,11,0.2)",
+                                  borderRadius: 6, padding: "7px 10px", fontSize: 11,
+                                }}>
+                                  <div style={{ color: r.status === 'COMPLETED' ? "#10b981" : "#f59e0b", fontWeight: 600, marginBottom: 2 }}>
+                                    <Calendar size={14} style={{ marginRight: 4 }} /> 
+                                    {r.roundName || `Round ${idx + 1}`}
+                                    <span style={{ float: 'right', fontSize: '9px', padding: '2px 4px', background: r.status === 'COMPLETED' ? '#10b98133' : '#f59e0b33', borderRadius: 4 }}>
+                                      {r.status}
+                                    </span>
+                                  </div>
+                                  <div style={{ color: "#d1c9a8", marginBottom: 2 }}>
+                                    {r.scheduledAt && `${new Date(r.scheduledAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} at ${new Date(r.scheduledAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`}
+                                  </div>
+                                  {r.interviewerName && (
+                                    <div style={{ color: "#9b96b8", marginBottom: 2 }}><User size={12} style={{ marginRight: 4 }} /> {r.interviewerName}</div>
+                                  )}
+                                  {r.status === 'COMPLETED' && r.score != null && (
+                                    <div style={{ marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(16,185,129,0.2)' }}>
+                                      <div style={{ color: "#10b981", fontWeight: 600 }}>Score: {r.score}/10</div>
+                                      <div style={{ color: "#cbd5e1", fontStyle: "italic", marginTop: 2 }}>"{r.feedbackNotes}"</div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
                             </div>
                           )}
+                          
                           {/* Row 2: Resume button */}
                           <a
                             href={resumeAPI.getDownloadUrl(c.id)}
@@ -330,12 +347,13 @@ export default function PageRecruitment() {
                               background: "rgba(99,102,241,0.1)", color: "#818cf8",
                               border: "1px solid rgba(99,102,241,0.25)", borderRadius: 6,
                               padding: "5px 8px", fontSize: 11, fontWeight: 500,
-                              cursor: "pointer",
+                              cursor: "pointer", marginBottom: "6px",
                             }}>
-                            📄 View Resume
+                            <FileText size={14} style={{ marginRight: 4 }} /> View Resume
                           </a>
+                          
                           {/* Row 3: stage action buttons */}
-                          <div style={{ display: "flex", gap: 6 }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                             {nextStage && (
                               nextStage === "INTERVIEW" ? (
                                 <button
@@ -350,24 +368,43 @@ export default function PageRecruitment() {
                                     fontSize: 11, fontWeight: 500, cursor: "pointer",
                                     whiteSpace: "nowrap",
                                   }}>
-                                  📅 Schedule Interview
+                                  <Calendar size={14} style={{ marginRight: 4 }} /> Schedule Interview
                                 </button>
                               ) : (
-                                <button
-                                  onClick={() => moveCandidate(c.id, nextStage)}
-                                  disabled={movingId === c.id}
-                                  style={{
-                                    flex: 1,
-                                    background: STAGE_COLORS[nextStage] + "22",
-                                    color: STAGE_COLORS[nextStage],
-                                    border: `1px solid ${STAGE_COLORS[nextStage]}55`,
-                                    borderRadius: 6, padding: "5px 6px",
-                                    fontSize: 11, fontWeight: 500, cursor: "pointer",
-                                    whiteSpace: "nowrap",
-                                    opacity: movingId === c.id ? 0.5 : 1,
-                                  }}>
-                                  {movingId === c.id ? "…" : `→ ${STAGE_LABELS[nextStage]}`}
-                                </button>
+                                <>
+                                  {/* If in INTERVIEW stage and all rounds are completed, show Schedule Next Round */}
+                                  {stage === "INTERVIEW" && (!c.interviewRounds || c.interviewRounds.length === 0 || c.interviewRounds[c.interviewRounds.length - 1].status === 'COMPLETED') && (
+                                    <button
+                                      onClick={() => openScheduleModal(c)}
+                                      disabled={movingId === c.id}
+                                      style={{
+                                        flex: '1 1 100%',
+                                        background: STAGE_COLORS["INTERVIEW"] + "22",
+                                        color: STAGE_COLORS["INTERVIEW"],
+                                        border: `1px solid ${STAGE_COLORS["INTERVIEW"]}55`,
+                                        borderRadius: 6, padding: "5px 6px", marginBottom: "4px",
+                                        fontSize: 11, fontWeight: 500, cursor: "pointer",
+                                        whiteSpace: "nowrap",
+                                      }}>
+                                      <Calendar size={14} style={{ marginRight: 4 }} /> + Schedule Next Round
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => moveCandidate(c.id, nextStage)}
+                                    disabled={movingId === c.id}
+                                    style={{
+                                      flex: 1,
+                                      background: STAGE_COLORS[nextStage] + "22",
+                                      color: STAGE_COLORS[nextStage],
+                                      border: `1px solid ${STAGE_COLORS[nextStage]}55`,
+                                      borderRadius: 6, padding: "5px 6px",
+                                      fontSize: 11, fontWeight: 500, cursor: "pointer",
+                                      whiteSpace: "nowrap",
+                                      opacity: movingId === c.id ? 0.5 : 1,
+                                    }}>
+                                    {movingId === c.id ? "…" : ` ${STAGE_LABELS[nextStage]}`}
+                                  </button>
+                                </>
                               )
                             )}
                             <button
@@ -380,7 +417,7 @@ export default function PageRecruitment() {
                                 cursor: "pointer", whiteSpace: "nowrap",
                                 opacity: movingId === c.id ? 0.5 : 1,
                               }}>
-                              ✕ Reject
+                              <X size={14} style={{ marginRight: 4 }} /> Reject
                             </button>
                           </div>
                         </div>
@@ -418,7 +455,7 @@ export default function PageRecruitment() {
                     border: "1px solid rgba(124,90,240,0.3)", borderRadius: 6,
                     padding: "4px 10px", fontSize: 11, cursor: "pointer",
                   }}>
-                  ↩ Reconsider
+                  ↺ Reconsider
                 </button>
                 <button
                   onClick={() => removeCandidate(c.id)}
@@ -427,7 +464,7 @@ export default function PageRecruitment() {
                     border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6,
                     padding: "4px 10px", fontSize: 11, cursor: "pointer",
                   }}>
-                  🗑
+                  <Trash2 size={14} />
                 </button>
               </div>
             ))}
@@ -445,9 +482,9 @@ export default function PageRecruitment() {
               boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}>📅 Schedule Interview</h3>
+                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}><Calendar size={14} style={{ marginRight: 4 }} /> Schedule Interview</h3>
                 <button onClick={() => setScheduleModal(null)}
-                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}>✕</button>
+                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}><X size={18} /></button>
               </div>
 
               {/* Candidate info */}
@@ -460,6 +497,18 @@ export default function PageRecruitment() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div className="hr-field">
+                  <label style={{ color: "#9b96b8", fontSize: 13, marginBottom: 6, display: "block" }}>Round Name *</label>
+                  <input
+                    placeholder="e.g. Technical Round 1"
+                    value={scheduleForm.roundName}
+                    onChange={e => setScheduleForm(f => ({ ...f, roundName: e.target.value }))}
+                    style={{
+                      width: "100%", background: "#12102a", border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 14,
+                    }}
+                  />
+                </div>
                 <div className="hr-field">
                   <label style={{ color: "#9b96b8", fontSize: 13, marginBottom: 6, display: "block" }}>Interview Date *</label>
                   <input
@@ -542,7 +591,7 @@ export default function PageRecruitment() {
                     cursor: scheduling ? "not-allowed" : "pointer",
                     opacity: scheduling ? 0.7 : 1,
                   }}>
-                  {scheduling ? "Scheduling…" : "✓ Confirm Interview"}
+                  {scheduling ? "Scheduling…" : " Confirm Interview"}
                 </button>
               </div>
             </div>
@@ -561,9 +610,9 @@ export default function PageRecruitment() {
               boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}>🤖 AI Screening Summary</h3>
+                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}><Bot size={18} style={{ marginRight: 6 }} /> AI Screening Summary</h3>
                 <button onClick={() => setSummaryModal(null)}
-                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}>✕</button>
+                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}><X size={18} /></button>
               </div>
 
               <div style={{
@@ -618,7 +667,7 @@ export default function PageRecruitment() {
       <div className="hr-page-header-row">
         <h2 className="hr-page-heading">Recruitment</h2>
         <button className="hr-primary-btn" onClick={() => setShowForm(s => !s)}>
-          {showForm ? "✕ Cancel" : "+ Post Job"}
+          {showForm ? <><X size={14} style={{ marginRight: 4 }} /> Cancel</> : "+ Post Job"}
         </button>
       </div>
 
@@ -664,7 +713,7 @@ export default function PageRecruitment() {
       <div className="hr-panel">
         <h3 className="hr-panel-title">Job Postings ({jobs.length})</h3>
         {jobs.length === 0 ? (
-          <EmptyState icon="💼" text="No jobs posted yet" />
+          <EmptyState icon="" text="No jobs posted yet" />
         ) : (
           <div className="hr-jobs-grid">
             {jobs.map(j => (
@@ -681,7 +730,7 @@ export default function PageRecruitment() {
                   </div>
                 )}
                 <div className="hr-job-row" style={{ marginTop: 10 }}>
-                  <span style={{ color: "#7c5af0", fontSize: 13 }}>👥 View pipeline</span>
+                  <span style={{ color: "#7c5af0", fontSize: 13 }}><Users size={14} style={{ marginRight: 4 }} /> View pipeline</span>
                   <select
                     value={j.status || "OPEN"}
                     onClick={(e) => e.stopPropagation()}

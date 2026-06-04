@@ -4,7 +4,7 @@
 // import "./index.css";
 // import App from "./App.jsx";
 
-// /* ✅ ADD THIS */
+// /*  ADD THIS */
 // import { AuthProvider } from "./components/AuthContext";
 
 // createRoot(document.getElementById("root")).render(

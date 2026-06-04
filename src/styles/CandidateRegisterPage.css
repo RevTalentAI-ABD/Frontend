@@ -12,9 +12,9 @@
     radial-gradient(circle, rgba(255, 255, 255, 0.065) 1px, transparent 1px);
   background-size: auto, auto, 36px 36px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 32px 16px;
+  padding: 40px 16px;
 }
 
 /* ── Card ── */

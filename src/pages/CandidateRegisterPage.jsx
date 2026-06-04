@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/CandidateRegisterPage.css";
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "";
 
 export default function CandidateRegisterPage() {
   const navigate = useNavigate();
@@ -93,7 +93,7 @@ export default function CandidateRegisterPage() {
         department: "NA",
       });
 
-      // ✅ OTP was sent by the backend — move to OTP page
+      //  OTP was sent by the backend — move to OTP page
       setPage("otp");
       startResendTimer();
 
@@ -186,6 +186,12 @@ export default function CandidateRegisterPage() {
     return (
       <div className="crp-bg">
         <div className="crp-card">
+          <div 
+            onClick={() => navigate("/")} 
+            style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--text3, #9b96b8)", fontSize: "13px", fontWeight: 500, marginBottom: "20px" }}
+          >
+            &larr; Back to Home
+          </div>
           <Brand />
 
           {/* Icon + heading */}
@@ -301,6 +307,12 @@ export default function CandidateRegisterPage() {
   return (
     <div className="crp-bg">
       <div className="crp-card">
+        <div 
+          onClick={() => navigate("/")} 
+          style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--text3, #9b96b8)", fontSize: "13px", fontWeight: 500, marginBottom: "20px" }}
+        >
+          &larr; Back to Home
+        </div>
         <Brand />
 
         <h1 className="crp-title">Create your account</h1>
@@ -394,8 +406,8 @@ export default function CandidateRegisterPage() {
               {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
             </button>
           </div>
-          {passwordsMatch    && <p className="crp-hint crp-hint--match">✓ Passwords match</p>}
-          {passwordsMismatch && <p className="crp-hint crp-hint--mismatch">✗ Passwords do not match</p>}
+          {passwordsMatch    && <p className="crp-hint crp-hint--match"> Passwords match</p>}
+          {passwordsMismatch && <p className="crp-hint crp-hint--mismatch"> Passwords do not match</p>}
         </div>
 
         {/* Register error */}

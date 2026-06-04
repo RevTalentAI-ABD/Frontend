@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { AlertTriangle } from "lucide-react";
+
 
 function authHeaders() {
   const token = localStorage.getItem("token") || sessionStorage.getItem("token");
@@ -9,12 +11,12 @@ function authHeaders() {
 
 const api = {
   get: async (url) => {
-    const res = await fetch(`http://localhost:8080${url}`, { headers: authHeaders() });
+    const res = await fetch(`${url}`, { headers: authHeaders() });
     if (!res.ok) throw new Error(`${res.status}`);
     return { data: await res.json() };
   },
   post: async (url, body) => {
-    const res = await fetch(`http://localhost:8080${url}`, {
+    const res = await fetch(`${url}`, {
       method: "POST", headers: authHeaders(), body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`${res.status}`);
@@ -150,7 +152,7 @@ export default function OrgHierarchy() {
   if (error) return (
     <div style={{ ...S.page, display:"flex", alignItems:"center", justifyContent:"center" }}>
       <div style={S.errorBox}>
-        <div style={{ fontSize:32, marginBottom:10 }}>⚠️</div>
+        <div style={{ fontSize:32, marginBottom:10, display: 'flex', justifyContent: 'center' }}><AlertTriangle size={32} color="#F87171" /></div>
         <div style={{ color:"#F87171", fontWeight:600, marginBottom:6 }}>Could not load hierarchy</div>
         <div style={{ color:"#7B7890", fontSize:13, marginBottom:18 }}>{error}</div>
         <button style={S.confirmBtn} onClick={fetchHierarchy}>Retry</button>
@@ -213,7 +215,7 @@ export default function OrgHierarchy() {
                           title="Unassign manager"
                           onClick={() => openUnassign(emp)}
                         >
-                          ✕
+                          
                         </button>
                       </div>
                     ))}
@@ -274,7 +276,7 @@ export default function OrgHierarchy() {
                       {emp.department && <div style={{ fontSize:11, color:"#5B5773" }}>{emp.department}</div>}
                     </div>
                     <div style={{ marginLeft:"auto" }}>
-                      {chosen ? <span style={{ color:"#7C3AED", fontSize:18 }}>✓</span> : <span style={{ color:"#444", fontSize:18 }}>○</span>}
+                      {chosen ? <span style={{ color:"#7C3AED", fontSize:18 }}></span> : <span style={{ color:"#444", fontSize:18 }}>○</span>}
                     </div>
                   </div>
                 );
@@ -320,7 +322,7 @@ export default function OrgHierarchy() {
                         {mgr.department && <div style={{ fontSize:11, color:"#5B5773" }}>{mgr.department}</div>}
                       </div>
                       <div style={{ marginLeft:"auto" }}>
-                        {chosen ? <span style={{ color:"#7C3AED", fontSize:18 }}>✓</span> : <span style={{ color:"#444", fontSize:18 }}>○</span>}
+                        {chosen ? <span style={{ color:"#7C3AED", fontSize:18 }}></span> : <span style={{ color:"#444", fontSize:18 }}>○</span>}
                       </div>
                     </div>
                   );

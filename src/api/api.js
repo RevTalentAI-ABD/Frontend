@@ -1,4 +1,4 @@
-// const BASE_URL = "http://localhost:8080/api";
+// const BASE_URL = "/api";
 
 // // ─── Auth helpers ────────────────────────────────────────────────────────────
 // function getToken() {
@@ -203,7 +203,7 @@
 // }
 import axios from "axios";
 
-const BASE_URL = "http://localhost:8080/api";
+const BASE_URL = "/api";
 
 // ─── Auth helpers ────────────────────────────────────────────────────────────
 function getToken() {
@@ -223,7 +223,8 @@ async function handleResponse(res) {
     throw new Error(text || `HTTP ${res.status}`);
   }
   if (res.status === 204) return null;
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 // ─── Axios instance with token ───────────────────────────────────────────────
@@ -364,19 +365,21 @@ export async function getPendingLeaves() {
   return handleResponse(res);
 }
 
-export async function approveLeave(id) {
+export async function approveLeave(id, comment) {
   const res = await fetch(`${BASE_URL}/leaves/${id}/approve`, {
     method: "PUT",
-    headers: authHeaders(),
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ reason: comment })
   });
   return handleResponse(res);
 }
 
-export async function rejectLeave(id, reason = "") {
-  const res = await fetch(
-    `${BASE_URL}/leaves/${id}/reject?reason=${encodeURIComponent(reason)}`,
-    { method: "PUT", headers: authHeaders() }
-  );
+export async function rejectLeave(id, reason) {
+  const res = await fetch(`${BASE_URL}/leaves/${id}/reject`, {
+    method: "PUT",
+    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ reason })
+  });
   return handleResponse(res);
 }
 

@@ -112,7 +112,7 @@
 // //           </button>
 // //           <div className="hr-topbar-title">{NAV.find(n => n.id === active)?.label}</div>
 // //           <button className="hr-topbar-notif" onClick={() => setActive("notifications")}>
-// //             🔔{unread > 0 && <span className="hr-notif-badge">{unread}</span>}
+// //             {unread > 0 && <span className="hr-notif-badge">{unread}</span>}
 // //           </button>
 // //         </header>
 // //         <div className="hr-content">

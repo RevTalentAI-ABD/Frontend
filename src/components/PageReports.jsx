@@ -11,7 +11,7 @@ import {
   Star
 } from "lucide-react";
 
-// 🔥 SIMPLE FETCH (NO CONFUSION)
+//  SIMPLE FETCH (NO CONFUSION)
 function useFetch(url) {
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
@@ -36,25 +36,25 @@ function useFetch(url) {
 
 export default function PageReports() {
 
-  // ✅ FULL URLs (IMPORTANT)
+  //  FULL URLs (IMPORTANT)
   const { data: summary, loading: l1, error: e1 } =
-    useFetch("http://localhost:8080/api/manager/reports/summary");
+    useFetch("/api/manager/reports/summary");
 
   const { data: attendance, loading: l2 } =
-    useFetch("http://localhost:8080/api/manager/reports/attendance");
+    useFetch("/api/manager/reports/attendance");
 
   const { data: productivity, loading: l3 } =
-    useFetch("http://localhost:8080/api/manager/reports/productivity");
+    useFetch("/api/manager/reports/productivity");
 
   const { data: team, loading: l4 } =
-    useFetch("http://localhost:8080/api/manager/reports/team-summary");
+    useFetch("/api/manager/reports/team-summary");
 
   const loading = l1 || l2 || l3 || l4;
   if (loading) return <Spinner />;
   if (e1) return <ErrorState message={e1} />;
 
   // ===============================
-  // 🔥 NORMALIZATION
+  //  NORMALIZATION
   // ===============================
 
   const headcountChart = team?.monthlyTrend
@@ -79,7 +79,7 @@ export default function PageReports() {
     : [];
 
   // ===============================
-  // 🎯 STATS
+  //  STATS
   // ===============================
 
   const totalEmployees = summary?.totalEmployees || 0;
@@ -94,7 +94,7 @@ export default function PageReports() {
         <h2 className="hr-page-heading">Reports & Analytics</h2>
       </div>
 
-      {/* 🔥 STATS */}
+      {/*  STATS */}
       <div className="hr-stats-grid">
         <StatCard icon={<TrendingUp size={18} />} label="Total Employees" value={totalEmployees} color="#10b981" />
         <StatCard icon={<LogOut size={18} />} label="Attrition Rate" value={`${attritionRate}%`} color="#ef4444" />
@@ -102,7 +102,7 @@ export default function PageReports() {
         <StatCard icon={<Star size={18} />} label="Productivity" value={`${productivityScore}`} color="#f59e0b" />
       </div>
 
-      {/* 📊 CHARTS */}
+      {/*  CHARTS */}
       <div className="hr-two-col">
 
         {/* Headcount */}

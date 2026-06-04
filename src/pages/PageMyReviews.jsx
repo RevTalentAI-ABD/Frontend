@@ -282,7 +282,7 @@ export default function PageMyReviews({ employee }) {
       {/* Review list */}
       {reviews.length === 0 ? (
         <div className="ed-panel" style={{ textAlign: "center", padding: "60px 20px" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+          <div style={{ fontSize: 40, marginBottom: 12 }}></div>
           <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>
             No reviews yet
           </div>

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { CheckCircle, Info, AlertTriangle, FileText } from "lucide-react";
 
-const BASE_URL = "http://localhost:8080";
+
+const BASE_URL = "";
 const authHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
 
 // ── Robust error message extractor ─────────────────────────────────────────
@@ -139,7 +141,6 @@ export default function CandidateOpenPositions() {
         </div>
       </div>
       <div className="cd-card" style={{ maxWidth: "560px", margin: "0 auto", textAlign: "center", padding: "48px 32px" }}>
-        <div style={{ fontSize: "56px", marginBottom: "16px" }}>🎉</div>
         <h2 style={{ color: "#10b981", fontSize: "22px", fontWeight: "700", marginBottom: "12px" }}>
           Application Submitted!
         </h2>
@@ -265,8 +266,8 @@ export default function CandidateOpenPositions() {
               fontSize: "13px", marginBottom: "16px",
               display: "flex", alignItems: "flex-start", gap: "10px",
             }}>
-              <span style={{ fontSize: "16px", flexShrink: 0 }}>
-                {submitError.includes("already applied") ? "ℹ️" : "⚠️"}
+              <span style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+                {submitError.includes("already applied") ? <Info size={16} /> : <AlertTriangle size={16} />}
               </span>
               <div>
                 <div style={{ fontWeight: "600", marginBottom: "2px" }}>
@@ -330,7 +331,7 @@ export default function CandidateOpenPositions() {
                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px",
               }}>
                 {resume
-                  ? "📄"
+                  ? <FileText size={24} color="#a78bfa" />
                   : <i className="ti ti-upload" style={{ color: "#6b6880", fontSize: "22px" }} />}
               </div>
               <div>
@@ -338,7 +339,7 @@ export default function CandidateOpenPositions() {
                   {resumeName || "Click to upload your resume"}
                 </div>
                 <div style={{ color: "#4d4a62", fontSize: "12px", marginTop: "4px" }}>
-                  {resume ? "File selected ✓ — click to change" : "PDF, DOC or DOCX up to 5MB"}
+                  {resume ? "File selected  — click to change" : "PDF, DOC or DOCX up to 5MB"}
                 </div>
               </div>
               <input ref={fileRef} type="file" accept=".pdf,.doc,.docx"
@@ -408,7 +409,7 @@ export default function CandidateOpenPositions() {
         {search && (
           <button onClick={() => setSearch("")}
             style={{ background: "none", border: "none", color: "#6b6880", cursor: "pointer", fontSize: "16px" }}>
-            ✕
+            
           </button>
         )}
       </div>

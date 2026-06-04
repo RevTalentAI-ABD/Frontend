@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Bot, Calendar, User, FileText, Trash2, Briefcase, Users } from "lucide-react";
 import { recruitmentAPI, candidateAPI, resumeAPI, employeeAPI } from "./api";
 import { useFetch, useToast } from "./hooks";
 import { Badge, Spinner, ErrorState, Toast, EmptyState, Avatar } from "./UI";
@@ -25,7 +26,7 @@ export default function PageRecruitment() {
 
   // ── Schedule interview modal state ────────────────────────────────────────
   const [scheduleModal, setScheduleModal] = useState(null); // candidate object or null
-  const [scheduleForm,  setScheduleForm]  = useState({ date: "", time: "", interviewerName: "", interviewerId: "" });
+  const [scheduleForm,  setScheduleForm]  = useState({ roundName: "", date: "", time: "", interviewerName: "", interviewerId: "" });
   const [scheduling,    setScheduling]    = useState(false);
   const [employees,     setEmployees]     = useState([]);
 
@@ -48,7 +49,7 @@ export default function PageRecruitment() {
       setCandidates(Array.isArray(res.data) ? res.data : []);
     } catch {
       setCandidates([]);
-      showToast("⚠️ Could not load candidates");
+      showToast("️ Could not load candidates");
     } finally {
       setLoadingCands(false);
     }
@@ -56,7 +57,7 @@ export default function PageRecruitment() {
 
   // ── Post a new job ────────────────────────────────────────────────────────
   const postJob = async () => {
-    if (!newJob.title.trim()) { showToast("❌ Job title is required"); return; }
+    if (!newJob.title.trim()) { showToast(" Job title is required"); return; }
     setPosting(true);
     try {
       await recruitmentAPI.createJob({
@@ -66,12 +67,12 @@ export default function PageRecruitment() {
         vacancies:    Number(newJob.numberOfOpenings),
         status:       "OPEN",
       });
-      showToast("✅ Job posted successfully!");
+      showToast(" Job posted successfully!");
       setNewJob({ title: "", department: "Engineering", numberOfOpenings: 1, description: "", requirements: "" });
       setShowForm(false);
       refetch();
     } catch {
-      showToast("❌ Failed to post job");
+      showToast(" Failed to post job");
     } finally {
       setPosting(false);
     }
@@ -80,7 +81,7 @@ export default function PageRecruitment() {
   // ── Add candidate to current job ──────────────────────────────────────────
   const addCandidate = async () => {
     if (!newCand.name.trim() || !newCand.email.trim()) {
-      showToast("❌ Name and email are required");
+      showToast(" Name and email are required");
       return;
     }
     setAddingCand(true);
@@ -94,9 +95,9 @@ export default function PageRecruitment() {
       setCandidates((prev) => [...prev, res.data]);
       setNewCand({ name: "", email: "", phone: "" });
       setShowAddCand(false);
-      showToast("✅ Candidate added!");
+      showToast(" Candidate added!");
     } catch (e) {
-      showToast("❌ " + (e.response?.data || "Failed to add candidate"));
+      showToast(" " + (e.response?.data || "Failed to add candidate"));
     } finally {
       setAddingCand(false);
     }
@@ -105,7 +106,7 @@ export default function PageRecruitment() {
   // ── Open schedule interview modal ─────────────────────────────────────────
   const openScheduleModal = async (candidate) => {
     setScheduleModal(candidate);
-    setScheduleForm({ date: "", time: "", interviewerName: "", interviewerId: "" });
+    setScheduleForm({ roundName: "", date: "", time: "", interviewerName: "", interviewerId: "" });
     // Load employees list for interviewer selection
     if (employees.length === 0) {
       try {
@@ -120,7 +121,7 @@ export default function PageRecruitment() {
   // ── Confirm schedule interview ─────────────────────────────────────────────
   const confirmSchedule = async () => {
     if (!scheduleForm.date || !scheduleForm.time) {
-      showToast("❌ Please select date and time");
+      showToast(" Please select date and time");
       return;
     }
     setScheduling(true);
@@ -128,12 +129,12 @@ export default function PageRecruitment() {
       const interviewDate = `${scheduleForm.date}T${scheduleForm.time}:00`;
       const rawId = scheduleForm.interviewerId;
       const interviewerId = rawId && rawId !== "" ? Number(rawId) : null;
-      const res = await candidateAPI.scheduleInterview(scheduleModal.id, interviewDate, interviewerId);
+      const res = await candidateAPI.scheduleInterview(scheduleModal.id, scheduleForm.roundName, interviewDate, interviewerId);
       setCandidates((prev) => prev.map((c) => (c.id === scheduleModal.id ? res.data : c)));
-      showToast("✅ Interview scheduled!");
+      showToast(" Interview scheduled!");
       setScheduleModal(null);
     } catch (e) {
-      showToast("❌ " + (e.response?.data || e.message || "Failed to schedule interview"));
+      showToast(" " + (e.response?.data || e.message || "Failed to schedule interview"));
     } finally {
       setScheduling(false);
     }
@@ -147,9 +148,9 @@ export default function PageRecruitment() {
       setCandidates((prev) =>
         prev.map((c) => (c.id === candidateId ? res.data : c))
       );
-      showToast(`✅ Moved to ${STAGE_LABELS[newStatus] || newStatus}`);
+      showToast(` Moved to ${STAGE_LABELS[newStatus] || newStatus}`);
     } catch {
-      showToast("❌ Failed to update status");
+      showToast(" Failed to update status");
     } finally {
       setMovingId(null);
     }
@@ -161,9 +162,9 @@ export default function PageRecruitment() {
     try {
       await candidateAPI.delete(candidateId);
       setCandidates((prev) => prev.filter((c) => c.id !== candidateId));
-      showToast("✅ Candidate removed");
+      showToast(" Candidate removed");
     } catch {
-      showToast("❌ Failed to remove candidate");
+      showToast(" Failed to remove candidate");
     }
   };
 
@@ -172,10 +173,10 @@ export default function PageRecruitment() {
     e.stopPropagation();
     try {
       await recruitmentAPI.updateJobStatus(jobId, status);
-      showToast("✅ Status updated");
+      showToast(" Status updated");
       refetch();
     } catch {
-      showToast("❌ Failed to update status");
+      showToast(" Failed to update status");
     }
   };
 
@@ -212,7 +213,7 @@ export default function PageRecruitment() {
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <Badge status={selectedJob.status || "OPEN"} />
               <button className="hr-primary-btn" onClick={() => setShowAddCand(s => !s)}>
-                {showAddCand ? "✕ Cancel" : "+ Add Candidate"}
+                {showAddCand ? " Cancel" : "+ Add Candidate"}
               </button>
             </div>
           </div>
@@ -285,7 +286,7 @@ export default function PageRecruitment() {
                                   rel="noopener noreferrer"
                                   style={{ fontSize: 11, color: "#a78bfa", textDecoration: "none" }}
                                 >
-                                  🔗 GitHub
+                                   GitHub
                                 </a>
                               )}
                             </div>
@@ -297,7 +298,7 @@ export default function PageRecruitment() {
                               background: "rgba(124, 90, 240, 0.08)", border: "1px solid rgba(124, 90, 240, 0.2)",
                               borderRadius: 6, padding: "7px 10px", fontSize: 11, marginTop: 8, marginBottom: 8
                             }}>
-                              <div style={{ color: "#a78bfa", fontWeight: 600, marginBottom: 4 }}>🤖 AI Match Score: {c.aiScore}/100</div>
+                              <div style={{ color: "#a78bfa", fontWeight: 600, marginBottom: 4, display: "flex", alignItems: "center", gap: 4 }}><Bot size={14} /> AI Match Score: {c.aiScore}/100</div>
                               {c.aiSummary && (
                                 <div style={{ color: "rgba(255,255,255,0.7)", display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", lineHeight: "1.4" }}>
                                   {c.aiSummary}
@@ -306,21 +307,34 @@ export default function PageRecruitment() {
                             </div>
                           )}
 
-                          {/* Interview schedule details (shown when in INTERVIEW stage) */}
-                          {stage === "INTERVIEW" && c.interviewDate && (
-                            <div style={{
-                              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
-                              borderRadius: 6, padding: "7px 10px", fontSize: 11,
-                            }}>
-                              <div style={{ color: "#f59e0b", fontWeight: 600, marginBottom: 2 }}>📅 Scheduled Interview</div>
-                              <div style={{ color: "#d1c9a8" }}>
-                                {new Date(c.interviewDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                                {" at "}
-                                {new Date(c.interviewDate).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
-                              </div>
-                              {c.interviewerName && (
-                                <div style={{ color: "#9b96b8", marginTop: 2 }}>👤 {c.interviewerName}</div>
-                              )}
+                          {/* Interview schedule details */}
+                          {c.interviewRounds && c.interviewRounds.length > 0 && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 8, marginBottom: 8 }}>
+                              {c.interviewRounds.map((round, idx) => (
+                                <div key={idx} style={{
+                                  background: round.status === 'COMPLETED' ? "rgba(16,185,129,0.08)" : "rgba(245,158,11,0.08)",
+                                  border: `1px solid ${round.status === 'COMPLETED' ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)"}`,
+                                  borderRadius: 6, padding: "7px 10px", fontSize: 11,
+                                }}>
+                                  <div style={{ color: round.status === 'COMPLETED' ? "#10b981" : "#f59e0b", fontWeight: 600, marginBottom: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                                    <Calendar size={14} /> {round.roundName || "Interview"} {round.status === 'COMPLETED' ? "(Completed)" : ""}
+                                  </div>
+                                  <div style={{ color: "#d1c9a8" }}>
+                                    {new Date(round.scheduledAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                                    {" at "}
+                                    {new Date(round.scheduledAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                                  </div>
+                                  {round.interviewerName && (
+                                    <div style={{ color: "#9b96b8", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><User size={14} /> {round.interviewerName}</div>
+                                  )}
+                                  {round.status === 'COMPLETED' && round.score && (
+                                    <div style={{ marginTop: 4, color: "#fff", background: "rgba(0,0,0,0.2)", padding: 6, borderRadius: 4 }}>
+                                      <span style={{ fontWeight: 600, color: "#10b981" }}>Score: {round.score}/10</span>
+                                      {round.feedbackNotes && <div style={{ color: "rgba(255,255,255,0.7)", marginTop: 2 }}>{round.feedbackNotes}</div>}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
                             </div>
                           )}
                           {/* Row 2: Resume button */}
@@ -336,7 +350,7 @@ export default function PageRecruitment() {
                               padding: "5px 8px", fontSize: 11, fontWeight: 500,
                               cursor: "pointer",
                             }}>
-                            📄 View Resume
+                            <FileText size={14} /> View Resume
                           </a>
                           {/* Row 3: stage action buttons */}
                           <div style={{ display: "flex", gap: 6 }}>
@@ -354,7 +368,7 @@ export default function PageRecruitment() {
                                     fontSize: 11, fontWeight: 500, cursor: "pointer",
                                     whiteSpace: "nowrap",
                                   }}>
-                                  📅 Schedule Interview
+                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><Calendar size={12} /> Schedule Interview</div>
                                 </button>
                               ) : (
                                 <button
@@ -384,7 +398,7 @@ export default function PageRecruitment() {
                                 cursor: "pointer", whiteSpace: "nowrap",
                                 opacity: movingId === c.id ? 0.5 : 1,
                               }}>
-                              ✕ Reject
+                               Reject
                             </button>
                           </div>
                         </div>
@@ -431,7 +445,7 @@ export default function PageRecruitment() {
                     border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6,
                     padding: "4px 10px", fontSize: 11, cursor: "pointer",
                   }}>
-                  🗑
+                  <Trash2 size={14} />
                 </button>
               </div>
             ))}
@@ -449,9 +463,9 @@ export default function PageRecruitment() {
               boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                <h3 style={{ color: "#fff", fontSize: 18, margin: 0 }}>📅 Schedule Interview</h3>
+                <h3 style={{ color: "#fff", fontSize: 18, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}><Calendar size={20} /> Schedule Interview</h3>
                 <button onClick={() => setScheduleModal(null)}
-                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}>✕</button>
+                  style={{ background: "none", border: "none", color: "#9b96b8", fontSize: 20, cursor: "pointer" }}></button>
               </div>
 
               {/* Candidate info */}
@@ -464,6 +478,18 @@ export default function PageRecruitment() {
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div className="hr-field">
+                  <label style={{ color: "#9b96b8", fontSize: 13, marginBottom: 6, display: "block" }}>Round Name *</label>
+                  <input
+                    placeholder="e.g. Technical Round 1"
+                    value={scheduleForm.roundName}
+                    onChange={e => setScheduleForm(f => ({ ...f, roundName: e.target.value }))}
+                    style={{
+                      width: "100%", background: "#12102a", border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 8, padding: "9px 12px", color: "#fff", fontSize: 14,
+                    }}
+                  />
+                </div>
                 <div className="hr-field">
                   <label style={{ color: "#9b96b8", fontSize: 13, marginBottom: 6, display: "block" }}>Interview Date *</label>
                   <input
@@ -546,7 +572,7 @@ export default function PageRecruitment() {
                     cursor: scheduling ? "not-allowed" : "pointer",
                     opacity: scheduling ? 0.7 : 1,
                   }}>
-                  {scheduling ? "Scheduling…" : "✓ Confirm Interview"}
+                  {scheduling ? "Scheduling…" : " Confirm Interview"}
                 </button>
               </div>
             </div>
@@ -563,7 +589,7 @@ export default function PageRecruitment() {
       <div className="hr-page-header-row">
         <h2 className="hr-page-heading">Recruitment</h2>
         <button className="hr-primary-btn" onClick={() => setShowForm(s => !s)}>
-          {showForm ? "✕ Cancel" : "+ Post Job"}
+          {showForm ? " Cancel" : "+ Post Job"}
         </button>
       </div>
 
@@ -609,7 +635,7 @@ export default function PageRecruitment() {
       <div className="hr-panel">
         <h3 className="hr-panel-title">Job Postings ({jobs.length})</h3>
         {jobs.length === 0 ? (
-          <EmptyState icon="💼" text="No jobs posted yet" />
+          <EmptyState icon={<Briefcase size={32} />} text="No jobs posted yet" />
         ) : (
           <div className="hr-jobs-grid">
             {jobs.map(j => (
@@ -626,7 +652,7 @@ export default function PageRecruitment() {
                   </div>
                 )}
                 <div className="hr-job-row" style={{ marginTop: 10 }}>
-                  <span style={{ color: "#7c5af0", fontSize: 13 }}>👥 View pipeline</span>
+                  <span style={{ color: "#7c5af0", fontSize: 13, display: 'flex', alignItems: 'center', gap: 4 }}><Users size={14} /> View pipeline</span>
                   <select
                     value={j.status || "OPEN"}
                     onClick={(e) => e.stopPropagation()}

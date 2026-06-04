@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 import { authAPI } from "./api";
-import { useNavigate } from "react-router-dom"; // ✅ add this
+import { useNavigate } from "react-router-dom"; //  add this
 
 const AuthContext = createContext(null);
 
@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const navigate = useNavigate(); // ✅ add this
+  const navigate = useNavigate(); //  add this
 
   const login = async (credentials) => {
     setLoading(true);
@@ -43,7 +43,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("user");
     localStorage.removeItem("role");
     setUser(null);
-    navigate("/login"); // ✅ add this
+    navigate("/login"); //  add this
   };
 
   return (

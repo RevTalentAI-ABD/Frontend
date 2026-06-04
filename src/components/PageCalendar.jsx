@@ -100,8 +100,8 @@ export default function PageCalendar({ isHr = false }) {
           <div className="cal-subtitle">Indian public holidays · {year}</div>
         </div>
         <div className="cal-top-badges">
-          <div className="cal-badge national">🏢 {nationalCount} National</div>
-          <div className="cal-badge festival">🎉 {festivalCount} Festival</div>
+          <div className="cal-badge national"> {nationalCount} National</div>
+          <div className="cal-badge festival"> {festivalCount} Festival</div>
         </div>
       </div>
 

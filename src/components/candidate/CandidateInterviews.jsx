@@ -60,14 +60,14 @@ export default function CandidateInterviews({ applications }) {
                       gap: 10,
                     }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 18 }}>📅</span>
+                        <span style={{ fontSize: 18 }}></span>
                         <div>
                           <div style={{ color: "#93c5fd", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Date</div>
                           <div style={{ color: "#e0e7ff", fontSize: 15, fontWeight: 600 }}>{dateStr}</div>
                         </div>
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 18 }}>🕐</span>
+                        <span style={{ fontSize: 18 }}></span>
                         <div>
                           <div style={{ color: "#93c5fd", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Time</div>
                           <div style={{ color: "#e0e7ff", fontSize: 15, fontWeight: 600 }}>{timeStr}</div>
@@ -75,7 +75,7 @@ export default function CandidateInterviews({ applications }) {
                       </div>
                       {(app.interviewerName || app.interviewer) && (
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <span style={{ fontSize: 18 }}>👤</span>
+                          <span style={{ fontSize: 18 }}></span>
                           <div>
                             <div style={{ color: "#93c5fd", fontSize: 12, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Interviewer</div>
                             <div style={{ color: "#e0e7ff", fontSize: 15, fontWeight: 600 }}>{app.interviewerName || app.interviewer}</div>
@@ -93,7 +93,7 @@ export default function CandidateInterviews({ applications }) {
                       alignItems: "center",
                       gap: 8,
                     }}>
-                      <span style={{ fontSize: 16 }}>⏳</span>
+                      <span style={{ fontSize: 16 }}></span>
                       <span style={{ color: "#fde68a", fontSize: 13 }}>
                         Interview date &amp; time will be confirmed by HR shortly.
                       </span>

@@ -97,6 +97,12 @@ export default function RegisterPage() {
     <div className="hrflow-bg">
       <div className="hrflow-card">
 
+        <div 
+          onClick={() => navigate("/")} 
+          style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--text3, #9b96b8)", fontSize: "13px", fontWeight: 500, marginBottom: "20px" }}
+        >
+          &larr; Back to Home
+        </div>
         {/* Logo */}
         <div className="hrflow-logo">
           <div className="hrflow-logo-icon">

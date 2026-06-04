@@ -87,7 +87,7 @@
 // export default App;
 
 
-import { Routes, Route, Navigate } from "react-router-dom"; // ✅ remove BrowserRouter import
+import { Routes, Route, Navigate } from "react-router-dom"; //  remove BrowserRouter import
 
 import LandingPage            from "./pages/LandingPage";
 import About                  from "./pages/About";
@@ -119,7 +119,7 @@ const ProtectedRoute = ({ children, allowedRole }) => {
 
 function App() {
   return (
-    // ✅ No BrowserRouter here
+    //  No BrowserRouter here
     <Routes>
       <Route path="/"                   element={<LandingPage />} />
       <Route path="/about"              element={<About />} />

@@ -9,6 +9,8 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
   const [durationMin, setDurationMin] = useState(0);
   const timerRef = useRef(null);
 
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+
   const fetchTodayAttendance = async () => {
     if (!employeeId) return;
     try {
@@ -57,11 +59,12 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
     return () => clearInterval(timerRef.current);
   }, [status, checkInTime]);
 
-  const handleClockIn = async () => {
+  const handleClockIn = async (type = "WFO") => {
     try {
       await api.post(`/api/attendance/employee/${employeeId}/checkin`, {
-        attendanceType: "WFO"
+        attendanceType: type
       });
+      setShowLocationPrompt(false);
       setCheckInTime(new Date());
       setStatus("clocked_in");
       if (onAttendanceUpdate) onAttendanceUpdate();
@@ -113,7 +116,7 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "16px", position: "relative" }}>
       {status === "clocked_in" && (
         <div style={{ textAlign: "right" }}>
           <div style={{ fontFamily: "monospace", fontSize: "18px", color: "#7c5af0", fontWeight: 700 }}>
@@ -127,30 +130,111 @@ export default function AttendanceClock({ employeeId, onAttendanceUpdate }) {
         </div>
       )}
       
-      <button
-        onClick={status === "clocked_in" ? handleClockOut : handleClockIn}
-        style={{
-          background: status === "clocked_in" ? "#ef4444" : "#7c5af0",
-          color: "white",
-          border: "none",
-          borderRadius: "10px",
-          padding: "10px 20px",
-          fontWeight: 600,
-          cursor: "pointer",
-          fontSize: "14px",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-          transition: "background 0.2s"
-        }}
-      >
-        {status === "clocked_in" ? (
-          <><Square size={14} /> Clock Out</>
-        ) : (
-          <><Play size={14} /> Clock In</>
-        )}
-      </button>
+      {status === "clocked_in" ? (
+        <button
+          onClick={handleClockOut}
+          style={{
+            background: "#ef4444",
+            color: "white",
+            border: "none",
+            borderRadius: "10px",
+            padding: "10px 20px",
+            fontWeight: 600,
+            cursor: "pointer",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            transition: "background 0.2s"
+          }}
+        >
+          <Square size={14} /> Clock Out
+        </button>
+      ) : (
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => setShowLocationPrompt(!showLocationPrompt)}
+            style={{
+              background: "#7c5af0",
+              color: "white",
+              border: "none",
+              borderRadius: "10px",
+              padding: "10px 20px",
+              fontWeight: 600,
+              cursor: "pointer",
+              fontSize: "14px",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              transition: "background 0.2s"
+            }}
+          >
+            <Play size={14} /> Clock In
+          </button>
+
+          {showLocationPrompt && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              right: 0,
+              marginTop: "10px",
+              background: "#1e1740",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "12px",
+              padding: "16px",
+              width: "220px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+              zIndex: 100
+            }}>
+              <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "12px", textAlign: "center" }}>
+                Where are you working from today?
+              </div>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button
+                  onClick={() => handleClockIn("WFO")}
+                  style={{
+                    flex: 1,
+                    background: "rgba(16, 185, 129, 0.15)",
+                    color: "#10b981",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    borderRadius: "8px",
+                    padding: "8px 0",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    transition: "all 0.2s"
+                  }}
+                  onMouseOver={e => e.currentTarget.style.background = "rgba(16, 185, 129, 0.25)"}
+                  onMouseOut={e => e.currentTarget.style.background = "rgba(16, 185, 129, 0.15)"}
+                >
+                  Office
+                </button>
+                <button
+                  onClick={() => handleClockIn("WFH")}
+                  style={{
+                    flex: 1,
+                    background: "rgba(6, 182, 212, 0.15)",
+                    color: "#06b6d4",
+                    border: "1px solid rgba(6, 182, 212, 0.3)",
+                    borderRadius: "8px",
+                    padding: "8px 0",
+                    cursor: "pointer",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    transition: "all 0.2s"
+                  }}
+                  onMouseOver={e => e.currentTarget.style.background = "rgba(6, 182, 212, 0.25)"}
+                  onMouseOut={e => e.currentTarget.style.background = "rgba(6, 182, 212, 0.15)"}
+                >
+                  WFH
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

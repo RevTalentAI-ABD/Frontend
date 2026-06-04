@@ -111,7 +111,7 @@ function ReviewCard({ review, onEdit }) {
           background: `${color}22`, color, border: `1px solid ${color}44`,
           borderRadius: 20, padding: "2px 10px", fontSize: 13, fontWeight: 700
         }}>
-          ★ {overall.toFixed(1)}
+           {overall.toFixed(1)}
         </div>
         <span style={{
           background: `${statusColor}22`, color: statusColor,
@@ -389,8 +389,18 @@ export default function PagePerformanceReview({ managerProfile }) {
           ? api.get(`/api/performance/reviewer/${reviewerId}`)
           : Promise.resolve({ data: [] }),
       ]);
-      setTeam(teamData || []);
-      setReviews(revRes.data || []);
+      const tData = teamData || [];
+      setTeam(tData);
+      
+      const rData = revRes.data || [];
+      const populatedReviews = rData.map(r => {
+        if (!r.employeeName) {
+           const emp = tData.find(e => String(e.id) === String(r.employeeId) || String(e.employeeCode) === String(r.employeeId));
+           if (emp) r.employeeName = emp.name;
+        }
+        return r;
+      });
+      setReviews(populatedReviews);
     } catch (e) {
       setError("Failed to load data.");
     } finally {

@@ -3,6 +3,7 @@ import "../styles/ManagerDashboard.css";
 import PagePerformanceReview from "./PagePerformanceReview";
 import PageCalendar from "../components/PageCalendar";
 import PageKudos from "./PageKudos";
+import PageInterviews from "./PageInterviews";
 import AttendanceClock from "../components/AttendanceClock";
 import FloatingAI from "../components/FloatingAI";
 import api from "../api/axiosConfig";
@@ -159,20 +160,26 @@ function PageHome() {
   const [dashboard, setDashboard] = useState(null);
   const [activity, setActivity] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [attendanceList, setAttendanceList] = useState([]);
+  const [teamList, setTeamList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const [dash, act, announceRes] = await Promise.all([
+        const [dash, act, announceRes, teamRes, attRes] = await Promise.all([
           getManagerDashboard(),
           getManagerActivity(),
-          api.get("/api/announcements")
+          api.get("/api/announcements"),
+          getTeam(),
+          getAllAttendance()
         ]);
-        setDashboard(dash);
+        setDashboard(dash || {});
         setActivity(act || []);
         setAnnouncements(announceRes?.data || []);
+        setTeamList(teamRes || []);
+        setAttendanceList(attRes || []);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -184,18 +191,27 @@ function PageHome() {
   if (loading) return <Spinner />;
   if (error) return <ErrorMsg msg={error} />;
 
-  const present  = dashboard?.presentCount ?? 0;
-  const wfh      = dashboard?.wfhCount     ?? 0;
-  const absent   = dashboard?.absentCount  ?? 0;
-  const onLeave  = dashboard?.onLeaveCount ?? 0;
-  const teamSize = dashboard?.teamSize     ?? (present + wfh + absent + onLeave);
-  const pending  = dashboard?.pendingLeaves ?? 0;
+  let presentCount = 0;
+  let wfhCount = 0;
+  let onLeaveCount = 0;
+
+  attendanceList.forEach(a => {
+    const s = (a.status || "").toUpperCase();
+    const t = (a.attendanceType || "").toUpperCase();
+    if (s === "WFH" || t === "WFH") wfhCount++;
+    else if (s === "PRESENT" || t === "WFO") presentCount++;
+    else if (s === "ON_LEAVE" || s === "LEAVE") onLeaveCount++;
+  });
+
+  const teamSize = teamList.length;
+  const absentCount = Math.max(0, teamSize - presentCount - wfhCount - onLeaveCount);
+  const pending = dashboard?.pendingLeaves ?? 0;
 
   const PIE_DATA = [
-    { name: "Present",  value: present,  color: "#10b981" },
-    { name: "WFH",      value: wfh,      color: "#06b6d4" },
-    { name: "On Leave", value: onLeave,  color: "#f59e0b" },
-    { name: "Absent",   value: absent,   color: "#ef4444" },
+    { name: "Present",  value: presentCount,  color: "#10b981" },
+    { name: "WFH",      value: wfhCount,      color: "#06b6d4" },
+    { name: "On Leave", value: onLeaveCount,  color: "#f59e0b" },
+    { name: "Absent",   value: absentCount,   color: "#ef4444" },
   ].filter((d) => d.value > 0);
 
   return (
@@ -210,7 +226,7 @@ function PageHome() {
           <h2 className="md-welcome-heading">{getGreeting()}</h2>
           <p className="md-welcome-sub">
             You have <strong>{pending} pending leave requests</strong> and{" "}
-            <strong>{absent} absent today</strong>.
+            <strong>{absentCount} absent today</strong>.
           </p>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -223,8 +239,8 @@ function PageHome() {
 
       <div className="md-stats-grid">
         <StatCard icon={<Users size={20} />}        label="Team Size"         value={teamSize} sub="total members" color="#7c5af0" />
-        <StatCard icon={<CheckCircle size={20} />}  label="Present Today"     value={present}  sub="in office"     color="#10b981" />
-        <StatCard icon={<Laptop size={20} />}       label="WFH Today"         value={wfh}      sub="remote"        color="#06b6d4" />
+        <StatCard icon={<CheckCircle size={20} />}  label="Present Today"     value={presentCount}  sub="in office"     color="#10b981" />
+        <StatCard icon={<Laptop size={20} />}       label="WFH Today"         value={wfhCount}      sub="remote"        color="#06b6d4" />
         <StatCard icon={<ClipboardList size={20} />} label="Pending Approvals" value={pending}  sub="need action"   color="#f59e0b" />
       </div>
 
@@ -299,19 +315,19 @@ function PageHome() {
 function PageTeamAttendance() {
   const [filter, setFilter] = useState("All");
   const [attendance, setAttendance] = useState([]);
-  const [weeklyData, setWeeklyData] = useState([]);
+  const [teamList, setTeamList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
       try {
-        const [all, summary] = await Promise.all([
+        const [allAtt, teamRes] = await Promise.all([
           getAllAttendance(),
-          getAttendanceSummary(),
+          getTeam()
         ]);
-        setAttendance(all || []);
-        setWeeklyData(Array.isArray(summary) ? summary : []);
+        setAttendance(allAtt || []);
+        setTeamList(teamRes || []);
       } catch (e) {
         setError(e.message);
       } finally {
@@ -323,11 +339,57 @@ function PageTeamAttendance() {
   const statuses = ["All", "PRESENT", "WFH", "ABSENT", "ON_LEAVE"];
   const displayLabel = { PRESENT: "Present", WFH: "WFH", ABSENT: "Absent", ON_LEAVE: "On Leave" };
 
-  const filtered = filter === "All"
-    ? attendance
-    : attendance.filter((a) => (a.attendanceType || a.status || "").toUpperCase() === filter);
-
   if (loading) return <Spinner />;
+
+  let presentCount = 0;
+  let wfhCount = 0;
+  let onLeaveCount = 0;
+
+  const attMap = {};
+  attendance.forEach(a => {
+    attMap[a.employeeId] = a;
+    const s = (a.status || "").toUpperCase();
+    const t = (a.attendanceType || "").toUpperCase();
+    if (s === "WFH" || t === "WFH") wfhCount++;
+    else if (s === "PRESENT" || t === "WFO") presentCount++;
+    else if (s === "ON_LEAVE" || s === "LEAVE") onLeaveCount++;
+  });
+
+  const teamSize = teamList.length;
+  const absentCount = Math.max(0, teamSize - presentCount - wfhCount - onLeaveCount);
+
+  // Build full roster combining team members and attendance data
+  const fullRoster = teamList.map(member => {
+    const a = attMap[member.id] || {};
+    const type = (a.attendanceType || "").toUpperCase();
+    const stat = (a.status || "").toUpperCase();
+    let computedStatus = "ABSENT";
+    if (stat === "WFH" || type === "WFH") computedStatus = "WFH";
+    else if (stat === "PRESENT" || type === "WFO") computedStatus = "PRESENT";
+    else if (stat === "ON_LEAVE" || stat === "LEAVE") computedStatus = "ON_LEAVE";
+
+    return {
+      ...member,
+      ...a,
+      computedStatus
+    };
+  });
+
+  const filtered = filter === "All"
+    ? fullRoster
+    : fullRoster.filter(m => m.computedStatus === filter);
+
+  const formatTime = (isoStr) => {
+    if (!isoStr) return "--";
+    return new Date(isoStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDuration = (mins) => {
+    if (!mins) return "--";
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${m}m`;
+  };
 
   return (
     <div className="md-page">
@@ -336,6 +398,12 @@ function PageTeamAttendance() {
       </div>
 
       {error && <ErrorMsg msg={error} />}
+
+      <div className="md-stats-grid" style={{ marginBottom: "24px" }}>
+        <StatCard icon={<CheckCircle size={20} />} label="In Office" value={presentCount} sub="Present today" color="#10b981" />
+        <StatCard icon={<Laptop size={20} />} label="Remote (WFH)" value={wfhCount} sub="Working from home" color="#06b6d4" />
+        <StatCard icon={<Users size={20} />} label="Absent / Leave" value={absentCount + onLeaveCount} sub="Away today" color="#ef4444" />
+      </div>
 
       <div className="md-filter-tabs">
         {statuses.map((s) => (
@@ -347,40 +415,53 @@ function PageTeamAttendance() {
         ))}
       </div>
 
-      <div className="md-team-grid">
-        {filtered.map((m, i) => (
-          <div key={m.id || i} className="md-team-attendance-card">
-            <Avatar initials={getInitials(m.employeeName)} size={44} color={pickColor(m.employeeId || i)} />
-            <div className="md-tac-info">
-              <div className="md-tac-name">{m.employeeName}</div>
-              <div className="md-tac-role">{m.department || m.employeeCode}</div>
-            </div>
-            <StatusBadge status={statusFromEmployee(m)} />
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div style={{ color: "rgba(255,255,255,0.4)", gridColumn: "1/-1", padding: 20 }}>
-            No records found.
-          </div>
-        )}
+      <div className="md-panel" style={{ padding: 0, overflow: "hidden" }}>
+        <table className="md-roster-table" style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
+          <thead>
+            <tr style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <th style={{ padding: "16px", color: "#9b96b8", fontWeight: 500, fontSize: "13px" }}>Employee</th>
+              <th style={{ padding: "16px", color: "#9b96b8", fontWeight: 500, fontSize: "13px" }}>Status</th>
+              <th style={{ padding: "16px", color: "#9b96b8", fontWeight: 500, fontSize: "13px" }}>Clock In</th>
+              <th style={{ padding: "16px", color: "#9b96b8", fontWeight: 500, fontSize: "13px" }}>Clock Out</th>
+              <th style={{ padding: "16px", color: "#9b96b8", fontWeight: 500, fontSize: "13px" }}>Total Hours</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((m, i) => (
+              <tr key={m.id || i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                <td style={{ padding: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <Avatar initials={getInitials(m.name || m.employeeName)} size={36} color={pickColor(m.id || m.employeeId || i)} />
+                    <div>
+                      <div style={{ fontWeight: 600, color: "#fff", fontSize: "14px" }}>{m.name || m.employeeName}</div>
+                      <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{m.designation || m.department || m.employeeCode}</div>
+                    </div>
+                  </div>
+                </td>
+                <td style={{ padding: "16px" }}>
+                  <StatusBadge status={m.computedStatus === "PRESENT" ? "Present" : m.computedStatus === "ON_LEAVE" ? "On Leave" : m.computedStatus === "ABSENT" ? "Absent" : "WFH"} />
+                </td>
+                <td style={{ padding: "16px", color: "rgba(255,255,255,0.8)", fontSize: "14px", fontFamily: "monospace" }}>
+                  {formatTime(m.checkIn)}
+                </td>
+                <td style={{ padding: "16px", color: "rgba(255,255,255,0.8)", fontSize: "14px", fontFamily: "monospace" }}>
+                  {m.checkIn && !m.checkOut ? <span style={{ color: "#10b981", fontSize: "12px", fontWeight: "bold" }}>Working...</span> : formatTime(m.checkOut)}
+                </td>
+                <td style={{ padding: "16px", color: "rgba(255,255,255,0.8)", fontSize: "14px", fontFamily: "monospace" }}>
+                  {formatDuration(m.durationMin)}
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan="5" style={{ padding: "32px", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>
+                  No attendance records found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-
-      {weeklyData.length > 0 && (
-        <div className="md-panel">
-          <h3 className="md-panel-title">Weekly Attendance Overview</h3>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={weeklyData} barSize={20}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="week" tick={{ fill: "#9b96b8", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "#9b96b8", fontSize: 12 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: "#1e1740", border: "none", borderRadius: 10, color: "#fff" }} />
-              <Bar dataKey="present" fill="#10b981" radius={[4,4,0,0]} name="Present" />
-              <Bar dataKey="absent"  fill="#ef4444" radius={[4,4,0,0]} name="Absent" />
-              <Bar dataKey="leave"   fill="#f59e0b" radius={[4,4,0,0]} name="Leave" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
     </div>
   );
 }
@@ -449,7 +530,37 @@ function PageLeaveApprovals() {
 
   const PENDING_STATUSES = ["PENDING", "Pending", "APPLIED", "Applied"];
   const pending = requests.filter(r => !r.status || PENDING_STATUSES.includes(r.status));
-  const done    = requests.filter(r => r.status && !PENDING_STATUSES.includes(r.status));
+  const approved = requests.filter(r => (r.status || "").toUpperCase() === "APPROVED");
+  const rejected = requests.filter(r => (r.status || "").toUpperCase() === "REJECTED");
+  
+  // Calculate currently active leaves
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const activeLeaves = approved.filter(r => {
+    if (!r.startDate || !r.endDate) return false;
+    const s = new Date(r.startDate); s.setHours(0,0,0,0);
+    const e = new Date(r.endDate); e.setHours(23,59,59,999);
+    return today >= s && today <= e;
+  });
+
+  const done = requests.filter(r => r.status && !PENDING_STATUSES.includes(r.status));
+
+  // Chart data
+  let sick = 0, casual = 0, annual = 0, other = 0;
+  requests.forEach(r => {
+    const t = (r.leaveType || "").toUpperCase();
+    if (t.includes("SICK")) sick++;
+    else if (t.includes("CASUAL")) casual++;
+    else if (t.includes("ANNUAL")) annual++;
+    else other++;
+  });
+  const totalLeaves = requests.length;
+  const PIE_DATA = [
+    { name: "Sick leave", value: sick, color: "#ef4444" },
+    { name: "Casual leave", value: casual, color: "#f59e0b" },
+    { name: "Annual leave", value: annual, color: "#7c5af0" },
+    { name: "Other", value: other, color: "#10b981" },
+  ];
 
   if (loading) return <Spinner />;
 
@@ -478,21 +589,11 @@ function PageLeaveApprovals() {
           <div style={modalBox}>
             <h3 style={modalTitle}>Approve Leave</h3>
             <p style={modalSub}>Add a comment before approving (required)</p>
-            <textarea
-              style={modalTextarea}
-              placeholder="e.g. Approved. Ensure handover before leave."
-              value={approveComment}
-              onChange={e => setApproveComment(e.target.value)}
-              autoFocus
-            />
+            <textarea style={modalTextarea} placeholder="e.g. Approved." value={approveComment} onChange={e => setApproveComment(e.target.value)} autoFocus />
             <div style={modalActions}>
-              <button onClick={() => { setApproveModal(null); setApproveComment(""); }}
-                style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13 }}>
-                Cancel
-              </button>
-              <button onClick={handleApprove} disabled={!approveComment.trim() || approveSubmitting}
-                style={{ background: approveComment.trim() ? "#10b981" : "rgba(16,185,129,0.3)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: approveComment.trim() ? "pointer" : "not-allowed", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                <Check size={14} /> {approveSubmitting ? "Approving..." : "Confirm Approve"}
+              <button onClick={() => { setApproveModal(null); setApproveComment(""); }} style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13 }}>Cancel</button>
+              <button onClick={handleApprove} disabled={!approveComment.trim() || approveSubmitting} style={{ background: approveComment.trim() ? "#10b981" : "rgba(16,185,129,0.3)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: approveComment.trim() ? "pointer" : "not-allowed", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                <Check size={14} /> {approveSubmitting ? "Approving..." : "Confirm"}
               </button>
             </div>
           </div>
@@ -504,94 +605,174 @@ function PageLeaveApprovals() {
           <div style={modalBox}>
             <h3 style={modalTitle}>Reject Leave</h3>
             <p style={modalSub}>Please provide a reason for rejection (required)</p>
-            <textarea
-              style={modalTextarea}
-              placeholder="e.g. Insufficient team coverage during this period."
-              value={rejectComment}
-              onChange={e => setRejectComment(e.target.value)}
-              autoFocus
-            />
+            <textarea style={modalTextarea} placeholder="e.g. Insufficient coverage." value={rejectComment} onChange={e => setRejectComment(e.target.value)} autoFocus />
             <div style={modalActions}>
-              <button onClick={() => { setRejectModal(null); setRejectComment(""); }}
-                style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13 }}>
-                Cancel
-              </button>
-              <button onClick={handleReject} disabled={!rejectComment.trim() || rejectSubmitting}
-                style={{ background: rejectComment.trim() ? "#ef4444" : "rgba(239,68,68,0.3)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: rejectComment.trim() ? "pointer" : "not-allowed", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                <X size={14} /> {rejectSubmitting ? "Rejecting..." : "Confirm Reject"}
+              <button onClick={() => { setRejectModal(null); setRejectComment(""); }} style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: "pointer", fontSize: 13 }}>Cancel</button>
+              <button onClick={handleReject} disabled={!rejectComment.trim() || rejectSubmitting} style={{ background: rejectComment.trim() ? "#ef4444" : "rgba(239,68,68,0.3)", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", cursor: rejectComment.trim() ? "pointer" : "not-allowed", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                <X size={14} /> {rejectSubmitting ? "Rejecting..." : "Confirm"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="md-page-header-row">
-        <h2 className="md-page-heading">Leave Approvals</h2>
-        <span className="md-count-badge">{pending.length} pending</span>
+      <div className="md-page-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+        <h2 className="md-page-heading" style={{ margin: 0 }}>Leave Management</h2>
       </div>
 
       {error && <ErrorMsg msg={error} />}
       {actionError && <ErrorMsg msg={actionError} />}
 
-      {pending.length === 0 && (
-        <div className="md-empty-state">All caught up! No pending requests.</div>
-      )}
-
-      {pending.map(r => {
-        const name = r.employeeName || `Employee #${r.employeeId}`;
-        const days = r.totalDays ?? "?";
-        return (
-          <div key={r.id} className="md-leave-request-card">
-            <div className="md-lr-top">
-              <Avatar initials={getInitials(name)} size={44} color={pickColor(r.employeeId)} />
-              <div className="md-lr-info">
-                <div className="md-lr-name">{name}</div>
-                <div className="md-lr-details">
-                  <span className="md-lr-type">{r.leaveType} Leave</span>
-                  <span className="md-lr-dates">
-                    {r.startDate} – {r.endDate} ({days} day{days !== 1 ? "s" : ""})
-                  </span>
-                </div>
-                <div className="md-lr-reason">"{r.reason}"</div>
-              </div>
-              <div className="md-lr-actions">
-                <button className="md-approve-btn" onClick={() => setApproveModal(r.id)}
-                  style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <Check size={14} /> Approve
-                </button>
-                <button className="md-reject-btn" onClick={() => setRejectModal(r.id)}
-                  style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <X size={14} /> Reject
-                </button>
-              </div>
-            </div>
+      <div className="lm-metric-grid">
+        <div className="lm-metric-card">
+          <div className="lm-mc-header">
+            <Clock size={14} /> PENDING
           </div>
-        );
-      })}
+          <div className="lm-mc-value">{pending.length}</div>
+          <div className="lm-mc-sub">{pending.length === 0 ? "No requests awaiting" : "Action required"}</div>
+        </div>
+        <div className="lm-metric-card">
+          <div className="lm-mc-header">
+            <Check size={14} /> APPROVED
+          </div>
+          <div className="lm-mc-value">{approved.length}</div>
+          <div className="lm-pill lm-pill-green">↑ This week</div>
+        </div>
+        <div className="lm-metric-card">
+          <div className="lm-mc-header">
+            <Users size={14} /> ON LEAVE
+          </div>
+          <div className="lm-mc-value">{activeLeaves.length}</div>
+          <div className="lm-pill lm-pill-yellow">Active now</div>
+        </div>
+        <div className="lm-metric-card">
+          <div className="lm-mc-header">
+            <X size={14} /> REJECTED
+          </div>
+          <div className="lm-mc-value">{rejected.length}</div>
+          <div className="lm-mc-sub">All clear</div>
+        </div>
+      </div>
 
-      {done.length > 0 && (
-        <div className="md-panel" style={{ marginTop: 24 }}>
-          <h3 className="md-panel-title">Processed Requests</h3>
-          {done.map(r => {
-            const name = r.employeeName || `Employee #${r.employeeId}`;
-            return (
-              <div key={r.id} className="md-lr-done-row">
-                <Avatar initials={getInitials(name)} size={36} color={pickColor(r.employeeId)} />
-                <div className="md-lr-done-info">
-                  <span className="md-lr-done-name">{name}</span>
-                  <span className="md-lr-done-detail">
-                    {r.leaveType} · {r.startDate} – {r.endDate}
-                    {r.rejectionReason && (
-                      <span style={{ color: "#f87171", marginLeft: 8 }}>· Reason: {r.rejectionReason}</span>
-                    )}
-                  </span>
+      {pending.length > 0 && (
+        <div className="lm-panel">
+          <div className="lm-panel-header">
+            <h3 className="lm-panel-title">Pending Requests</h3>
+            <div className="lm-pill lm-pill-yellow">{pending.length} records</div>
+          </div>
+          <div className="lm-processed-list">
+            {pending.map(r => {
+              const name = r.employeeName || `Employee #${r.employeeId}`;
+              const t = (r.leaveType || "").toUpperCase();
+              let badgeClass = "lm-type-other";
+              if (t.includes("SICK")) badgeClass = "lm-type-sick";
+              if (t.includes("CASUAL")) badgeClass = "lm-type-casual";
+              if (t.includes("ANNUAL")) badgeClass = "lm-type-annual";
+
+              return (
+                <div key={r.id} className="lm-processed-card">
+                  <div className="lm-pc-left">
+                    <Avatar initials={getInitials(name)} size={44} color={pickColor(r.employeeId)} />
+                    <div>
+                      <div className="lm-pc-name">{name}</div>
+                      <div className="lm-pc-dates">{new Date(r.startDate).toLocaleDateString('en-GB', {day:'numeric', month:'short'})} → {new Date(r.endDate).toLocaleDateString('en-GB', {day:'numeric', month:'short', year: 'numeric'})}</div>
+                    </div>
+                  </div>
+                  <div className="lm-pc-right">
+                    <div className={`lm-type-badge ${badgeClass}`}>{r.leaveType}</div>
+                    <div style={{ display: "flex", gap: "8px", marginLeft: "16px" }}>
+                      <button onClick={() => setApproveModal(r.id)} style={{ background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "6px", padding: "6px 12px", cursor: "pointer", fontSize: "12px", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}><Check size={14}/> Approve</button>
+                      <button onClick={() => setRejectModal(r.id)} style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "6px", padding: "6px 12px", cursor: "pointer", fontSize: "12px", fontWeight: "600", display: "flex", alignItems: "center", gap: "4px" }}><X size={14}/> Reject</button>
+                    </div>
+                  </div>
                 </div>
-                <StatusBadge status={r.status} />
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
+
+      {done.length > 0 && (
+        <div className="lm-panel">
+          <div className="lm-panel-header">
+            <h3 className="lm-panel-title">Processed Leaves</h3>
+            <div className="lm-pill lm-pill-purple">{done.length} records</div>
+          </div>
+          <div className="lm-processed-list">
+            {done.map(r => {
+              const name = r.employeeName || `Employee #${r.employeeId}`;
+              const t = (r.leaveType || "").toUpperCase();
+              let badgeClass = "lm-type-other";
+              if (t.includes("SICK")) badgeClass = "lm-type-sick";
+              if (t.includes("CASUAL")) badgeClass = "lm-type-casual";
+              if (t.includes("ANNUAL")) badgeClass = "lm-type-annual";
+
+              return (
+                <div key={r.id} className="lm-processed-card">
+                  <div className="lm-pc-left">
+                    <Avatar initials={getInitials(name)} size={44} color={pickColor(r.employeeId)} />
+                    <div>
+                      <div className="lm-pc-name">{name}</div>
+                      <div className="lm-pc-dates">{new Date(r.startDate).toLocaleDateString('en-GB', {day:'numeric', month:'short'})} → {new Date(r.endDate).toLocaleDateString('en-GB', {day:'numeric', month:'short', year: 'numeric'})}</div>
+                    </div>
+                  </div>
+                  <div className="lm-pc-right">
+                    <div className={`lm-type-badge ${badgeClass}`}>{r.leaveType}</div>
+                    <StatusBadge status={r.status} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="lm-panel">
+        <div className="lm-panel-header">
+          <h3 className="lm-panel-title">Leave by type</h3>
+          <div className="lm-pill lm-pill-purple">{new Date().toLocaleDateString('en-GB', {month: 'long', year: 'numeric'})}</div>
+        </div>
+        <div className="lm-chart-container">
+          <div style={{ position: "relative", width: 220, height: 220 }}>
+            {totalLeaves > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={PIE_DATA} cx="50%" cy="50%" innerRadius={70} outerRadius={100} dataKey="value" stroke="none">
+                      {PIE_DATA.map((e, i) => <Cell key={i} fill={e.color} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: "#1e1340", border: "none", borderRadius: 10, color: "#fff" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                  <div style={{ fontSize: "28px", fontWeight: "700", color: "#fff", lineHeight: 1 }}>{totalLeaves}</div>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "4px" }}>total</div>
+                </div>
+              </>
+            ) : (
+              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.4)" }}>No data</div>
+            )}
+          </div>
+          
+          <div className="lm-legend-list">
+            {PIE_DATA.map(d => {
+              const pct = totalLeaves > 0 ? Math.round((d.value / totalLeaves) * 100) : 0;
+              return (
+                <div key={d.name} className="lm-legend-item">
+                  <div className="lm-legend-item-left">
+                    <div className="lm-dot" style={{ background: d.color }}></div>
+                    {d.name}
+                  </div>
+                  <div>
+                    <span className="lm-legend-count">{d.value}</span>
+                    <span className="lm-legend-pct">{pct}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -910,7 +1091,7 @@ function PageApplyLeave() {
             background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)",
             color: "#6ee7b7", borderRadius: 10, padding: "12px 16px", marginBottom: 16,
           }}>
-            ✓ {success}
+             {success}
           </div>
         )}
 
@@ -1027,6 +1208,7 @@ const NAV = [
   { id: "approvals",  icon: <ClipboardList size={18} />, label: "Leave Approvals" },
   { id: "members",    icon: <Users size={18} />,         label: "Team Members"    },
   { id: "calendar",   icon: <CalIcon size={18} />,       label: "Calendar"        },
+  { id: "interviews", icon: <CalIcon size={18} />,       label: "Interviews"      },
   { id: "reviews",    icon: <Award size={18} />,         label: "Performance"     },
   { id: "kudos",      icon: <Star size={18} />,          label: "Kudos"           },
   { id: "myleave",    icon: <Umbrella size={18} />,      label: "My Leave"        },
@@ -1071,6 +1253,7 @@ export default function ManagerDashboard() {
     approvals:  <PageLeaveApprovals />,
     members:    <PageTeamMembers />,
     calendar:   <PageCalendar />,
+    interviews: <PageInterviews />,
     reviews:    <PagePerformanceReview managerProfile={profile} />,
     kudos:      <PageKudos />,
     myleave:    <PageApplyLeave />,

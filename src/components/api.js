@@ -1,6 +1,6 @@
 // // import axios from "axios";
 
-// // const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// // const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 // // const api = axios.create({
 // //   baseURL: BASE_URL,
@@ -167,7 +167,7 @@
 
 // import axios from "axios";
 
-// const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 // const api = axios.create({
 //   baseURL: BASE_URL,
@@ -370,7 +370,7 @@
 
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -486,12 +486,14 @@ export const recruitmentAPI = {
 
 // ── CANDIDATES ────────────────────────────────────────────────────────────────
 export const candidateAPI = {
-  add:               (data)                             => api.post("/api/candidates", data),
-  getByJob:          (jobId)                            => api.get(`/api/candidates/job/${jobId}`),
-  getAll:            ()                                 => api.get("/api/candidates"),
-  updateStatus:      (id, status)                       => api.put(`/api/candidates/${id}/status`, { status }),
-  scheduleInterview: (id, interviewDate, interviewerId) => api.put(`/api/candidates/${id}/schedule`, { interviewDate, interviewerId }),
-  delete:            (id)                               => api.delete(`/api/candidates/${id}`),
+  add:               (data)                                          => api.post("/api/candidates", data),
+  getByJob:          (jobId)                                         => api.get(`/api/candidates/job/${jobId}`),
+  getAll:            ()                                              => api.get("/api/candidates"),
+  updateStatus:      (id, status)                                    => api.put(`/api/candidates/${id}/status`, { status }),
+  scheduleInterview: (id, roundName, interviewDate, interviewerId)   => api.put(`/api/candidates/${id}/schedule`, { roundName, interviewDate, interviewerId }),
+  submitFeedback:    (roundId, score, notes)                         => api.put(`/api/candidates/interview-round/${roundId}/feedback`, { score, feedbackNotes: notes }),
+  delete:            (id)                                            => api.delete(`/api/candidates/${id}`),
+  getMyInterviews:   ()                                              => api.get("/api/candidates/interviewer"),
 };
 
 // ── SCREENING ─────────────────────────────────────────────────────────────────

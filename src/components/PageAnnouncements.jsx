@@ -244,7 +244,7 @@ export default function PageAnnouncements() {
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await axios.get("http://localhost:8080/api/announcements");
+      const res = await axios.get("/api/announcements");
       setAnnouncements(res.data);
     } catch (err) { console.log(err); }
   };
@@ -269,7 +269,7 @@ const postAnnouncement = async () => {
     };
 
     const res = await axios.post(
-      "http://localhost:8080/api/announcements",
+      "/api/announcements",
       payload
     );
 
@@ -315,7 +315,7 @@ const postAnnouncement = async () => {
     // optimistic remove
     setAnnouncements(prev => prev.filter(a => a.id !== id));
     try {
-      await axios.delete(`http://localhost:8080/api/announcements/${id}`);
+      await axios.delete(`/api/announcements/${id}`);
     } catch (err) {
       console.log(err);
       fetchAnnouncements(); // restore on error
