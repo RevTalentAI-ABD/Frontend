@@ -1,17 +1,17 @@
-# RevTalent Client Web Application
+# RevTalentAI
 
 The **Frontend Application** is a modern, responsive single-page dashboard built with React and Vite. It serves as the primary user interface for the **RevTalent** microservices HRMS ecosystem, supporting candidates, employees, managers, and HR administrators.
 
 ---
 
-## 💡 Project Description & Overview
+##  Project Description & Overview
 
 ### Phase 2: Cloud-Native Microservices Architecture
 Phase 2 transforms the HR platform into a cloud-native microservices architecture designed for scalability, fault isolation, and independent deployment. The system is organized around HR business domains such as employee management, leave workflows, attendance tracking, recruitment, performance reviews, payroll, and AI-powered assistance. This approach improves maintainability while supporting secure, role-based access for employees, managers, and HR administrators.
 
 ---
 
-## 🏗️ Microservices Architecture
+## Microservices Architecture
 
 The platform is divided into domain-focused services, each handling a specific business capability:
 
@@ -28,14 +28,14 @@ The platform is divided into domain-focused services, each handling a specific b
 
 ---
 
-## 📡 Service Communication
+## Service Communication
 
 - **Synchronous Communication**: REST APIs with Feign Clients for service-to-service calls.
 - **Asynchronous Communication**: RabbitMQ for event-driven workflows such as leave approvals, recruitment updates, and notification triggers.
 
 ---
 
-## 🛡️ Resilience & Configuration
+##  Resilience & Configuration
 
 - **Service Discovery**: Eureka Server for dynamic service registration and lookup.
 - **Centralized Configuration**: Spring Cloud Config Server for environment-based configuration management.
@@ -43,7 +43,7 @@ The platform is divided into domain-focused services, each handling a specific b
 
 ---
 
-## 💾 Data Management
+## Data Management
 
 - **MySQL** stores transactional data such as employees, leave, attendance, and payroll.
 - **MongoDB** stores flexible document-based data such as resumes, review forms, policies, and chat history.
@@ -51,14 +51,14 @@ The platform is divided into domain-focused services, each handling a specific b
 
 ---
 
-## 🔍 Observability & Monitoring
+##  Observability & Monitoring
 
 - **Zipkin** provides distributed tracing across all microservices.
 - **Structured Logging & Metrics** support debugging, performance monitoring, and operational visibility.
 
 ---
 
-## 📦 Containerization & Orchestration
+## Containerization & Orchestration
 
 - **Docker** packages each service consistently across environments.
 - **Docker Compose** supports complete local setup with databases, messaging, and tracing services.
@@ -66,20 +66,20 @@ The platform is divided into domain-focused services, each handling a specific b
 
 ---
 
-## 🚀 CI/CD & Deployment
+## CI/CD & Deployment
 
 - **GitHub Actions** automates build, test, Docker image creation, and deployment.
 - **Deployment Targets** include Azure Kubernetes Service (AKS) for production-like demos and Azure App Service for lightweight hosting scenarios.
 
 ---
 
-## ✨ Outcome
+## Outcome
 
 This phase delivers a scalable, resilient, and production-ready HR platform with independent service deployment, event-driven workflows, AI-assisted HR operations, and a modern DevOps pipeline for efficient delivery and maintenance.
 
 ---
 
-## 🛠️ Frontend Dependencies
+## Frontend Dependencies
 
 The following libraries are declared in the project's `package.json`:
 
@@ -92,22 +92,3 @@ The following libraries are declared in the project's `package.json`:
 - **Testing Libraries** (`jest`, `@testing-library/react`, `babel-jest`): Quality verification suite.
 
 ---
-
-## ⚙️ Development Setup
-
-### Prerequisite Endpoint Configuration
-Configure the API Gateway target location in the `.env` file:
-```bash
-VITE_API_BASE_URL=http://localhost:8090
-```
-
-### Running Locally
-1. Install node dependencies:
-   ```bash
-   npm install
-   ```
-2. Start the Vite local development server:
-   ```bash
-   npm run dev
-   ```
-   The application will run at `http://localhost:5173`.
